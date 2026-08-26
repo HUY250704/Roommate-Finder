@@ -1,0 +1,87 @@
+const calculateMatchScore = (p1, p2) => {
+  let budgetScore = 0;
+  let lifestyleScore = 0;
+  let habitsScore = 0;
+  let locationScore = 0;
+  let interestsScore = 0;
+
+  const p1Min = p1.searchPreferences?.budgetMin || 0;
+  const p1Max = p1.searchPreferences?.budgetMax || 10000000;
+  const p2Min = p2.searchPreferences?.budgetMin || 0;
+  const p2Max = p2.searchPreferences?.budgetMax || 10000000;
+
+  const overlapMin = Math.max(p1Min, p2Min);
+  const overlapMax = Math.min(p1Max, p2Max);
+
+  if (overlapMax >= overlapMin) {
+    budgetScore = 20;
+  } else {
+    const diff = overlapMin - overlapMax;
+    const maxDiff = 5000000;
+    budgetScore = Math.max(0, Math.round(20 * (1 - diff / maxDiff)));
+  }
+
+  if (p1.lifestyle?.smoking === p2.lifestyle?.smoking) {
+    lifestyleScore += 15;
+  } else if (p1.lifestyle?.smoking === 'no-preference' || p2.lifestyle?.smoking === 'no-preference') {
+    lifestyleScore += 10;
+  }
+
+  if (p1.lifestyle?.pets === p2.lifestyle?.pets) {
+    lifestyleScore += 15;
+  } else if (p1.lifestyle?.pets === 'pet friendly' || p2.lifestyle?.pets === 'pet friendly') {
+    lifestyleScore += 10;
+  }
+
+  if (p1.lifestyle?.sleepSchedule === p2.lifestyle?.sleepSchedule) {
+    habitsScore += 15;
+  } else if (p1.lifestyle?.sleepSchedule === 'flexible' || p2.lifestyle?.sleepSchedule === 'flexible') {
+    habitsScore += 10;
+  }
+
+  if (p1.lifestyle?.cleanliness === p2.lifestyle?.cleanliness) {
+    habitsScore += 20;
+  } else {
+    const clean1 = p1.lifestyle?.cleanliness || 'medium';
+    const clean2 = p2.lifestyle?.cleanliness || 'medium';
+    if ((clean1 === 'high' && clean2 === 'medium') || (clean1 === 'medium' && clean2 === 'high')) {
+      habitsScore += 12;
+    } else if ((clean1 === 'low' && clean2 === 'medium') || (clean1 === 'medium' && clean2 === 'low')) {
+      habitsScore += 12;
+    } else {
+      habitsScore += 5;
+    }
+  }
+
+  const loc1 = p1.searchPreferences?.location || '';
+  const loc2 = p2.searchPreferences?.location || '';
+  if (loc1 && loc2 && loc1.toLowerCase() === loc2.toLowerCase()) {
+    locationScore = 15;
+  } else if (loc1 && loc2 && (loc1.toLowerCase().includes(loc2.toLowerCase()) || loc2.toLowerCase().includes(loc1.toLowerCase()))) {
+    locationScore = 10;
+  } else {
+    locationScore = 5;
+  }
+
+  const h1 = p1.lifestyle?.hobbies || [];
+  const h2 = p2.lifestyle?.hobbies || [];
+  const common = h1.filter(h => h2.includes(h));
+  if (h1.length > 0 && h2.length > 0) {
+    interestsScore = Math.min(10, common.length * 5);
+  }
+
+  const matchScore = budgetScore + lifestyleScore + habitsScore + locationScore + interestsScore;
+
+  return {
+    matchScore: Math.min(100, matchScore),
+    details: {
+      budgetScore,
+      locationScore,
+      lifestyleScore,
+      habitsScore,
+      interestsScore,
+    }
+  };
+};
+
+module.exports = { calculateMatchScore };
