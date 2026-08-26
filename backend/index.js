@@ -20,6 +20,7 @@ const roommateRequestRoute = require('./routes/RoommateRequestRoute');
 const messageRoute = require('./routes/MessageRoute');
 const notificationRoute = require('./routes/NotificationRoute');
 const reportRoute = require('./routes/ReportRoute');
+const adminRoute = require('./routes/AdminRoute');
 
 const app = express();
 const server = http.createServer(app);
@@ -88,6 +89,7 @@ app.use('/api/roommate-requests', roommateRequestRoute);
 app.use('/api/conversations', messageRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/reports', reportRoute);
+app.use('/api/admin', adminRoute);
 
 // Basic route to verify
 app.get('/', (req, res) => {
