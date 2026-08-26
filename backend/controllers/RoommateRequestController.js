@@ -1,5 +1,5 @@
 const RoommateRequest = require('../models/RoommateRequest');
-const Notification = require('../models/Notification');
+const { createNotification } = require('../services/notificationService');
 
 const sendRequest = async (req, res) => {
   try {
@@ -28,14 +28,14 @@ const sendRequest = async (req, res) => {
       message,
     });
 
-    await Notification.create({
-      recipient: receiverId,
-      sender: req.user._id,
-      type: 'request',
-      title: 'New Roommate Request',
-      content: `${req.user.username} sent you a roommate request.`,
-      relatedId: request._id,
-    });
+    await createNotification(
+      receiverId,
+      req.user._id,
+      'request',
+      'New Roommate Request',
+      `${req.user.username} sent you a roommate request.`,
+      request._id
+    );
 
     return res.status(201).json(request);
   } catch (error) {
@@ -62,14 +62,14 @@ const handleRequest = async (req, res) => {
     request.status = status;
     await request.save();
 
-    await Notification.create({
-      recipient: request.sender,
-      sender: req.user._id,
-      type: 'request',
-      title: `Roommate Request ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
-      content: `${req.user.username} ${status} your roommate request.`,
-      relatedId: request._id,
-    });
+    await createNotification(
+      request.sender,
+      req.user._id,
+      'request',
+      `Roommate Request ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
+      `${req.user.username} ${status} your roommate request.`,
+      request._id
+    );
 
     return res.status(200).json(request);
   } catch (error) {

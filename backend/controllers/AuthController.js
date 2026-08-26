@@ -1,11 +1,5 @@
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretjwtkeyforroommatefinder', {
-    expiresIn: '30d',
-  });
-};
+const generateToken = require('../utils/tokenGenerator');
 
 const registerUser = async (req, res) => {
   try {
