@@ -85,7 +85,7 @@ app.use('/api/roommates', roommateRoute);
 app.use('/api/matches', matchRoute);
 app.use('/api/favorites', favoriteRoute);
 app.use('/api/roommate-requests', roommateRequestRoute);
-app.use('/api/chats', messageRoute);
+app.use('/api/conversations', messageRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/reports', reportRoute);
 
