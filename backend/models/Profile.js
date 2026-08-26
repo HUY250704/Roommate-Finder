@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const ProfileSchema = new mongoose.Schema(
   {
@@ -28,6 +28,10 @@ const ProfileSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    jobOrUniversity: {
+      type: String,
+      default: '',
+    },
     bio: {
       type: String,
       default: '',
@@ -51,6 +55,26 @@ const ProfileSchema = new mongoose.Schema(
       cleanliness: {
         type: String,
         enum: ['high', 'medium', 'low'],
+        default: 'medium',
+      },
+      drinking: {
+        type: String,
+        enum: ['non-drinker', 'drinker', 'occasional', 'no-preference'],
+        default: 'no-preference',
+      },
+      cooking: {
+        type: String,
+        enum: ['never', 'sometimes', 'frequently'],
+        default: 'sometimes',
+      },
+      guestFrequency: {
+        type: String,
+        enum: ['never', 'rarely', 'frequently'],
+        default: 'rarely',
+      },
+      noiseTolerance: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
         default: 'medium',
       },
       hobbies: {

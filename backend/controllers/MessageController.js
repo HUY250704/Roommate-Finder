@@ -1,5 +1,6 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const RoommateRequest = require('../models/RoommateRequest');
 
 const getMessages = async (req, res) => {
   try {
@@ -22,23 +23,43 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: 'Please provide recipientId or conversationId' });
     }
 
+    let targetRecipientId = recipientId;
+
     let conversation;
     if (conversationId) {
       conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        targetRecipientId = conversation.participants.find(
+          p => p.toString() !== req.user._id.toString()
+        );
+      }
     } else {
       conversation = await Conversation.findOne({
         participants: { $all: [req.user._id, recipientId] }
       });
+    }
 
-      if (!conversation) {
-        conversation = await Conversation.create({
-          participants: [req.user._id, recipientId]
-        });
-      }
+    if (!targetRecipientId) {
+      return res.status(400).json({ message: 'Recipient not found' });
+    }
+
+    const acceptedRequest = await RoommateRequest.findOne({
+      $or: [
+        { sender: req.user._id, receiver: targetRecipientId, status: 'accepted' },
+        { sender: targetRecipientId, receiver: req.user._id, status: 'accepted' }
+      ]
+    });
+
+    if (!acceptedRequest) {
+      return res.status(403).json({
+        message: 'Chat locked. You must have an accepted roommate request with this user to chat.'
+      });
     }
 
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation not found' });
+      conversation = await Conversation.create({
+        participants: [req.user._id, targetRecipientId]
+      });
     }
 
     const message = await Message.create({

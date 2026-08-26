@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const RoomSchema = new mongoose.Schema(
   {
@@ -27,6 +27,26 @@ const RoomSchema = new mongoose.Schema(
     location: {
       type: String,
       required: [true, 'Please add location (district/city)'],
+    },
+    area: {
+      type: Number,
+      default: 0, // area in m2
+    },
+    bedrooms: {
+      type: Number,
+      default: 1,
+    },
+    bathrooms: {
+      type: Number,
+      default: 1,
+    },
+    numRoommates: {
+      type: Number,
+      default: 1,
+    },
+    houseRules: {
+      type: String,
+      default: '',
     },
     images: {
       type: [String],

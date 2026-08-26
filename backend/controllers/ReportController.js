@@ -1,5 +1,26 @@
 const Report = require('../models/Report');
 
+const createReport = async (req, res) => {
+  try {
+    const { reportedUserId, reportedRoomId, reason, details } = req.body;
+    if (!reason) {
+      return res.status(400).json({ message: 'Reason for report is required' });
+    }
+
+    const report = await Report.create({
+      reporter: req.user._id,
+      reportedUser: reportedUserId || undefined,
+      reportedRoom: reportedRoomId || undefined,
+      reason,
+      details,
+    });
+
+    return res.status(201).json(report);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 const handleReports = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
@@ -37,6 +58,7 @@ const updateReportStatus = async (req, res) => {
 };
 
 module.exports = {
+  createReport,
   handleReports,
   updateReportStatus,
 };

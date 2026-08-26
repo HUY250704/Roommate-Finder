@@ -60,8 +60,52 @@ const removeFavoriteRoom = async (req, res) => {
   }
 };
 
+const addFavoriteRoommate = async (req, res) => {
+  try {
+    const { roommateId } = req.body;
+    if (!roommateId) {
+      return res.status(400).json({ message: 'Roommate ID is required' });
+    }
+
+    let fav = await Favorite.findOne({ user: req.user._id });
+    if (!fav) {
+      fav = await Favorite.create({ user: req.user._id, rooms: [], roommates: [] });
+    }
+
+    if (fav.roommates.includes(roommateId)) {
+      return res.status(400).json({ message: 'Roommate already in favorites' });
+    }
+
+    fav.roommates.push(roommateId);
+    await fav.save();
+
+    return res.status(200).json(fav);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const removeFavoriteRoommate = async (req, res) => {
+  try {
+    const { roommateId } = req.params;
+    let fav = await Favorite.findOne({ user: req.user._id });
+    if (!fav) {
+      return res.status(404).json({ message: 'Favorites not found' });
+    }
+
+    fav.roommates = fav.roommates.filter(id => id.toString() !== roommateId);
+    await fav.save();
+
+    return res.status(200).json(fav);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addFavoriteRoom,
   removeFavoriteRoom,
+  addFavoriteRoommate,
+  removeFavoriteRoommate,
   getFavorites,
 };

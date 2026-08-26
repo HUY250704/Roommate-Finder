@@ -3,7 +3,7 @@ const Profile = require('../models/Profile');
 
 const createRoom = async (req, res) => {
   try {
-    const { title, description, price, address, location, images, amenities, availableFrom, roomType } = req.body;
+    const { title, description, price, address, location, area, bedrooms, bathrooms, numRoommates, houseRules, images, amenities, availableFrom, roomType } = req.body;
     const room = await Room.create({
       owner: req.user._id,
       title,
@@ -11,6 +11,11 @@ const createRoom = async (req, res) => {
       price,
       address,
       location,
+      area,
+      bedrooms,
+      bathrooms,
+      numRoommates,
+      houseRules,
       images,
       amenities,
       availableFrom,

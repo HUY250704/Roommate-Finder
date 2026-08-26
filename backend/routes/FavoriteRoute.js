@@ -1,20 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const { addFavoriteRoom, removeFavoriteRoom, getFavorites } = require('../controllers/FavoriteController');
+const {
+  addFavoriteRoom,
+  removeFavoriteRoom,
+  addFavoriteRoommate,
+  removeFavoriteRoommate,
+  getFavorites,
+} = require('../controllers/FavoriteController');
 const { protect } = require('../middleware/auth');
 
 /**
  * @swagger
  * tags:
  *   name: Favorites
- *   description: Save rooms to favorites
+ *   description: Save rooms and roommates to favorites
  */
 
 /**
  * @swagger
  * /api/favorites:
  *   get:
- *     summary: Xem danh sách ph?ng tr? ð? lýu yêu thích
+ *     summary: Xem danh sách ph?ng tr? và roommate yêu thích
  *     tags: [Favorites]
  *     security:
  *       - bearerAuth: []
@@ -43,12 +49,9 @@ router.get('/', protect, getFavorites);
  *             properties:
  *               roomId:
  *                 type: string
- *                 example: 60b9f07a2d480d19a4e4d586
  *     responses:
  *       200:
  *         description: Thêm thành công
- *       400:
- *         description: Ð? lýu ph?ng này trý?c ðó
  */
 router.post('/rooms', protect, addFavoriteRoom);
 
@@ -71,5 +74,50 @@ router.post('/rooms', protect, addFavoriteRoom);
  *         description: Xóa thành công
  */
 router.delete('/rooms/:roomId', protect, removeFavoriteRoom);
+
+/**
+ * @swagger
+ * /api/favorites/roommates:
+ *   post:
+ *     summary: Lýu roommate yêu thích m?i
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - roommateId
+ *             properties:
+ *               roommateId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thêm thành công
+ */
+router.post('/roommates', protect, addFavoriteRoommate);
+
+/**
+ * @swagger
+ * /api/favorites/roommates/{roommateId}:
+ *   delete:
+ *     summary: B? lýu roommate yêu thích
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: roommateId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Xóa thành công
+ */
+router.delete('/roommates/:roommateId', protect, removeFavoriteRoommate);
 
 module.exports = router;
