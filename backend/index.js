@@ -9,6 +9,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const connectDB = require('./config/db');
 
 // Route imports
+const authRoute = require('./routes/AuthRoute');
 const userRoute = require('./routes/UserRoute');
 const profileRoute = require('./routes/ProfileRoute');
 const roomRoute = require('./routes/RoomRoute');
@@ -75,6 +76,7 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
+app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
 app.use('/api/profiles', profileRoute);
 app.use('/api/rooms', roomRoute);
