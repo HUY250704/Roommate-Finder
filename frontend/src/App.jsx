@@ -21,7 +21,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminRooms from './pages/admin/AdminRooms';
 import AdminReports from './pages/admin/AdminReports';
-import AdminViewings from './pages/admin/AdminViewings';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 
 // User Layout wrapper
 function UserLayout() {
@@ -47,9 +47,9 @@ function AdminLayout() {
   }
 
   return (
-    <div className="flex bg-gray-100 min-h-screen font-sans">
+    <div className="flex bg-[#fff8f6] min-h-screen font-sans">
       <AdminSidebar />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-grow overflow-y-auto">
         <Outlet />
       </main>
     </div>
@@ -83,7 +83,7 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="rooms" element={<AdminRooms />} />
           <Route path="reports" element={<AdminReports />} />
-          <Route path="viewings" element={<AdminViewings />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
         </Route>
 
         {/* Catch-all redirect */}
