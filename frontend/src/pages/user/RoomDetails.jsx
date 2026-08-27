@@ -40,7 +40,7 @@ export default function RoomDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans relative">
+    <div className="min-h-screen bg-transparent pb-24 font-sans relative">
       {/* Mobile Header Nav */}
       <header className="md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-md px-5 py-4 flex items-center justify-between shadow-[0_4px_20px_0px_rgba(0,0,0,0.05)] border-b">
         <button

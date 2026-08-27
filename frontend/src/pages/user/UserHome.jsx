@@ -21,11 +21,11 @@ export default function UserHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+    <div className="min-h-screen bg-transparent flex flex-col font-sans">
       <main className="flex-grow w-full max-w-7xl mx-auto px-5 md:px-8 py-6 space-y-6">
         
         {/* Search & Toggle Section */}
-        <section className="space-y-4 sticky top-[64px] z-30 bg-[#f8f9fa]/90 backdrop-blur-sm py-4 -mx-5 px-5 md:mx-0 md:px-0">
+        <section className="space-y-4 sticky top-[64px] z-30 bg-transparent backdrop-blur-sm py-4 -mx-5 px-5 md:mx-0 md:px-0">
           <div className="relative w-full max-w-2xl mx-auto">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#594139]">
               search

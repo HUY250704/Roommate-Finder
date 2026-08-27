@@ -18,7 +18,7 @@ export default function RoommateProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans relative">
+    <div className="min-h-screen bg-transparent pb-24 font-sans relative">
       {/* Contextual Top Nav with Back Button */}
       <div className="absolute top-4 left-4 z-40">
         <button
