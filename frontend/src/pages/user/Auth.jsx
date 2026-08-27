@@ -27,7 +27,7 @@ export default function Auth() {
 
   const autofill = (type) => {
     if (type === 'user') {
-      setEmail('alice@example.com');
+      setEmail('sarah@example.com');
     } else {
       setEmail('admin@roommate.com');
     }
@@ -35,18 +35,20 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md border border-gray-150">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">Sign in to Roommate Finder</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">Choose one of the demo accounts below for easy testing</p>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Log in with any email to access User page. Use "admin@roommate.com" to access Admin page.
+          </p>
         </div>
 
         <div className="flex gap-2 justify-center">
-          <button onClick={() => autofill('user')} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 transition">
-            Demo User (Alice)
+          <button onClick={() => autofill('user')} className="px-3 py-1.5 bg-[#ab3500]/10 text-[#ab3500] rounded-full text-xs font-semibold hover:bg-[#ab3500]/20 transition">
+            Demo User
           </button>
-          <button onClick={() => autofill('admin')} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-100 transition">
+          <button onClick={() => autofill('admin')} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold hover:bg-blue-100 transition">
             Demo Admin
           </button>
         </div>
@@ -69,7 +71,7 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
-                className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#ab3500] focus:border-[#ab3500]"
               />
             </div>
           </div>
@@ -84,14 +86,14 @@ export default function Auth() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="******"
-                className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#ab3500] focus:border-[#ab3500]"
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#ab3500] hover:bg-[#ab3500]/95 focus:outline-none flex items-center justify-center gap-2"
           >
             <LogIn className="w-4 h-4" /> Sign In
           </button>

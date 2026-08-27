@@ -163,13 +163,38 @@ export const useStore = create((set) => ({
   viewings: initialViewings,
   favorites: ['haichau'],
 
-  login: (email, password) => {
-    const user = initialUsers.find(u => u.email === email);
-    if (user) {
-      set({ currentUser: user });
-      return { success: true, role: user.role };
+    login: (email, password) => {
+    const emailLower = email.toLowerCase().trim();
+    if (emailLower === 'admin@roommate.com') {
+      const adminUser = {
+        id: 'admin',
+        name: 'System Admin',
+        email: 'admin@roommate.com',
+        role: 'admin',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+        status: 'active'
+      };
+      set({ currentUser: adminUser });
+      return { success: true, role: 'admin' };
+    } else {
+      const nickname = emailLower.split('@')[0];
+      const normalUser = {
+        id: nickname || 'user',
+        name: nickname.charAt(0).toUpperCase() + nickname.slice(1) || 'User',
+        email: emailLower,
+        role: 'user',
+        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
+        status: 'active',
+        gender: 'Male',
+        phone: '0912345678',
+        occupation: 'Member',
+        cleanHabit: 'High Standard',
+        intro: "Hi, I am looking for a roommate!",
+        matchScore: 90
+      };
+      set({ currentUser: normalUser });
+      return { success: true, role: 'user' };
     }
-    return { success: false, message: 'Invalid credentials. Try: sarah@example.com (user) or admin@roommate.com (admin)' };
   },
 
   logout: () => set({ currentUser: null }),
