@@ -261,8 +261,31 @@ export const useStore = create((set) => ({
     return { success: true, role: "user" };
   },
 
-  login: (email, password) => {
+  login: async (email, password) => {
     const emailLower = email.toLowerCase().trim();
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailLower, password })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const user = {
+          ...data.user,
+          id: data.user?._id || data.user?.id || (emailLower === 'admin@roommate.com' ? 'admin' : emailLower.split('@')[0]),
+          name: data.user?.username || data.user?.name || emailLower.split('@')[0],
+          email: emailLower,
+          role: data.user?.role || (emailLower === 'admin@roommate.com' ? 'admin' : 'user'),
+          avatar: data.user?.avatar || (emailLower === 'admin@roommate.com' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY'),
+          status: 'active'
+        };
+        set({ currentUser: user });
+        return { success: true, role: user.role };
+      }
+    } catch (e) {
+      console.warn("Backend auth failed, using local session", e);
+    }
     if (emailLower === 'admin@roommate.com') {
       const adminUser = {
         id: 'admin',

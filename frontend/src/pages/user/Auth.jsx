@@ -8,6 +8,7 @@ import { auth, googleProvider, signInWithPopup } from '../../config/firebase';
 export default function Auth() {
   const { login, loginWithFirebase } = useStore();
   const [loadingFirebase, setLoadingFirebase] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('123456');
