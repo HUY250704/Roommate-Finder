@@ -21,9 +21,9 @@ export default function UserHome() {
 
   const handleCardClick = (id, type) => {
     if (type === 'roommate') {
-      navigate(/roommates/\);
+      navigate(/roommates/);
     } else {
-      navigate(/rooms/\);
+      navigate(/rooms/);
     }
   };
 
@@ -68,13 +68,13 @@ export default function UserHome() {
               <div className="inline-flex bg-gray-100 rounded-full p-1 select-none border">
                 <button
                   onClick={() => setActiveTab('roommates')}
-                  className={px-5 py-2 rounded-full text-xs font-bold transition-all \}
+                  className="px-5 py-2 rounded-full text-xs font-bold transition-all"
                 >
                   Roommates
                 </button>
                 <button
                   onClick={() => setActiveTab('rooms')}
-                  className={px-5 py-2 rounded-full text-xs font-bold transition-all \}
+                  className="px-5 py-2 rounded-full text-xs font-bold transition-all"
                 >
                   Rooms
                 </button>
@@ -82,7 +82,7 @@ export default function UserHome() {
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={px-4 py-2.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors \}
+                className="px-4 py-2.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors"
               >
                 <span className="material-symbols-outlined text-base">tune</span>
                 Filters
@@ -204,7 +204,7 @@ export default function UserHome() {
                     )}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                       <h2 className="text-xl text-white font-bold">
-                        {room.price >= 1000000 ? \M : room.price.toLocaleString()} / mo
+                        {room.price >= 1000000 ? M : room.price.toLocaleString()} / mo
                       </h2>
                       <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5">
                         <span className="material-symbols-outlined text-sm">location_on</span>

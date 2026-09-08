@@ -175,13 +175,13 @@ export default function UserNavbar() {
             <div className="flex border rounded-lg p-1 bg-gray-50">
               <button
                 onClick={() => setPostType('room')}
-                className={lex-1 py-2 text-xs font-bold rounded-md transition-colors \}
+                className="flex-1 py-2 text-xs font-bold rounded-md transition-colors"
               >
                 Post Room Listing
               </button>
               <button
                 onClick={() => setPostType('request')}
-                className={lex-1 py-2 text-xs font-bold rounded-md transition-colors \}
+                className="flex-1 py-2 text-xs font-bold rounded-md transition-colors"
               >
                 Post Roommate Request
               </button>

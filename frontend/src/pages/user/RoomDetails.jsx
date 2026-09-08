@@ -53,7 +53,7 @@ export default function RoomDetails() {
             onClick={() => toggleFavorite(room.id)}
             className="p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-transform"
           >
-            <span className={material-symbols-outlined \}>
+            <span className="material-symbols-outlined">
               {isFav ? 'favorite' : 'favorite_border'}
             </span>
           </button>
@@ -101,7 +101,7 @@ export default function RoomDetails() {
                 <img
                   key={idx}
                   className="w-full h-72 object-cover snap-center flex-shrink-0"
-                  alt={Slide \}
+                  alt={Slide }
                   src={img}
                 />
               ))}
@@ -157,7 +157,7 @@ export default function RoomDetails() {
           <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-150 sticky top-24 space-y-5">
             <div>
               <span className="text-3xl font-extrabold text-[#ab3500]">
-                {room.price >= 1000000 ? \M : room.price.toLocaleString()} VND
+                {room.price >= 1000000 ? M : room.price.toLocaleString()} VND
               </span>
               <span className="text-gray-500 text-sm font-medium"> / month</span>
             </div>

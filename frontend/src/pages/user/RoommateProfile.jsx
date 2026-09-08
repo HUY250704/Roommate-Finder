@@ -27,7 +27,7 @@ export default function RoommateProfile() {
   ];
 
   const handleSendRequest = () => {
-    alert(Request sent to \!);
+    alert("Request sent!");
     navigate('/chat');
   };
 
@@ -103,7 +103,7 @@ export default function RoommateProfile() {
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       fill="none"
                       stroke="currentColor"
-                      strokeDasharray={\, 100}
+                      strokeDasharray={`${user.matchScore || 92}, 100`}
                       strokeLinecap="round"
                       strokeWidth="3"
                     ></path>
@@ -142,8 +142,8 @@ export default function RoommateProfile() {
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={h-full \ rounded-full transition-all duration-500}
-                        style={{ width: \% }}
+                        className={`h-full ${item.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${item.score}%` }}
                       ></div>
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export default function RoommateProfile() {
         </button>
         <button
           onClick={() => setSaved(!saved)}
-          className={w-14 h-14 rounded-full border flex items-center justify-center transition-colors \}
+          className="w-14 h-14 rounded-full border flex items-center justify-center transition-colors"
         >
           <span className="material-symbols-outlined">{saved ? 'bookmark' : 'bookmark_border'}</span>
         </button>
