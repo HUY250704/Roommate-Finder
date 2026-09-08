@@ -7,6 +7,8 @@ const {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  googleLogin,
+  firebaseLogin,
 } = require('../controllers/AuthController');
 
 /**
@@ -160,5 +162,9 @@ router.post('/reset-password', resetPassword);
  *         description: Email verified successfully
  */
 router.post('/verify-email', verifyEmail);
+
+
+
+router.post("/firebase", firebaseLogin);
 
 module.exports = router;

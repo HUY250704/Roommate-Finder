@@ -18,9 +18,10 @@ const UserSchema = new mongoose.Schema(
         'Please add a valid email',
       ],
     },
+    firebaseUid: { type: String }, googleId: { type: String }, avatar: { type: String }, authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
     password: {
       type: String,
-      required: [true, 'Please add a password'],
+      required: function() { return !this.firebaseUid && !this.googleId; },
       minlength: 6,
     },
     role: {

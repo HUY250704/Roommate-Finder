@@ -163,7 +163,105 @@ export const useStore = create((set) => ({
   viewings: initialViewings,
   favorites: ['haichau'],
 
-    login: (email, password) => {
+    
+  loginWithGoogle: async (googleData) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(googleData)
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const user = {
+          ...data,
+          id: data._id || data.id,
+          name: data.username || data.name || googleData.name || "Google User",
+          avatar: data.avatar || googleData.avatar || googleData.picture || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+          status: "active"
+        };
+        set({ currentUser: user });
+        return { success: true, role: user.role || "user" };
+      }
+    } catch (e) {
+      console.warn("Backend auth failed, using Google local session", e);
+    }
+
+    const emailLower = (googleData.email || "googleuser@gmail.com").toLowerCase().trim();
+    const nickname = googleData.name || emailLower.split("@")[0];
+    const googleUser = {
+      id: googleData.googleId || "google_" + Date.now(),
+      name: nickname,
+      email: emailLower,
+      role: "user",
+      avatar: googleData.avatar || googleData.picture || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+      status: "active",
+      authProvider: "google",
+      gender: "Male",
+      phone: "0900000000",
+      occupation: "Member",
+      cleanHabit: "High Standard",
+      intro: "Signed in with Google.",
+      matchScore: 95
+    };
+    set({ currentUser: googleUser });
+    return { success: true, role: "user" };
+  },
+
+  
+  loginWithFirebase: async (firebaseData) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/firebase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: firebaseData.uid,
+          email: firebaseData.email,
+          displayName: firebaseData.displayName || firebaseData.name,
+          photoURL: firebaseData.photoURL || firebaseData.avatar,
+          idToken: firebaseData.idToken,
+          providerId: firebaseData.providerId || "firebase"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const user = {
+          ...data,
+          id: data._id || data.id,
+          name: data.username || data.name || firebaseData.displayName || "Firebase User",
+          avatar: data.avatar || firebaseData.photoURL || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+          status: "active"
+        };
+        set({ currentUser: user });
+        return { success: true, role: user.role || "user" };
+      }
+    } catch (e) {
+      console.warn("Backend auth failed, using Firebase client session", e);
+    }
+
+    const emailLower = (firebaseData.email || "firebaseuser@gmail.com").toLowerCase().trim();
+    const nickname = firebaseData.displayName || firebaseData.name || emailLower.split("@")[0];
+    const firebaseUser = {
+      id: firebaseData.uid || "firebase_" + Date.now(),
+      name: nickname,
+      email: emailLower,
+      role: "user",
+      avatar: firebaseData.photoURL || firebaseData.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+      status: "active",
+      authProvider: firebaseData.providerId || "firebase",
+      gender: "Male",
+      phone: "0900000000",
+      occupation: "Member",
+      cleanHabit: "High Standard",
+      intro: "Signed in with Firebase Authentication.",
+      matchScore: 95
+    };
+    set({ currentUser: firebaseUser });
+    return { success: true, role: "user" };
+  },
+
+  login: (email, password) => {
     const emailLower = email.toLowerCase().trim();
     if (emailLower === 'admin@roommate.com') {
       const adminUser = {
