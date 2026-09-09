@@ -224,7 +224,7 @@ const firebaseLogin = async (req, res) => {
         email: email,
         firebaseUid: uid,
         avatar: photoURL,
-        authProvider: providerId || "firebase",
+        authProvider: ["local", "google", "firebase"].includes(providerId) ? providerId : "firebase",
         isVerified: true,
       });
     }
