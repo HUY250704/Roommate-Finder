@@ -5,7 +5,6 @@ import { searchVietmapAddress } from '../../utils/vietmap';
 export default function VietmapView({ address, location, title }) {
   const [coordinates, setCoordinates] = useState(null);
   const [loading, setLoading] = useState(false);
-  const apiKey = import.meta.env.VITE_VIETMAP_API_KEY || '';
 
   const fullAddress = address ? `${address}, ${location || 'Da Nang, Vietnam'}` : (location || 'Da Nang, Vietnam');
 
@@ -42,15 +41,6 @@ export default function VietmapView({ address, location, title }) {
           <span className="material-symbols-outlined text-[#ab3500]">location_on</span>
           <span>Bản đồ vị trí (Vietmap GIS)</span>
         </div>
-        <a 
-          href={vietmapWebUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-xs text-[#ab3500] hover:underline flex items-center gap-1 font-semibold"
-        >
-          <span>Mở trên Vietmap</span>
-          <ExternalLink size={13} />
-        </a>
       </div>
 
       <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">

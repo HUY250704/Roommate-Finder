@@ -208,19 +208,6 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
                   Tọa độ: {selectedLocation.lat.toFixed(5)}, {selectedLocation.lng.toFixed(5)}
                 </p>
               )}
-
-              <div className="absolute bottom-3 right-3 flex gap-2">
-                <a
-                  href={vietmapWebUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#ab3500] text-white text-xs font-semibold rounded-lg shadow hover:bg-[#8e2800] transition flex items-center gap-1.5"
-                >
-                  <Navigation size={13} />
-                  <span>Mở trên Vietmap.vn</span>
-                  <ExternalLink size={11} />
-                </a>
-              </div>
             </div>
 
             {/* Distance & Route Tool */}
