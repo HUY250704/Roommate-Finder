@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Mail, Lock, LogIn, AlertCircle, X } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, X, ShieldAlert } from 'lucide-react';
 import { auth, googleProvider, facebookProvider, signInWithPopup } from '../../config/firebase';
 import bgImage from '../../assets/bg-image.jpg';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
@@ -34,7 +34,7 @@ export default function Auth() {
         navigate('/');
       }
     } else {
-      setError(res.message);
+      setError(res.message || (language === 'vi' ? 'Email hoặc mật khẩu không chính xác' : 'Invalid email or password'));
     }
   };
 
@@ -44,9 +44,22 @@ export default function Auth() {
     try {
       let resultUser = null;
       if (auth && googleProvider && signInWithPopup) {
-        const result = await signInWithPopup(auth, googleProvider);
-        if (result && result.user) {
-          resultUser = result.user;
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          if (result && result.user) {
+            resultUser = result.user;
+          }
+        } catch (popupErr) {
+          console.warn('Firebase Google popup issue:', popupErr.code, popupErr.message);
+          if (popupErr.code === 'auth/popup-closed-by-user') {
+            setLoadingFirebase(false);
+            return;
+          }
+          // If popup blocked by COOP or Firebase Provider not activated yet, open direct social modal
+          setSocialProviderType('google');
+          setShowSocialModal(true);
+          setLoadingFirebase(false);
+          return;
         }
       }
 
@@ -66,17 +79,14 @@ export default function Auth() {
         } else {
           setError(res.message || (language === 'vi' ? 'Đăng nhập Google thất bại' : 'Google sign-in failed'));
         }
-      }
-    } catch (err) {
-      console.warn('Firebase Google Auth error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError(language === 'vi' ? 'Bạn đã đóng cửa sổ đăng nhập Google' : 'Google sign-in window was closed');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        setError(language === 'vi' ? 'Yêu cầu đăng nhập đã bị hủy' : 'Sign-in request was cancelled');
       } else {
         setSocialProviderType('google');
         setShowSocialModal(true);
       }
+    } catch (err) {
+      console.warn('Google Auth general error:', err);
+      setSocialProviderType('google');
+      setShowSocialModal(true);
     } finally {
       setLoadingFirebase(false);
     }
@@ -88,9 +98,22 @@ export default function Auth() {
     try {
       let resultUser = null;
       if (auth && facebookProvider && signInWithPopup) {
-        const result = await signInWithPopup(auth, facebookProvider);
-        if (result && result.user) {
-          resultUser = result.user;
+        try {
+          const result = await signInWithPopup(auth, facebookProvider);
+          if (result && result.user) {
+            resultUser = result.user;
+          }
+        } catch (popupErr) {
+          console.warn('Firebase Facebook popup issue:', popupErr.code, popupErr.message);
+          if (popupErr.code === 'auth/popup-closed-by-user') {
+            setLoadingFirebase(false);
+            return;
+          }
+          // If Facebook Provider not configured in Firebase Console yet or COOP blocked, open direct input modal
+          setSocialProviderType('facebook');
+          setShowSocialModal(true);
+          setLoadingFirebase(false);
+          return;
         }
       }
 
@@ -110,17 +133,14 @@ export default function Auth() {
         } else {
           setError(res.message || (language === 'vi' ? 'Đăng nhập Facebook thất bại' : 'Facebook sign-in failed'));
         }
-      }
-    } catch (err) {
-      console.warn('Firebase Facebook Auth error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError(language === 'vi' ? 'Bạn đã đóng cửa sổ đăng nhập Facebook' : 'Facebook sign-in window was closed');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        setError(language === 'vi' ? 'Yêu cầu đăng nhập đã bị hủy' : 'Sign-in request was cancelled');
       } else {
         setSocialProviderType('facebook');
         setShowSocialModal(true);
       }
+    } catch (err) {
+      console.warn('Facebook Auth general error:', err);
+      setSocialProviderType('facebook');
+      setShowSocialModal(true);
     } finally {
       setLoadingFirebase(false);
     }
@@ -344,9 +364,12 @@ export default function Auth() {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 space-y-1">
-              <p className="font-bold">Xác thực Firebase Authentication:</p>
+              <p className="font-bold flex items-center gap-1">
+                <ShieldAlert size={14} className="text-blue-700" />
+                Xác thực Firebase Authentication
+              </p>
               <p>
-                Nhập thông tin tài khoản mạng xã hội để hoàn tất đăng nhập trực tiếp qua hệ thống Firebase.
+                Nhập thông tin tài khoản để hoàn tất đăng nhập trực tiếp qua hệ thống Firebase.
               </p>
             </div>
 
