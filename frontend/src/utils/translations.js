@@ -53,6 +53,7 @@
     noPets: "Không thú cưng",
     highStandard: "Rất sạch sẽ",
     moderate: "Bình thường",
+    relaxed: "Thoải mái",
     priceRange: "Mức giá tối đa",
     viewProfile: "Xem hồ sơ",
     viewRoom: "Xem chi tiết phòng",
@@ -65,6 +66,33 @@
     requestsSubtitle: "Danh sách các bạn đang tìm phòng trọ hoặc tìm người ở ghép cùng.",
     createRequest: "Tạo bài đăng mới",
     maxBudget: "Tối đa",
+
+    // Profile Form
+    profileTitle: "Thông tin cá nhân & Hồ sơ",
+    fullName: "Họ và tên",
+    phoneNumber: "Số điện thoại",
+    occupation: "Nghề nghiệp / Trường học",
+    cleanHabit: "Thói quen vệ sinh",
+    selfIntro: "Giới thiệu bản thân",
+    selfIntroPlaceholder: "Chia sẻ về thói quen sinh hoạt, sở thích, giờ giấc của bạn...",
+    saveChanges: "Lưu thay đổi",
+    profileUpdatedSuccess: "Cập nhật hồ sơ thành công!",
+
+    // Room Details & Viewing Modal
+    scheduleViewing: "Đặt lịch hẹn xem phòng",
+    viewingDate: "Ngày xem phòng",
+    viewingTime: "Giờ xem phòng",
+    submitViewingRequest: "Gửi yêu cầu hẹn xem",
+    viewingRequestSuccess: "Đã gửi yêu cầu hẹn xem phòng tới chủ phòng!",
+    reportRoom: "Báo cáo tin đăng",
+    reportUser: "Báo cáo người dùng",
+    reportReason: "Lý do báo cáo",
+    reportDetails: "Chi tiết bổ sung",
+    submitReport: "Gửi báo cáo",
+    reportSuccess: "Báo cáo vi phạm đã được gửi tới Quản trị viên.",
+    contactLandlord: "Liên hệ chủ phòng",
+    sendRoommateRequest: "Gửi lời mời ở ghép",
+    requestSentSuccess: "Đã gửi yêu cầu kết nối ở ghép!",
 
     // Admin Sidebar & Dashboard
     dashboard: "Tổng quan",
@@ -135,6 +163,7 @@
     noPets: "No pets",
     highStandard: "High Standard",
     moderate: "Moderate",
+    relaxed: "Relaxed",
     priceRange: "Max Budget",
     viewProfile: "View Profile",
     viewRoom: "View Room",
@@ -147,6 +176,33 @@
     requestsSubtitle: "Browse people looking for flatmates and rooms to team up with.",
     createRequest: "Create Request",
     maxBudget: "Max",
+
+    // Profile Form
+    profileTitle: "User Profile & Information",
+    fullName: "Full Name",
+    phoneNumber: "Phone Number",
+    occupation: "Occupation / University",
+    cleanHabit: "Cleanliness Habits",
+    selfIntro: "Self Introduction",
+    selfIntroPlaceholder: "Share about your habits, lifestyle, and preferences...",
+    saveChanges: "Save Changes",
+    profileUpdatedSuccess: "Profile updated successfully!",
+
+    // Room Details & Viewing Modal
+    scheduleViewing: "Schedule a Viewing",
+    viewingDate: "Viewing Date",
+    viewingTime: "Viewing Time",
+    submitViewingRequest: "Submit Viewing Request",
+    viewingRequestSuccess: "Viewing appointment request submitted to property owner!",
+    reportRoom: "Report Listing",
+    reportUser: "Report User",
+    reportReason: "Report Reason",
+    reportDetails: "Additional Details",
+    submitReport: "Submit Report",
+    reportSuccess: "Report submitted for admin review.",
+    contactLandlord: "Contact Host",
+    sendRoommateRequest: "Send Roommate Request",
+    requestSentSuccess: "Roommate request sent!",
 
     // Admin Sidebar & Dashboard
     dashboard: "Dashboard",

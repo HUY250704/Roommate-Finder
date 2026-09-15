@@ -3,11 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import VietmapView from '../../components/common/VietmapView';
 import { Home, ArrowLeft } from 'lucide-react';
+import { translations } from '../../utils/translations';
 
 export default function RoomDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { rooms, users, scheduleViewing, toggleFavorite, favorites } = useStore();
+  const { rooms, users, scheduleViewing, toggleFavorite, favorites, language } = useStore();
+  const t = translations[language] || translations.vi;
 
   const roomId = id || 'haichau';
   const room = rooms.find(r => r.id === roomId || r._id === roomId);
@@ -28,9 +30,13 @@ export default function RoomDetails() {
             <span className="material-symbols-outlined text-3xl">home_work</span>
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-gray-900">Không tìm thấy phòng trọ</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              {language === 'vi' ? 'Không tìm thấy phòng trọ' : 'Room Not Found'}
+            </h2>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Phòng trọ có mã <strong>{roomId}</strong> không tồn tại hoặc đã được gỡ xuống.
+              {language === 'vi'
+                ? `Phòng trọ có mã ${roomId} không tồn tại hoặc đã được gỡ xuống.`
+                : `Room listing ID ${roomId} does not exist or has been removed.`}
             </p>
           </div>
           <div className="flex gap-3 justify-center pt-2">
@@ -39,14 +45,14 @@ export default function RoomDetails() {
               className="px-4 py-2.5 rounded-xl border text-xs font-semibold text-gray-700 hover:bg-gray-50 transition flex items-center gap-1.5"
             >
               <ArrowLeft size={14} />
-              <span>Quay lại</span>
+              <span>{language === 'vi' ? 'Quay lại' : 'Go back'}</span>
             </button>
             <Link
               to="/"
               className="px-5 py-2.5 rounded-xl bg-[#ab3500] text-white text-xs font-semibold hover:bg-[#8e2800] transition flex items-center gap-1.5"
             >
               <Home size={14} />
-              <span>Khám phá phòng khác</span>
+              <span>{language === 'vi' ? 'Khám phá phòng khác' : 'Explore other rooms'}</span>
             </Link>
           </div>
         </div>
@@ -65,13 +71,13 @@ export default function RoomDetails() {
       time
     });
     setShowViewingModal(false);
-    alert('Viewing appointment request submitted to property owner!');
+    alert(t.viewingRequestSuccess);
   };
 
   const handleReportSubmit = (e) => {
     e.preventDefault();
     setShowReportModal(false);
-    alert('Report submitted for admin review.');
+    alert(t.reportSuccess);
   };
 
   return (
@@ -89,7 +95,7 @@ export default function RoomDetails() {
             onClick={() => toggleFavorite(room.id)}
             className="p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-transform"
           >
-            <span className="material-symbols-outlined">
+            <span className="material-symbols-outlined text-[#ab3500]">
               {isFav ? 'favorite' : 'favorite_border'}
             </span>
           </button>
@@ -102,11 +108,11 @@ export default function RoomDetails() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-5 md:mt-8 md:grid md:grid-cols-12 md:gap-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 md:mt-8 md:grid md:grid-cols-12 md:gap-6">
         {/* Left Column: Gallery & Details */}
         <div className="md:col-span-8 flex flex-col gap-6">
           <section className="relative">
-            <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[400px] rounded-xl overflow-hidden shadow-sm border border-gray-100">
+            <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[400px] rounded-2xl overflow-hidden shadow-sm border border-gray-100">
               <img
                 className="col-span-3 row-span-2 object-cover w-full h-full hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
                 alt="Main"
@@ -126,13 +132,13 @@ export default function RoomDetails() {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="text-white font-label-md text-[14px] font-semibold flex items-center gap-1">
                     <span className="material-symbols-outlined">photo_library</span>
-                    Photos
+                    {language === 'vi' ? 'Hình ảnh' : 'Photos'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="md:hidden -mx-5 flex overflow-x-auto snap-x snap-mandatory scrollbar-none">
+            <div className="md:hidden -mx-4 flex overflow-x-auto snap-x snap-mandatory scrollbar-none">
               {(room.gallery || [room.image]).map((img, idx) => (
                 <img
                   key={idx}
@@ -144,41 +150,49 @@ export default function RoomDetails() {
             </div>
           </section>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-150 space-y-4">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-150 space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <span className="bg-[#ab3500]/10 text-[#ab3500] text-xs font-bold px-2.5 py-1 rounded-full uppercase">
-                  {room.type || 'Private Studio'}
+                  {room.type || t.privateStudio}
                 </span>
-                <h1 className="text-2xl font-bold text-[#191c1d] mt-2">{room.title}</h1>
-                <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                  <span className="material-symbols-outlined text-base">location_on</span>
-                  {room.address ? `${room.address}, ${room.location}` : room.location}
+                <h1 className="text-2xl font-bold text-gray-900 mt-2">{room.title}</h1>
+                <p className="text-gray-500 text-sm flex items-center gap-1 mt-1">
+                  <span className="material-symbols-outlined text-base text-gray-400">location_on</span>
+                  {room.address || room.location}
                 </p>
               </div>
+
               <button
                 onClick={() => setShowReportModal(true)}
-                className="hidden md:flex items-center gap-1 text-xs text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium"
+                className="hidden md:flex items-center gap-1 text-xs text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">report</span>
-                Report Listing
+                {t.reportRoom}
               </button>
             </div>
 
-            <hr />
+            <hr className="border-gray-100" />
 
             <div>
-              <h3 className="font-bold text-gray-900 mb-2">Description</h3>
+              <h3 className="font-bold text-gray-900 mb-2">{t.description}</h3>
               <p className="text-gray-700 text-sm leading-relaxed">{room.description}</p>
             </div>
 
-            <hr />
+            <hr className="border-gray-100" />
 
             <div>
-              <h3 className="font-bold text-gray-900 mb-3">Amenities Included</h3>
+              <h3 className="font-bold text-gray-900 mb-3">{language === 'vi' ? 'Tiện ích có sẵn' : 'Amenities Included'}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {['High-speed WiFi', 'Air Conditioning', 'Washing Machine', 'Refrigerator', 'Balcony View', 'Parking Spot'].map((am, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs font-medium text-gray-700 bg-gray-50 p-2.5 rounded-lg border">
+                {[
+                  language === 'vi' ? 'Wifi tốc độ cao' : 'High-speed WiFi',
+                  language === 'vi' ? 'Điều hòa inverter' : 'Air Conditioning',
+                  language === 'vi' ? 'Máy giặt riêng' : 'Washing Machine',
+                  language === 'vi' ? 'Tủ lạnh' : 'Refrigerator',
+                  language === 'vi' ? 'Ban công thoáng mát' : 'Balcony View',
+                  language === 'vi' ? 'Chỗ để xe an ninh' : 'Parking Spot'
+                ].map((am, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs font-medium text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
                     <span className="material-symbols-outlined text-base text-[#ab3500]">check_circle</span>
                     {am}
                   </div>
@@ -186,7 +200,7 @@ export default function RoomDetails() {
               </div>
             </div>
 
-            <hr />
+            <hr className="border-gray-100" />
 
             {/* Vietmap GIS Section */}
             <div>
@@ -201,37 +215,37 @@ export default function RoomDetails() {
 
         {/* Right Column: Pricing & Action Card */}
         <div className="hidden md:block md:col-span-4">
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-150 sticky top-24 space-y-5">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-150 sticky top-24 space-y-5">
             <div>
               <span className="text-3xl font-extrabold text-[#ab3500]">
                 {room.price >= 1000000 ? `${(room.price / 1000000).toFixed(1)}M` : room.price.toLocaleString()} VND
               </span>
-              <span className="text-gray-500 text-sm font-medium"> / month</span>
+              <span className="text-gray-500 text-sm font-medium"> / {language === 'vi' ? 'tháng' : 'month'}</span>
             </div>
 
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => setShowViewingModal(true)}
-                className="w-full bg-[#ab3500] hover:bg-[#ab3500]/95 text-white font-semibold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#ab3500] hover:bg-[#8e2800] text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <span className="material-symbols-outlined">calendar_month</span>
-                Request Viewing
+                {t.scheduleViewing}
               </button>
               <button
                 onClick={() => navigate('/chat')}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined">chat_bubble</span>
-                Contact Landlord
+                {t.contactLandlord}
               </button>
             </div>
 
             {owner && (
-              <div className="flex items-center gap-3 bg-gray-50 p-3.5 rounded-xl border">
+              <div className="flex items-center gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-150">
                 <img src={owner.avatar} alt={owner.name} className="w-10 h-10 rounded-full object-cover border" />
                 <div>
                   <p className="text-sm font-bold text-gray-900">{owner.name}</p>
-                  <p className="text-xs text-gray-500">Property Host</p>
+                  <p className="text-xs text-gray-500">{language === 'vi' ? 'Chủ nhà / Người đăng' : 'Property Host'}</p>
                 </div>
               </div>
             )}
@@ -241,48 +255,52 @@ export default function RoomDetails() {
 
       {/* Viewing Modal */}
       {showViewingModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border">
-            <h3 className="text-lg font-bold text-[#191c1d] mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#ab3500]">calendar_month</span>
-              Schedule Room Viewing
-            </h3>
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-base font-bold text-[#191c1d] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#ab3500]">calendar_month</span>
+                {t.scheduleViewing}
+              </h3>
+              <button onClick={() => setShowViewingModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
             
             <form onSubmit={handleRequestViewing} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#594139] mb-1">Preferred Date</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">{t.viewingDate}</label>
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ab3500]"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-[#594139] mb-1">Preferred Time</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">{t.viewingTime}</label>
                 <input
                   type="time"
                   required
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#ab3500]"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
 
-              <div className="flex gap-3 justify-end pt-3 border-t">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowViewingModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                  className="flex-1 py-2.5 border rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-white bg-[#ab3500] hover:bg-[#ab3500]/95 rounded-lg shadow"
+                  className="flex-1 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-xs font-bold shadow transition"
                 >
-                  Submit Request
+                  {t.submitViewingRequest}
                 </button>
               </div>
             </form>
@@ -290,41 +308,41 @@ export default function RoomDetails() {
         </div>
       )}
 
-      {/* Report Listing Modal */}
+      {/* Report Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative border space-y-4">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="text-lg font-bold text-red-600 flex items-center gap-2">
+              <h3 className="text-base font-bold text-red-600 flex items-center gap-1.5">
                 <span className="material-symbols-outlined">report</span>
-                Report Room Listing
+                {t.reportRoom}
               </h3>
-              <button onClick={() => setShowReportModal(false)} className="text-gray-400">&times;</button>
+              <button onClick={() => setShowReportModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
             </div>
 
-            <form onSubmit={handleReportSubmit} className="space-y-3">
+            <form onSubmit={handleReportSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Reason</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">{t.reportReason}</label>
                 <select
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none bg-white"
                 >
-                  <option value="Fake listing">Fake Listing / Photos</option>
-                  <option value="Incorrect Price">Incorrect Price / Fraud</option>
-                  <option value="Already Rent Out">Already Rented Out</option>
-                  <option value="Inappropriate Content">Inappropriate Content</option>
+                  <option value="Fake listing">{language === 'vi' ? 'Thông tin phòng giả mạo' : 'Fake listing'}</option>
+                  <option value="Incorrect price">{language === 'vi' ? 'Giá tiền sai lệch thực tế' : 'Incorrect price'}</option>
+                  <option value="Scam">{language === 'vi' ? 'Lừa đảo / Yêu cầu đặt cọc mờ ám' : 'Scam or fraud'}</option>
+                  <option value="Other">{language === 'vi' ? 'Lý do khác' : 'Other'}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Additional Details</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">{t.reportDetails}</label>
                 <textarea
                   rows="3"
                   value={reportDetails}
                   onChange={(e) => setReportDetails(e.target.value)}
-                  placeholder="Explain why this listing violates policies..."
-                  className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                  placeholder={language === 'vi' ? 'Mô tả chi tiết vấn đề bạn gặp phải...' : 'Describe the issue in detail...'}
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
 
@@ -332,15 +350,15 @@ export default function RoomDetails() {
                 <button
                   type="button"
                   onClick={() => setShowReportModal(false)}
-                  className="flex-1 py-2 text-xs font-semibold border rounded-lg text-gray-600"
+                  className="flex-1 py-2.5 border rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 text-xs font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 shadow"
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow transition"
                 >
-                  Submit Report
+                  {t.submitReport}
                 </button>
               </div>
             </form>
