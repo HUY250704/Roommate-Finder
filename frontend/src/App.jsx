@@ -9,9 +9,6 @@ import MobileBottomNav from './components/layout/MobileBottomNav';
 import PwaInstallPrompt from './components/common/PwaInstallPrompt';
 import bgImage from './assets/bg-image.jpg';
 
-// Common Pages
-import NotFound from './pages/common/NotFound';
-
 // User Pages
 import UserHome from './pages/user/UserHome';
 import RoomDetails from './pages/user/RoomDetails';
@@ -111,8 +108,8 @@ export default function App() {
           <Route path="/saved" element={currentUser ? <SavedRooms /> : <Navigate to="/login" replace />} />
           <Route path="/chat" element={currentUser ? <Chat /> : <Navigate to="/login" replace />} />
           
-          {/* 404 Inside User Layout */}
-          <Route path="*" element={<NotFound />} />
+          {/* Catch-all redirect to Home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
 
         {/* Admin layout routes */}
@@ -123,7 +120,7 @@ export default function App() {
           <Route path="rooms" element={<AdminRooms />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
       </Routes>
     </Router>

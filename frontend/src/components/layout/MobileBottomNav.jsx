@@ -1,12 +1,13 @@
 ﻿import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, Heart, MessageSquare, User, Compass, PlusCircle } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Home, Search, Heart, User, Compass } from 'lucide-react';
 import { useStore } from '../../store';
 import VietmapModal from '../common/VietmapModal';
+import { translations } from '../../utils/translations';
 
 export default function MobileBottomNav() {
-  const { currentUser, favorites } = useStore();
-  const navigate = useNavigate();
+  const { currentUser, favorites, language } = useStore();
+  const t = translations[language] || translations.vi;
   const [showVietmapModal, setShowVietmapModal] = useState(false);
 
   return (
@@ -24,7 +25,7 @@ export default function MobileBottomNav() {
             }
           >
             <Home size={20} />
-            <span className="text-[10px] mt-0.5">Khám phá</span>
+            <span className="text-[10px] mt-0.5">{t.explore}</span>
           </NavLink>
 
           {/* Roommate Requests */}
@@ -37,7 +38,7 @@ export default function MobileBottomNav() {
             }
           >
             <Search size={20} />
-            <span className="text-[10px] mt-0.5">Tìm bạn</span>
+            <span className="text-[10px] mt-0.5">{t.findRoommatesMobile}</span>
           </NavLink>
 
           {/* Vietmap GIS Action */}
@@ -66,7 +67,7 @@ export default function MobileBottomNav() {
                 {favorites.length}
               </span>
             )}
-            <span className="text-[10px] mt-0.5">Đã lưu</span>
+            <span className="text-[10px] mt-0.5">{t.savedMobile}</span>
           </NavLink>
 
           {/* Profile / Chat */}
@@ -83,7 +84,7 @@ export default function MobileBottomNav() {
             ) : (
               <User size={20} />
             )}
-            <span className="text-[10px] mt-0.5">{currentUser ? 'Hồ sơ' : 'Đăng nhập'}</span>
+            <span className="text-[10px] mt-0.5">{currentUser ? t.profileMobile : t.login}</span>
           </NavLink>
         </div>
       </nav>

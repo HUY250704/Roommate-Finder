@@ -155,6 +155,11 @@ const initialViewings = [
 ];
 
 export const useStore = create((set) => ({
+  language: localStorage.getItem('language') || 'vi',
+  setLanguage: (lang) => {
+    localStorage.setItem('language', lang);
+    set({ language: lang });
+  },
   currentUser: initialUsers[1], // default logged in as Sarah
   users: initialUsers,
   rooms: initialRooms,

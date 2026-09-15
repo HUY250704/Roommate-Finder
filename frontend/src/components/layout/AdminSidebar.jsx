@@ -2,9 +2,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Menu, X } from 'lucide-react';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import { translations } from '../../utils/translations';
 
 export default function AdminSidebar() {
-  const { currentUser, logout, reports } = useStore();
+  const { currentUser, logout, reports, language } = useStore();
+  const t = translations[language] || translations.vi;
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,16 +18,16 @@ export default function AdminSidebar() {
   };
 
   const menuItems = [
-    { path: '/admin/dashboard', name: 'Dashboard', icon: 'dashboard' },
-    { path: '/admin/users', name: 'User Management', icon: 'group' },
-    { path: '/admin/rooms', name: 'Listing Management', icon: 'list_alt' },
+    { path: '/admin/dashboard', name: t.dashboard, icon: 'dashboard' },
+    { path: '/admin/users', name: t.userManagement, icon: 'group' },
+    { path: '/admin/rooms', name: t.listingManagement, icon: 'list_alt' },
     {
       path: '/admin/reports',
-      name: 'Reports',
+      name: t.reportsManagement,
       icon: 'flag',
       badge: reports.filter(r => r.status === 'pending').length
     },
-    { path: '/admin/analytics', name: 'Analytics', icon: 'analytics' }
+    { path: '/admin/analytics', name: t.analytics, icon: 'analytics' }
   ];
 
   const sidebarContent = (
@@ -45,6 +48,12 @@ export default function AdminSidebar() {
         >
           <X size={20} />
         </button>
+      </div>
+
+      {/* Language Switcher in Admin Sidebar */}
+      <div className="px-6 py-3 border-b border-[#ffe9e3] flex items-center justify-between bg-[#fff8f6]/30">
+        <span className="text-xs font-bold text-[#5c4037]">Language / Ngôn ngữ</span>
+        <LanguageSwitcher />
       </div>
 
       {/* Navigation */}
@@ -89,7 +98,7 @@ export default function AdminSidebar() {
           />
           <div className="min-w-0">
             <p className="text-sm font-bold text-[#281712] truncate">{currentUser?.name || 'System Admin'}</p>
-            <p className="text-xs text-[#5c4037]">Administrator</p>
+            <p className="text-xs text-[#5c4037]">{t.adminRole}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2">
@@ -98,14 +107,14 @@ export default function AdminSidebar() {
             className="flex items-center gap-2 text-xs font-semibold text-[#aa3000] hover:underline"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            <span>Go to User Page</span>
+            <span>{t.goToUserPage}</span>
           </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-xs font-semibold text-[#ba1a1a] hover:underline text-left"
           >
             <span className="material-symbols-outlined text-[16px]">logout</span>
-            <span>Logout</span>
+            <span>{t.logout}</span>
           </button>
         </div>
       </div>
@@ -120,12 +129,15 @@ export default function AdminSidebar() {
           <span className="material-symbols-outlined text-[#aa3000] text-[24px]">home_pin</span>
           <span className="font-bold text-sm text-[#aa3000]">Admin Console</span>
         </div>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="p-2 rounded-xl text-gray-700 hover:bg-[#ffe9e3]/50 transition"
-        >
-          <Menu size={22} />
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 rounded-xl text-gray-700 hover:bg-[#ffe9e3]/50 transition"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Sidebar Overlay Drawer */}
