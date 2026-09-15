@@ -10,27 +10,27 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const getVietmapAutocomplete = async (text) => {
   if (!text || text.trim().length < 2) return [];
 
-  // Try direct backend proxy first
+  // Try direct backend proxy first (avoids CORS issues)
   try {
     const res = await fetch(`${API_URL}/map/autocomplete?text=${encodeURIComponent(text)}`);
     if (res.ok) {
       const data = await res.json();
-      return data.data?.features || data.features || data || [];
+      return data.data?.features || data.features || data.data || data || [];
     }
   } catch (e) {
     console.warn('Backend Vietmap autocomplete proxy failed, checking direct API', e);
   }
 
-  // Fallback to direct Vietmap API if client has API Key
-  if (VIETMAP_API_KEY) {
+  // Fallback to direct Vietmap API if client has a valid API Key configured
+  if (VIETMAP_API_KEY && VIETMAP_API_KEY !== 'your_vietmap_api_key') {
     try {
       const res = await fetch(`https://maps.vietmap.vn/api/autocomplete/v3?apikey=${VIETMAP_API_KEY}&text=${encodeURIComponent(text)}`);
       if (res.ok) {
         const data = await res.json();
-        return data.data?.features || data.features || data || [];
+        return data.data?.features || data.features || data.data || data || [];
       }
     } catch (e) {
-      console.error('Direct Vietmap autocomplete error', e);
+      console.warn('Direct Vietmap autocomplete error', e);
     }
   }
 
