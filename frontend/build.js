@@ -1,2 +1,7 @@
 import { build } from 'vite';
-build({ configFile: false });
+import react from '@vitejs/plugin-react';
+
+await build({
+  configFile: false,
+  plugins: [react()],
+});

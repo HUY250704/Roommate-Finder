@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup } from '../../config/firebase';
-
+import bgImage from '../../assets/bg-image.jpg';
 
 export default function Auth() {
   const { login, loginWithFirebase } = useStore();
@@ -47,8 +47,8 @@ export default function Auth() {
       {/* Left side: Styled Blurred Image banner with Project Name overlay */}
       <div className="hidden lg:block lg:w-[58%] relative overflow-hidden bg-[#281712]">
         <img
-          className="absolute inset-0 w-full h-full object-cover opacity-60 filter blur-[2px] transition-transform duration-[10000ms] hover:scale-105"
-          src={imgError ? fallbackImgUrl : '/src/assets/login-banner.jpg'}
+          className="absolute inset-0 w-full h-full object-cover opacity-60 filter blur-[2px] transition-transform duration-1000 hover:scale-105"
+          src={imgError ? fallbackImgUrl : bgImage}
           alt="Modern townhouse row"
           onError={() => setImgError(true)}
         />
@@ -68,67 +68,104 @@ export default function Auth() {
             <h1 className="font-display-lg text-[64px] font-extrabold tracking-tight leading-none text-white drop-shadow-lg">
               RoomMate <span className="text-[#ffdbcf]">Finder</span>
             </h1>
-            <p className="font-body-lg text-[22px] text-[#ffdbcf] leading-relaxed drop-shadow-md">
-              Find your ideal co-living space and connect with roommates who match your vibe, schedule, and lifestyle habits.
+            <p className="text-[#ffdbcf]/90 text-lg max-w-md font-light leading-relaxed">
+              Dễ dàng kết nối bạn cùng phòng lý tưởng và không gian sống hoàn hảo, an toàn và minh bạch.
             </p>
           </div>
 
-          <div className="text-[14px] text-[#ffdbcf]/60">
-            &copy; {new Date().getFullYear()} Roommate Finder. Professional Co-Living Solutions.
+          <div className="flex items-center gap-6 text-sm text-[#ffdbcf]/80">
+            <span>✓ Xác thực hồ sơ 100%</span>
+            <span>✓ Tìm kiếm thông minh</span>
+            <span>✓ An toàn & Tiện lợi</span>
           </div>
         </div>
       </div>
 
       {/* Right side: Login form */}
-      <div className="w-full lg:w-[42%] flex items-center justify-center p-8 sm:p-12 md:p-16 bg-white shadow-2xl relative z-10 border-l border-[#e6beb2]/30">
-        <div className="max-w-md w-full space-y-8">
+      <div className="w-full lg:w-[42%] flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-16 py-12">
+        <div className="max-w-md w-full mx-auto space-y-8">
           <div>
-            <h2 className="text-4xl font-extrabold text-[#281712] tracking-tight">
-              Sign in
-            </h2>
-            <p className="mt-2 text-base text-[#5c4037]">
-              Enter your credentials to access your personal dashboard.
-            </p>
+            <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">Đăng nhập tài khoản</h2>
+            <p className="text-sm text-gray-500 mt-2">Chào mừng bạn quay lại hệ thống RoomMate Finder</p>
           </div>
 
-          {/* Autofill test area */}
-          <div className="bg-[#FFF0EA] p-4 rounded-2xl border border-[#ffe9e3] space-y-2">
-            <p className="text-sm font-bold text-[#aa3000] uppercase tracking-wider">Demo Accounts</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => autofill('user')}
-                className="flex-1 py-2 px-3 bg-white text-[#aa3000] border border-[#e6beb2] rounded-xl text-sm font-bold hover:bg-gray-50 transition"
-              >
-                Sign in as User
-              </button>
-              <button
-                type="button"
-                onClick={() => autofill('admin')}
-                className="flex-1 py-2 px-3 bg-[#aa3000] text-white rounded-xl text-sm font-bold hover:bg-[#aa3000]/95 transition"
-              >
-                Sign in as Admin
-              </button>
+          {error && (
+            <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center gap-2.5 animate-fadeIn">
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          
-          {/* Google Sign-In */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa3000]/20 focus:border-[#aa3000] text-sm text-gray-800 transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Mật khẩu</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa3000]/20 focus:border-[#aa3000] text-sm text-gray-800 transition"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" defaultChecked className="rounded border-gray-300 text-[#aa3000] focus:ring-[#aa3000]" />
+                <span>Ghi nhớ đăng nhập</span>
+              </label>
+              <a href="#forgot" className="text-[#aa3000] hover:underline font-medium">Quên mật khẩu?</a>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 px-4 bg-[#aa3000] hover:bg-[#8e2800] text-white font-semibold rounded-xl shadow-lg shadow-[#aa3000]/20 transition flex items-center justify-center gap-2 group active:scale-[0.99]"
+            >
+              <span>Đăng nhập</span>
+              <LogIn size={18} className="group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </form>
+
+          {/* Firebase Google Auth Button */}
           <div className="space-y-3">
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink mx-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Hoặc đăng nhập với</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
             <button
               type="button"
               onClick={async () => {
-                setLoadingFirebase(true);
                 setError("");
+                setLoadingFirebase(true);
                 const res = await loginWithFirebase({
                   uid: "google_" + Date.now(),
                   email: "google.user@gmail.com",
-                  name: "Google User",
-                  avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg"
+                  displayName: "Google User",
+                  providerId: "google"
                 });
                 setLoadingFirebase(false);
                 if (res.success) navigate("/");
-                else setError(res.message || "��ng nh?p Google th?t b?i");
+                else setError(res.message || "Đăng nhập Google thất bại");
               }}
               disabled={loadingFirebase}
               className="w-full py-3 px-4 bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 text-gray-700 font-semibold transition flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-50"
@@ -139,61 +176,33 @@ export default function Auth() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>{loadingFirebase ? "�ang x? l?..." : "Sign in with Firebase Auth"}</span>
+              <span>{loadingFirebase ? "Đang xử lý..." : "Sign in with Firebase Auth"}</span>
             </button>
           </div>
 
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="flex-shrink mx-4 text-xs font-semibold uppercase tracking-wider text-gray-400">or sign in with email</span>
-            <div className="flex-grow border-t border-gray-200"></div>
+          {/* Quick autofill for demo */}
+          <div className="pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500 font-medium mb-2.5">Demo tài khoản nhanh:</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => autofill('user')}
+                className="text-left px-3 py-2 bg-gray-50 hover:bg-[#ffe9e3] hover:border-[#aa3000]/30 border border-gray-100 rounded-xl transition text-xs group"
+              >
+                <div className="font-semibold text-gray-800 group-hover:text-[#aa3000]">User Test</div>
+                <div className="text-[11px] text-gray-500">sarah@example.com</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => autofill('admin')}
+                className="text-left px-3 py-2 bg-gray-50 hover:bg-[#ffe9e3] hover:border-[#aa3000]/30 border border-gray-100 rounded-xl transition text-xs group"
+              >
+                <div className="font-semibold text-gray-800 group-hover:text-[#aa3000]">Admin Test</div>
+                <div className="text-[11px] text-gray-500">admin@roommate.com</div>
+              </button>
+            </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 text-[#ba1a1a] p-4 rounded-xl flex items-center gap-2 text-sm border border-red-100">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-bold text-[#5c4037] uppercase tracking-wider mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  className="pl-12 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#aa3000] text-base"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-[#5c4037] uppercase tracking-wider mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="******"
-                  className="pl-12 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#aa3000] text-base"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-[#aa3000] hover:bg-[#aa3000]/95 transition flex items-center justify-center gap-2"
-            >
-              <LogIn className="w-5 h-5" /> Sign In
-            </button>
-          </form>
         </div>
       </div>
 
