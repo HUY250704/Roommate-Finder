@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { translations } from '../../utils/translations';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 
 export default function UserHome() {
   const { users, rooms, favorites, language } = useStore();
@@ -46,17 +47,19 @@ export default function UserHome() {
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col font-sans">
-      <main className="flex-grow w-full max-w-7xl mx-auto px-5 md:px-8 py-6 space-y-6">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {/* Search & Filter Header Section */}
-        <section className="space-y-4 sticky top-[64px] z-30 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-            <div className="relative w-full max-w-xl">
+        {/* Search & Filter Header Section with Language Switcher */}
+        <section className="space-y-4 sticky top-[70px] z-30 bg-white/90 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-sm border border-gray-150">
+          <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
+            
+            {/* Search Input Bar */}
+            <div className="relative w-full lg:max-w-xl">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                 search
               </span>
               <input
-                className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ab3500]"
+                className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-full border border-gray-250 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ab3500]/40 focus:border-[#ab3500] shadow-2xs transition"
                 placeholder={activeTab === 'roommates' ? t.searchPlaceholderRoommates : t.searchPlaceholderRooms}
                 type="text"
                 value={searchQuery}
@@ -64,34 +67,43 @@ export default function UserHome() {
               />
             </div>
 
-            {/* Custom Toggle Switch & Filter Trigger */}
-            <div className="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
-              <div className="inline-flex bg-gray-100 rounded-full p-1 select-none border">
+            {/* Custom Toggle Switch & Filter Trigger + Language Switcher on the outside */}
+            <div className="flex items-center gap-2.5 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
+              <div className="inline-flex bg-gray-100/90 rounded-full p-1 select-none border border-gray-200">
                 <button
+                  type="button"
                   onClick={() => setActiveTab('roommates')}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                    activeTab === 'roommates' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-600'
+                    activeTab === 'roommates' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   {t.findRoommatesTab}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveTab('rooms')}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                    activeTab === 'rooms' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-600'
+                    activeTab === 'rooms' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   {t.findRoomsTab}
                 </button>
               </div>
 
+              {/* Filter Button */}
               <button
+                type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2.5 rounded-full text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2 rounded-full text-xs font-bold border border-gray-250 bg-gray-50 hover:bg-gray-100 text-gray-700 flex items-center gap-1.5 transition-colors shadow-2xs"
               >
                 <span className="material-symbols-outlined text-[16px]">tune</span>
                 <span>{t.filters}</span>
               </button>
+
+              {/* Language Switcher Button OUTSIDE the Filter button */}
+              <div className="shrink-0 pl-1 border-l border-gray-200">
+                <LanguageSwitcher />
+              </div>
             </div>
           </div>
 
@@ -142,6 +154,7 @@ export default function UserHome() {
 
               <div className="flex items-end">
                 <button
+                  type="button"
                   onClick={() => {
                     setMaxBudget(10000000);
                     setSelectedSmoking('All');

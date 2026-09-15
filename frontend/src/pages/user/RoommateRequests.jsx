@@ -2,6 +2,7 @@
 import { useStore } from '../../store';
 import { Plus, DollarSign, MapPin } from 'lucide-react';
 import { translations } from '../../utils/translations';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 
 export default function RoommateRequests() {
   const { requests, users, addRequest, language } = useStore();
@@ -34,12 +35,15 @@ export default function RoommateRequests() {
           <h1 className="text-3xl font-bold text-gray-900">{t.requestsTitle}</h1>
           <p className="text-gray-500 mt-1">{t.requestsSubtitle}</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2.5 bg-[#ab3500] text-white font-medium rounded-xl hover:bg-[#ab3500]/90 transition flex items-center gap-2 shadow-sm"
-        >
-          <Plus className="w-5 h-5" /> {t.createRequest}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <LanguageSwitcher />
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2.5 bg-[#ab3500] text-white font-medium rounded-xl hover:bg-[#ab3500]/90 transition flex items-center gap-2 shadow-sm whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5" /> {t.createRequest}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

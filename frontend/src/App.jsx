@@ -7,6 +7,7 @@ import UserNavbar from './components/layout/UserNavbar';
 import AdminSidebar from './components/layout/AdminSidebar';
 import MobileBottomNav from './components/layout/MobileBottomNav';
 import PwaInstallPrompt from './components/common/PwaInstallPrompt';
+import LanguageSwitcher from './components/common/LanguageSwitcher';
 import bgImage from './assets/bg-image.jpg';
 
 // User Pages
@@ -28,6 +29,8 @@ import AdminAnalytics from './pages/admin/AdminAnalytics';
 
 // User Layout wrapper with desktop and mobile responsive shell
 function UserLayout() {
+  const { language } = useStore();
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans relative overflow-x-hidden pb-16 md:pb-0">
       {/* City Background Image */}
@@ -45,9 +48,25 @@ function UserLayout() {
         <main className="flex-grow">
           <Outlet />
         </main>
-        <footer className="bg-white/80 backdrop-blur-md border-t py-6 text-center text-xs text-gray-500 relative z-10 hidden md:block">
-          &copy; {new Date().getFullYear()} Roommate Finder. All rights reserved.
+        
+        {/* Bottom Footer with integrated Language Switcher */}
+        <footer className="bg-white/85 backdrop-blur-md border-t border-gray-200 py-4 px-6 sm:px-12 text-xs text-gray-500 relative z-10 hidden md:flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span>&copy; {new Date().getFullYear()} Roommate Finder. All rights reserved.</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-gray-600">
+              {language === 'vi' ? 'Ngôn ngữ / Language:' : 'Language:'}
+            </span>
+            <LanguageSwitcher />
+          </div>
         </footer>
+      </div>
+
+      {/* Floating Bottom-Right Language Toggle on Mobile/Tablet */}
+      <div className="md:hidden fixed bottom-20 right-4 z-40 shadow-lg rounded-full">
+        <LanguageSwitcher />
       </div>
 
       {/* PWA Mobile Bottom Navigation */}

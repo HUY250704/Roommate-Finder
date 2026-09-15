@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Mail, Lock, LogIn, AlertCircle, X, CheckCircle, ExternalLink } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, X } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup } from '../../config/firebase';
 import bgImage from '../../assets/bg-image.jpg';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { translations } from '../../utils/translations';
 
 export default function Auth() {
-  const { login, loginWithFirebase } = useStore();
+  const { login, loginWithFirebase, language } = useStore();
+  const t = translations[language] || translations.vi;
   const [loadingFirebase, setLoadingFirebase] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -60,21 +63,18 @@ export default function Auth() {
           navigate('/');
           return;
         } else {
-          setError(res.message || '��ng nh?p Google th?t b?i');
+          setError(res.message || (language === 'vi' ? 'Đăng nhập Google thất bại' : 'Google sign-in failed'));
         }
       }
     } catch (err) {
       console.warn('Firebase Google Auth error:', err);
       if (err.code === 'auth/configuration-not-found' || err.message?.includes('configuration-not-found')) {
-        // Firebase project has not enabled Google Sign-in in console yet
-        // Open the custom Google login dialog so user can enter their real email!
         setShowGoogleInputModal(true);
       } else if (err.code === 'auth/popup-closed-by-user') {
-        setError('B?n �? ��ng c?a s? ��ng nh?p Google');
+        setError(language === 'vi' ? 'Bạn đã đóng cửa sổ đăng nhập Google' : 'Google sign-in window was closed');
       } else if (err.code === 'auth/cancelled-popup-request') {
-        setError('Y�u c?u ��ng nh?p �? b? h?y');
+        setError(language === 'vi' ? 'Yêu cầu đăng nhập đã bị hủy' : 'Sign-in request was cancelled');
       } else {
-        // Offer custom Google email login modal
         setShowGoogleInputModal(true);
       }
     } finally {
@@ -103,7 +103,7 @@ export default function Auth() {
     if (res.success) {
       navigate('/');
     } else {
-      setError(res.message || '��ng nh?p th?t b?i');
+      setError(res.message || (language === 'vi' ? 'Đăng nhập thất bại' : 'Login failed'));
     }
   };
 
@@ -119,8 +119,7 @@ export default function Auth() {
   const fallbackImgUrl = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000";
 
   return (
-    <div className="min-h-screen flex bg-[#fff8f6] font-sans">
-      
+    <div className="min-h-screen flex bg-[#fff8f6] font-sans relative">
       {/* Left side: Styled Blurred Image banner with Project Name overlay */}
       <div className="hidden lg:block lg:w-[58%] relative overflow-hidden bg-[#281712]">
         <img
@@ -129,10 +128,8 @@ export default function Auth() {
           alt="Modern townhouse row"
           onError={() => setImgError(true)}
         />
-        {/* Soft color overlay matching the design palette */}
         <div className="absolute inset-0 bg-gradient-to-tr from-[#aa3000]/60 via-[#281712]/50 to-transparent" />
 
-        {/* Center overlay container for brand title */}
         <div className="absolute inset-0 flex flex-col justify-between p-16 text-white z-10">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#ffdbcf] text-[42px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -146,24 +143,32 @@ export default function Auth() {
               RoomMate <span className="text-[#ffdbcf]">Finder</span>
             </h1>
             <p className="text-[#ffdbcf]/90 text-lg max-w-md font-light leading-relaxed">
-              D? d�ng k?t n?i b?n c�ng ph?ng l? t�?ng v� kh�ng gian s?ng ho�n h?o, an to�n v� minh b?ch.
+              {language === 'vi'
+                ? 'Dễ dàng kết nối bạn cùng phòng lý tưởng và không gian sống hoàn hảo, an toàn và minh bạch.'
+                : 'Easily connect with compatible roommates and quality living spaces, securely and transparently.'}
             </p>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-[#ffdbcf]/80">
-            <span>? X�c th?c h? s� 100%</span>
-            <span>? T?m ki?m th�ng minh</span>
-            <span>? An to�n & Ti?n l?i</span>
+            <span>✓ {language === 'vi' ? 'Xác thực hồ sơ 100%' : '100% Verified Profiles'}</span>
+            <span>✓ {language === 'vi' ? 'Tìm kiếm thông minh' : 'Smart Search & GIS'}</span>
+            <span>✓ {language === 'vi' ? 'An toàn & Tiện lợi' : 'Safe & Convenient'}</span>
           </div>
         </div>
       </div>
 
       {/* Right side: Login form */}
       <div className="w-full lg:w-[42%] flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-16 py-12">
-        <div className="max-w-md w-full mx-auto space-y-8">
+        <div className="max-w-md w-full mx-auto space-y-7">
           <div>
-            <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">��ng nh?p t�i kho?n</h2>
-            <p className="text-sm text-gray-500 mt-2">Ch�o m?ng b?n quay l?i h? th?ng RoomMate Finder</p>
+            <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">
+              {language === 'vi' ? 'Đăng nhập tài khoản' : 'Sign in to Account'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              {language === 'vi'
+                ? 'Chào mừng bạn quay lại hệ thống RoomMate Finder'
+                : 'Welcome back to RoomMate Finder Platform'}
+            </p>
           </div>
 
           {error && (
@@ -173,67 +178,13 @@ export default function Auth() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa3000]/20 focus:border-[#aa3000] text-sm text-gray-800 transition"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">M?t kh?u</label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="��������"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa3000]/20 focus:border-[#aa3000] text-sm text-gray-800 transition"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded border-gray-300 text-[#aa3000] focus:ring-[#aa3000]" />
-                <span>Ghi nh? ��ng nh?p</span>
-              </label>
-              <a href="#forgot" className="text-[#aa3000] hover:underline font-medium">Qu�n m?t kh?u?</a>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 px-4 bg-[#aa3000] hover:bg-[#8e2800] text-white font-semibold rounded-xl shadow-lg shadow-[#aa3000]/20 transition flex items-center justify-center gap-2 group active:scale-[0.99]"
-            >
-              <span>��ng nh?p</span>
-              <LogIn size={18} className="group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </form>
-
-          {/* Real Google / Firebase Auth Button */}
+          {/* Social Sign In Button */}
           <div className="space-y-3">
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-gray-200"></div>
-              <span className="flex-shrink mx-4 text-xs font-medium text-gray-400 uppercase tracking-wider">Ho?c ��ng nh?p v?i</span>
-              <div className="flex-grow border-t border-gray-200"></div>
-            </div>
-
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loadingFirebase}
-              className="w-full py-3 px-4 bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 text-gray-700 font-semibold transition flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -241,14 +192,72 @@ export default function Auth() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>{loadingFirebase ? "�ang k?t n?i Google..." : "��ng nh?p v?i Google"}</span>
+              <span>{loadingFirebase ? (language === 'vi' ? 'Đang kết nối...' : 'Connecting...') : (language === 'vi' ? 'Tiếp tục với Google' : 'Continue with Google')}</span>
             </button>
           </div>
 
-          {/* Quick autofill for demo */}
-          <div className="pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 font-medium mb-2.5">Demo t�i kho?n nhanh:</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-gray-200 w-full" />
+            <span className="bg-[#fff8f6] px-4 text-xs text-gray-500 font-semibold uppercase tracking-wider relative">
+              {language === 'vi' ? 'hoặc đăng nhập bằng Email' : 'or login with Email'}
+            </span>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-[#5c4037] mb-2 uppercase tracking-wider">
+                {language === 'vi' ? 'Địa chỉ Email' : 'Email Address'}
+              </label>
+              <div className="relative">
+                <Mail className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white"
+                  placeholder="name@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold text-[#5c4037] uppercase tracking-wider">
+                  {language === 'vi' ? 'Mật khẩu' : 'Password'}
+                </label>
+                <a href="#forgot" className="text-xs font-bold text-[#aa3000] hover:underline">
+                  {language === 'vi' ? 'Quên mật khẩu?' : 'Forgot password?'}
+                </a>
+              </div>
+              <div className="relative">
+                <Lock className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-full bg-[#aa3000] hover:bg-[#aa3000]/95 text-white font-bold text-sm shadow-md transition duration-200 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <LogIn size={18} />
+              <span>{t.login}</span>
+            </button>
+          </form>
+
+          {/* Quick Demo Test Accounts Box */}
+          <div className="pt-3 border-t border-gray-200 space-y-2.5">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider text-center">
+              {language === 'vi' ? 'Tài khoản thử nghiệm nhanh (Demo)' : 'Quick Demo Test Accounts'}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => autofill('user')}
@@ -268,6 +277,14 @@ export default function Auth() {
               </button>
             </div>
           </div>
+
+          {/* Bottom Language Switcher */}
+          <div className="flex items-center justify-center gap-3 pt-2 border-t border-gray-100">
+            <span className="text-xs font-semibold text-gray-500">
+              {language === 'vi' ? 'Ngôn ngữ:' : 'Language:'}
+            </span>
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
 
@@ -283,7 +300,7 @@ export default function Auth() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                <h3 className="font-bold text-gray-900 text-base">��ng nh?p v?i Google</h3>
+                <h3 className="font-bold text-gray-900 text-base">Đăng nhập với Google</h3>
               </div>
               <button onClick={() => setShowGoogleInputModal(false)} className="text-gray-400 hover:text-gray-600">
                 <X size={18} />
@@ -291,15 +308,15 @@ export default function Auth() {
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 space-y-1">
-              <p className="font-bold">L�u ? c?u h?nh Firebase:</p>
+              <p className="font-bold">Lưu ý cấu hình Firebase:</p>
               <p>
-                �? b?t popup Google t? �?ng, h?y v�o <strong>Firebase Console &gt; Authentication &gt; Sign-in method</strong> v� k�ch ho?t nh� cung c?p <strong>Google</strong>.
+                Để bật popup Google tự động, hãy vào <strong>Firebase Console &gt; Authentication &gt; Sign-in method</strong> và kích hoạt nhà cung cấp <strong>Google</strong>.
               </p>
             </div>
 
             <form onSubmit={handleCustomGoogleSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Email Google / Gmail c?a b?n</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Email Google / Gmail của bạn</label>
                 <input
                   type="email"
                   required
@@ -311,12 +328,12 @@ export default function Auth() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">H? v� t�n hi?n th?</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Họ và tên hiển thị</label>
                 <input
                   type="text"
                   value={googleCustomName}
                   onChange={(e) => setGoogleCustomName(e.target.value)}
-                  placeholder="V� d?: Nguy?n V�n A"
+                  placeholder="Ví dụ: Nguyễn Văn A"
                   className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#aa3000] outline-none"
                 />
               </div>
@@ -327,14 +344,14 @@ export default function Auth() {
                   onClick={() => setShowGoogleInputModal(false)}
                   className="flex-1 py-2.5 border rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  H?y
+                  Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={loadingFirebase || !googleCustomEmail}
                   className="flex-1 py-2.5 bg-[#4285F4] hover:bg-[#3367D6] text-white rounded-xl text-xs font-semibold shadow transition"
                 >
-                  {loadingFirebase ? "�ang x? l?..." : "X�c nh?n ��ng nh?p"}
+                  {loadingFirebase ? "Đang xử lý..." : "Xác nhận đăng nhập"}
                 </button>
               </div>
             </form>

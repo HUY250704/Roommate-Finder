@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building, Compass } from 'lucide-react';
 import VietmapModal from '../common/VietmapModal';
-import LanguageSwitcher from '../common/LanguageSwitcher';
 import { translations } from '../../utils/translations';
 
 export default function UserNavbar() {
@@ -71,69 +70,84 @@ export default function UserNavbar() {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <nav className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-2 font-bold text-xl text-[#ab3500]">
+          <div className="flex items-center justify-between h-16 gap-3 sm:gap-6">
+            
+            {/* Left: Brand & Main Navigation Links */}
+            <div className="flex items-center gap-5 lg:gap-8 min-w-0">
+              <Link to="/" className="flex items-center space-x-2 font-extrabold text-xl text-[#ab3500] shrink-0">
                 <Home className="w-6 h-6 text-[#ab3500]" />
-                <span className="text-gray-900">{t.brandName}</span>
+                <span className="text-gray-900 tracking-tight">{t.brandName}</span>
                 <span className="text-[#ab3500]">{t.brandFinder}</span>
               </Link>
-              <div className="hidden md:flex ml-8 space-x-5">
-                <Link to="/" className="text-gray-600 hover:text-[#ab3500] flex items-center gap-1 font-medium text-sm">
-                  <Search className="w-4 h-4" /> {t.findRoomsRoommates}
+
+              <div className="hidden md:flex items-center gap-2 lg:gap-3 text-sm font-semibold text-gray-700">
+                <Link
+                  to="/"
+                  className="px-3 py-1.5 rounded-lg hover:text-[#ab3500] hover:bg-orange-50/60 flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                >
+                  <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>{t.findRoomsRoommates}</span>
                 </Link>
-                <Link to="/requests" className="text-gray-600 hover:text-[#ab3500] flex items-center gap-1 font-medium text-sm">
-                  <Building className="w-4 h-4" /> {t.roommatePosts}
+
+                <Link
+                  to="/requests"
+                  className="px-3 py-1.5 rounded-lg hover:text-[#ab3500] hover:bg-orange-50/60 flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                >
+                  <Building className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span>{t.roommatePosts}</span>
                 </Link>
+
                 {/* Vietmap Button in Navbar */}
                 <button
+                  type="button"
                   onClick={() => setShowVietmapModal(true)}
-                  className="text-[#ab3500] bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold text-xs transition border border-orange-200"
+                  className="text-[#ab3500] bg-orange-50 hover:bg-orange-100/80 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold text-xs transition border border-orange-200 whitespace-nowrap"
                 >
-                  <Compass className="w-3.5 h-3.5 text-[#ab3500]" />
+                  <Compass className="w-4 h-4 text-[#ab3500] shrink-0" />
                   <span>{t.vietmapMap}</span>
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              {/* Language Switcher Button */}
-              <LanguageSwitcher />
-
+            {/* Right: Actions, Notifications & Profile */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {currentUser ? (
                 <>
                   <button
+                    type="button"
                     onClick={() => setShowModal(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-[#ab3500] text-white hover:bg-[#ab3500]/90 rounded-lg text-sm font-semibold shadow-sm transition-all"
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all whitespace-nowrap active:scale-98"
                   >
-                    <PlusCircle className="w-4 h-4" /> {t.postListing}
+                    <PlusCircle className="w-4 h-4 shrink-0" />
+                    <span>{t.postListing}</span>
                   </button>
 
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={() => setShowNotifications(!showNotifications)}
-                      className="p-2 text-gray-500 hover:text-[#ab3500] relative"
+                      className="p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition relative"
                       title={t.notifications}
                     >
                       <Bell className="w-5 h-5" />
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
                     </button>
 
                     {showNotifications && (
-                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                        <div className="px-4 py-2 border-b flex justify-between items-center">
-                          <span className="font-bold text-sm text-gray-800">{t.notifications}</span>
-                          <span className="text-xs text-[#ab3500] cursor-pointer hover:underline">
+                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-150 py-2 z-50 animate-fadeIn">
+                        <div className="px-4 py-2.5 border-b border-gray-100 flex justify-between items-center">
+                          <span className="font-bold text-xs uppercase tracking-wider text-gray-800">{t.notifications}</span>
+                          <span className="text-xs font-semibold text-[#ab3500] cursor-pointer hover:underline">
                             {language === 'vi' ? 'Đánh dấu đã đọc' : 'Mark all as read'}
                           </span>
                         </div>
-                        <div className="max-h-60 overflow-y-auto">
+                        <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
                           {notifications.map((n) => (
-                            <div key={n.id} className="px-4 py-3 hover:bg-gray-50 border-b last:border-0 cursor-pointer">
+                            <div key={n.id} className="px-4 py-2.5 hover:bg-orange-50/50 cursor-pointer transition">
                               <p className="text-xs font-semibold text-gray-800">{n.title}</p>
-                              <span className="text-[10px] text-gray-400 mt-1 block">{n.time}</span>
+                              <span className="text-[11px] text-gray-400 mt-0.5 block">{n.time}</span>
                             </div>
                           ))}
                         </div>
@@ -141,41 +155,51 @@ export default function UserNavbar() {
                     )}
                   </div>
 
-                  <Link to="/saved" className="relative p-2 text-gray-500 hover:text-[#ab3500]" title={t.savedRooms}>
+                  <Link
+                    to="/saved"
+                    className="relative p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
+                    title={t.savedRooms}
+                  >
                     <Heart className="w-5 h-5" />
                     {favorites.length > 0 && (
-                      <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {favorites.length}
                       </span>
                     )}
                   </Link>
 
-                  <Link to="/chat" className="p-2 text-gray-500 hover:text-[#ab3500]" title={t.messages}>
+                  <Link
+                    to="/chat"
+                    className="p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
+                    title={t.messages}
+                  >
                     <MessageSquare className="w-5 h-5" />
                   </Link>
 
                   {currentUser.role === 'admin' && (
                     <Link
                       to="/admin"
-                      className="flex items-center gap-1 text-xs font-bold text-white bg-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-700 shadow-sm"
+                      className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-xl shadow-xs whitespace-nowrap transition"
                     >
                       <ShieldAlert className="w-4 h-4" />
                       <span>{t.adminConsole}</span>
                     </Link>
                   )}
 
-                  <div className="flex items-center space-x-2 pl-2 border-l border-gray-200">
-                    <Link to="/profile" className="flex items-center space-x-2">
+                  {/* Profile avatar & Logout */}
+                  <div className="flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-200">
+                    <Link to="/profile" className="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-50 transition">
                       <img
-                        className="h-8 w-8 rounded-full object-cover border border-gray-300 ring-2 ring-[#ab3500]/20"
+                        className="h-8 w-8 rounded-full object-cover border border-gray-200 ring-2 ring-[#ab3500]/15"
                         src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
                         alt={currentUser.name}
                       />
-                      <span className="text-sm font-semibold text-gray-700 hidden lg:inline">{currentUser.name}</span>
+                      <span className="text-xs font-bold text-gray-800 hidden xl:inline max-w-[90px] truncate">{currentUser.name}</span>
                     </Link>
                     <button
+                      type="button"
                       onClick={handleLogout}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
                       title={t.logout}
                     >
                       <LogOut className="w-4 h-4" />
@@ -183,16 +207,16 @@ export default function UserNavbar() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2.5">
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-[#ab3500]"
+                    className="px-3.5 py-2 text-xs sm:text-sm font-bold text-gray-700 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
                   >
                     {t.login}
                   </Link>
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-sm font-semibold text-white bg-[#ab3500] hover:bg-[#ab3500]/90 rounded-lg shadow-sm"
+                    className="px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#ab3500] hover:bg-[#8e2800] rounded-xl shadow-xs transition"
                   >
                     {language === 'vi' ? 'Đăng ký' : 'Sign Up'}
                   </Link>
@@ -209,25 +233,27 @@ export default function UserNavbar() {
       {/* Create Listing Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b pb-2">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border space-y-4 max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div className="flex justify-between items-center border-b pb-3">
               <h3 className="text-lg font-bold text-gray-900">{t.postListing}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
 
-            <div className="flex border rounded-lg p-1 bg-gray-50">
+            <div className="flex border rounded-xl p-1 bg-gray-50">
               <button
+                type="button"
                 onClick={() => setPostType('room')}
-                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${
-                  postType === 'room' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+                  postType === 'room' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-500'
                 }`}
               >
                 {t.postRoomListing}
               </button>
               <button
+                type="button"
                 onClick={() => setPostType('request')}
-                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${
-                  postType === 'request' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${
+                  postType === 'request' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-500'
                 }`}
               >
                 {t.postRoommateRequest}
@@ -243,7 +269,7 @@ export default function UserNavbar() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={postType === 'room' ? t.postPlaceholderRoom : t.postPlaceholderRequest}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
 
@@ -257,7 +283,7 @@ export default function UserNavbar() {
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="3000000"
-                      className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                      className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                     />
                   </div>
                   <div>
@@ -265,7 +291,7 @@ export default function UserNavbar() {
                     <select
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                      className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none bg-white"
                     >
                       <option value="Private Studio">{t.privateStudio}</option>
                       <option value="Shared Apartment">{t.sharedApartment}</option>
@@ -282,7 +308,7 @@ export default function UserNavbar() {
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
                     placeholder="3500000"
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                    className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                   />
                 </div>
               )}
@@ -295,7 +321,7 @@ export default function UserNavbar() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder={t.locationPlaceholder}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
 
@@ -306,7 +332,7 @@ export default function UserNavbar() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder={t.descPlaceholder}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                 />
               </div>
 
@@ -314,13 +340,13 @@ export default function UserNavbar() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 border rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  className="flex-1 py-2.5 border rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
                 >
                   {t.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-[#ab3500] hover:bg-[#ab3500]/90 text-white rounded-lg text-sm font-semibold shadow-md transition-colors"
+                  className="flex-1 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-sm font-semibold shadow-md transition-colors"
                 >
                   {t.publishAd}
                 </button>

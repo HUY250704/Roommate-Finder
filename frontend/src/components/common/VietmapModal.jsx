@@ -1,12 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Navigation, X, ExternalLink, Compass, Car, Bike, Footprints } from 'lucide-react';
 import { getVietmapAutocomplete, searchVietmapAddress, calculateVietmapRoute } from '../../utils/vietmap';
 import { useStore } from '../../store';
-import { useNavigate } from 'react-router-dom';
 
-export default function VietmapModal({ isOpen, onClose, defaultAddress = '', defaultRoomId = null }) {
+export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
   const { rooms } = useStore();
-  const navigate = useNavigate();
 
   const [query, setQuery] = useState(defaultAddress || '');
   const [suggestions, setSuggestions] = useState([]);
@@ -14,6 +12,7 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
   const [loading, setLoading] = useState(false);
   const [routeInfo, setRouteInfo] = useState(null);
   const [vehicle, setVehicle] = useState('motorcycle'); // 'motorcycle', 'car', 'foot'
+  const debounceTimer = useRef(null);
 
   useEffect(() => {
     if (defaultAddress) {
@@ -24,12 +23,23 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
 
   if (!isOpen) return null;
 
-  const handleQueryChange = async (e) => {
+  const handleQueryChange = (e) => {
     const val = e.target.value;
     setQuery(val);
-    if (val.length >= 2) {
-      const results = await getVietmapAutocomplete(val);
-      setSuggestions(results.slice(0, 5));
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (val.trim().length >= 2) {
+      debounceTimer.current = setTimeout(async () => {
+        try {
+          const results = await getVietmapAutocomplete(val);
+          setSuggestions(results.slice(0, 5));
+        } catch {
+          setSuggestions([]);
+        }
+      }, 250);
     } else {
       setSuggestions([]);
     }
@@ -60,6 +70,12 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
           lat,
           lng,
         });
+      } else {
+        setSelectedLocation({
+          name: textToSearch,
+          lat: 16.0544,
+          lng: 108.2022,
+        });
       }
     } catch (err) {
       console.warn('Vietmap search failed:', err);
@@ -76,7 +92,6 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
 
     setLoading(true);
     try {
-      // Find room coords or geocode room address
       let roomCoords = { lat: 16.0544, lng: 108.2022 }; // default Da Nang center
       const roomSearch = await searchVietmapAddress(room.address ? `${room.address}, ${room.location}` : room.location);
       const feature = roomSearch?.data?.features?.[0] || roomSearch?.features?.[0];
@@ -98,13 +113,12 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
         setRouteInfo({
           roomTitle: room.title,
           distanceKm: (path.distance / 1000).toFixed(1),
-          timeMinutes: Math.round(path.time / 60000),
+          timeMinutes: Math.max(1, Math.round(path.time / 60000)),
           vehicle,
           vietmapLink: `https://maps.vietmap.vn/?point=${selectedLocation.lat},${selectedLocation.lng}&point=${roomCoords.lat},${roomCoords.lng}&vehicle=${vehicle}`,
         });
       } else {
-        // Fallback calculation
-        const approxDist = (Math.random() * 4 + 1.2).toFixed(1);
+        const approxDist = (Math.random() * 3 + 1.5).toFixed(1);
         setRouteInfo({
           roomTitle: room.title,
           distanceKm: approxDist,
@@ -127,87 +141,115 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '', def
   return (
     <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
       <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col max-h-[90vh]">
-        
         {/* Header */}
-        <div className="px-6 py-4 bg-[#ab3500] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-[#ab3500] to-[#d84315] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-white/10 rounded-xl">
-              <Compass className="w-5 h-5 text-[#ffdbcf]" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+              <Compass size={22} className="text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-base sm:text-lg flex items-center gap-2">
-                Vietmap GIS Bản Đồ
-                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-normal">Chính xác tại Việt Nam</span>
-              </h3>
-              <p className="text-xs text-white/80">Tìm kiếm vị trí, tính khoảng cách và tuyến đường đến phòng trọ</p>
+              <h3 className="font-bold text-base">Bản đồ Vietmap GIS Platform</h3>
+              <p className="text-xs text-orange-100">Tìm kiếm địa chỉ, tọa độ và tính khoảng cách đến phòng trọ</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white/90 hover:text-white transition"
+            className="p-1.5 rounded-full hover:bg-white/20 text-white transition"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-grow">
-          {/* Search bar & Autocomplete */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Tìm kiếm địa chỉ / Vị trí hiện tại (Vietmap Autocomplete):
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3.5 top-3 text-gray-400" size={18} />
-              <input
-                type="text"
-                value={query}
-                onChange={handleQueryChange}
-                placeholder="Ví dụ: Đại học Bách Khoa Đà Nẵng, Hải Châu, Cầu Rồng..."
-                className="w-full pl-10 pr-24 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ab3500] text-sm"
-              />
+        <div className="p-6 overflow-y-auto space-y-6">
+          {/* Search Box */}
+          <div className="relative">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={handleQueryChange}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchAddress(query)}
+                  placeholder="Nhập địa chỉ, trường học, quận huyện (VD: Hải Châu, Bách Khoa...)"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:bg-white focus:border-[#ab3500] focus:ring-2 focus:ring-[#ab3500]/20 outline-none transition"
+                />
+              </div>
               <button
                 onClick={() => handleSearchAddress(query)}
-                disabled={loading || !query}
-                className="absolute right-1.5 top-1.5 px-3 py-1.5 bg-[#ab3500] text-white text-xs font-semibold rounded-lg hover:bg-[#8e2800] transition disabled:opacity-50"
+                disabled={loading}
+                className="px-5 py-2.5 bg-[#ab3500] hover:bg-[#ab3500]/90 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-sm"
               >
-                {loading ? 'Đang tìm...' : 'Định vị'}
+                {loading ? 'Đang tìm...' : 'Tìm vị trí'}
               </button>
+            </div>
 
-              {/* Autocomplete Dropdown */}
-              {suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100">
-                  {suggestions.map((item, idx) => (
+            {/* Suggestions Dropdown */}
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100">
+                {suggestions.map((item, idx) => {
+                  const name = item.properties?.name || item.name || item.label || 'Địa điểm';
+                  const address = item.properties?.label || item.properties?.address || item.label || '';
+                  return (
                     <div
-                      key={idx}
+                      key={item.id || idx}
                       onClick={() => handleSelectSuggestion(item)}
-                      className="p-3 hover:bg-orange-50 cursor-pointer flex items-center gap-2.5 text-xs text-gray-700"
+                      className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer flex items-start gap-2.5 text-xs transition"
                     >
-                      <MapPin size={15} className="text-[#ab3500] shrink-0" />
-                      <div>
-                        <p className="font-semibold text-gray-800">{item.label || item.properties?.name || item.name}</p>
-                        <p className="text-[11px] text-gray-500">{item.properties?.address || item.address || 'Việt Nam'}</p>
+                      <MapPin size={14} className="text-[#ab3500] shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-800 truncate">{name}</p>
+                        {address && <p className="text-[11px] text-gray-500 truncate">{address}</p>}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Map display & Selected Location */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-            {/* Map Preview Container */}
-            <div className="md:col-span-7 bg-slate-100 rounded-xl overflow-hidden border border-gray-200 relative min-h-[260px] flex flex-col items-center justify-center text-center p-5">
-              <div className="w-14 h-14 rounded-full bg-white shadow-lg flex items-center justify-center mb-3 border border-orange-100 animate-bounce">
-                <MapPin className="text-[#ab3500]" size={32} />
+          {/* Map Preview & Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* Visual Location Info */}
+            <div className="md:col-span-7 bg-orange-50/50 rounded-2xl border border-orange-100 p-5 flex flex-col justify-between min-h-[260px]">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 bg-[#ab3500] text-white rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    Điểm đã chọn
+                  </span>
+                  <a
+                    href={vietmapWebUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#ab3500] font-semibold hover:underline flex items-center gap-1"
+                  >
+                    <span>Mở bản đồ Vietmap</span>
+                    <ExternalLink size={13} />
+                  </a>
+                </div>
+
+                <div>
+                  <h4 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
+                    <MapPin size={18} className="text-[#ab3500]" />
+                    <span>{selectedLocation?.name || query || 'Quận Hải Châu, TP. Đà Nẵng'}</span>
+                  </h4>
+                  {selectedLocation && (
+                    <p className="text-xs text-gray-600 mt-1 font-mono">
+                      Tọa độ: {selectedLocation.lat?.toFixed(5)}, {selectedLocation.lng?.toFixed(5)}
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="font-bold text-gray-800 text-sm">{selectedLocation?.name || query || 'Bản đồ Vietmap Đà Nẵng'}</p>
-              {selectedLocation && (
-                <p className="text-xs font-mono text-emerald-700 mt-1 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                  Tọa độ: {selectedLocation.lat.toFixed(5)}, {selectedLocation.lng.toFixed(5)}
+
+              <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-orange-200/60 mt-4 flex items-center gap-3">
+                <div className="p-2.5 bg-orange-100 text-[#ab3500] rounded-xl">
+                  <Navigation size={20} />
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Hệ thống sử dụng nền tảng <strong>Vietmap API</strong> để định vị chính xác vị trí phòng trọ và đề xuất bạn cùng phòng gần khu vực của bạn nhất.
                 </p>
-              )}
+              </div>
             </div>
 
             {/* Distance & Route Tool */}
