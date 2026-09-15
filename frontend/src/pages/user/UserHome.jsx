@@ -2,7 +2,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Compass, MapPin } from 'lucide-react';
-import VietmapModal from '../../components/common/VietmapModal';
 
 export default function UserHome() {
   const { users, rooms, favorites } = useStore();
@@ -11,7 +10,6 @@ export default function UserHome() {
   // Tab state: 'roommates' | 'rooms'
   const [activeTab, setActiveTab] = useState('roommates');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showVietmapModal, setShowVietmapModal] = useState(false);
 
   // Filter drawer / controls state
   const [showFilters, setShowFilters] = useState(false);
@@ -66,7 +64,7 @@ export default function UserHome() {
               />
             </div>
 
-            {/* Custom Toggle Switch, Vietmap Button & Filter Trigger */}
+            {/* Custom Toggle Switch & Filter Trigger */}
             <div className="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
               <div className="inline-flex bg-gray-100 rounded-full p-1 select-none border">
                 <button
@@ -87,72 +85,74 @@ export default function UserHome() {
                 </button>
               </div>
 
-              {/* Vietmap Button */}
-              <button
-                onClick={() => setShowVietmapModal(true)}
-                className="px-4 py-2.5 rounded-full text-xs font-bold border border-[#ab3500]/30 bg-orange-50 text-[#ab3500] hover:bg-orange-100 flex items-center gap-1.5 transition-colors shadow-sm"
-              >
-                <Compass className="w-4 h-4 text-[#ab3500]" />
-                <span>Bản đồ Vietmap</span>
-              </button>
-
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors bg-white hover:bg-gray-50"
+                className="px-4 py-2.5 rounded-full text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 flex items-center gap-1.5 transition-colors"
               >
-                <span className="material-symbols-outlined text-base">tune</span>
-                Filters
+                <span className="material-symbols-outlined text-[16px]">tune</span>
+                <span>Bộ lọc</span>
               </button>
             </div>
           </div>
 
           {/* Expandable Filter Panel */}
           {showFilters && (
-            <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-medium">
-              {activeTab === 'rooms' ? (
-                <div className="space-y-1 col-span-3 sm:col-span-1">
-                  <div className="flex justify-between font-bold text-gray-700">
-                    <span>Max Monthly Budget</span>
-                    <span className="text-[#ab3500]">{(maxBudget / 1000000).toFixed(1)}M VND</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1000000"
-                    max="15000000"
-                    step="500000"
-                    value={maxBudget}
-                    onChange={(e) => setMaxBudget(Number(e.target.value))}
-                    className="w-full accent-[#ab3500]"
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-1">
-                    <label className="font-bold text-gray-700">Smoking</label>
-                    <select
-                      value={selectedSmoking}
-                      onChange={(e) => setSelectedSmoking(e.target.value)}
-                      className="w-full border rounded-lg p-2 bg-white outline-none focus:ring-1 focus:ring-[#ab3500]"
-                    >
-                      <option value="All">All</option>
-                      <option value="No smoking">No smoking</option>
-                      <option value="Outside only">Outside only</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-gray-700">Pets</label>
-                    <select
-                      value={selectedPets}
-                      onChange={(e) => setSelectedPets(e.target.value)}
-                      className="w-full border rounded-lg p-2 bg-white outline-none focus:ring-1 focus:ring-[#ab3500]"
-                    >
-                      <option value="All">All</option>
-                      <option value="Pet Friendly">Pet Friendly</option>
-                      <option value="No Pets">No Pets</option>
-                    </select>
-                  </div>
-                </>
-              )}
+            <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 animate-fadeIn text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">
+                  Giá tối đa: {maxBudget >= 10000000 ? 'Tất cả' : `${(maxBudget / 1000000).toFixed(1)} triệu`}
+                </label>
+                <input
+                  type="range"
+                  min="1000000"
+                  max="10000000"
+                  step="500000"
+                  value={maxBudget}
+                  onChange={(e) => setMaxBudget(Number(e.target.value))}
+                  className="w-full accent-[#ab3500]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Hút thuốc</label>
+                <select
+                  value={selectedSmoking}
+                  onChange={(e) => setSelectedSmoking(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                >
+                  <option value="All">Tất cả</option>
+                  <option value="No">Không hút thuốc</option>
+                  <option value="Outside">Hút ngoài ban công</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Thú cưng</label>
+                <select
+                  value={selectedPets}
+                  onChange={(e) => setSelectedPets(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                >
+                  <option value="All">Tất cả</option>
+                  <option value="Dog">Có chó</option>
+                  <option value="Cat">Có mèo</option>
+                  <option value="No pets">Không nuôi thú cưng</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setMaxBudget(10000000);
+                    setSelectedSmoking('All');
+                    setSelectedPets('All');
+                    setSearchQuery('');
+                  }}
+                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg font-semibold transition"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
             </div>
           )}
         </section>
@@ -241,9 +241,6 @@ export default function UserHome() {
           )}
         </section>
       </main>
-
-      {/* Vietmap Modal Triggered by Button */}
-      <VietmapModal isOpen={showVietmapModal} onClose={() => setShowVietmapModal(false)} />
     </div>
   );
 }
