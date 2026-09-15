@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema(
@@ -18,10 +18,18 @@ const UserSchema = new mongoose.Schema(
         'Please add a valid email',
       ],
     },
-    firebaseUid: { type: String }, googleId: { type: String }, avatar: { type: String }, authProvider: { type: String, enum: ['local', 'google', 'firebase'], default: 'local' },
+    firebaseUid: { type: String },
+    googleId: { type: String },
+    facebookId: { type: String },
+    avatar: { type: String },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'facebook', 'firebase'],
+      default: 'local'
+    },
     password: {
       type: String,
-      required: function() { return !this.firebaseUid && !this.googleId; },
+      required: function() { return !this.firebaseUid && !this.googleId && !this.facebookId; },
       minlength: 6,
     },
     role: {
@@ -47,7 +55,7 @@ const UserSchema = new mongoose.Schema(
 
 // Hash password before saving
 UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);
@@ -56,6 +64,7 @@ UserSchema.pre('save', async function (next) {
 
 // Compare password method
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

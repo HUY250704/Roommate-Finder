@@ -1,4 +1,4 @@
-const User = require('../models/User');
+﻿const User = require('../models/User');
 const generateToken = require('../utils/tokenGenerator');
 
 const registerUser = async (req, res) => {
@@ -224,7 +224,7 @@ const firebaseLogin = async (req, res) => {
         email: email,
         firebaseUid: uid,
         avatar: photoURL,
-        authProvider: ["local", "google", "firebase"].includes(providerId) ? providerId : "firebase",
+        authProvider: ["local", "google", "facebook", "firebase"].includes(providerId) ? providerId : "firebase",
         isVerified: true,
       });
     }
@@ -252,3 +252,4 @@ module.exports = {
   resetPassword,
   verifyEmail,
 };
+
