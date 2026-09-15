@@ -7,6 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const connectDB = require('./config/db');
+const { notFound, errorHandler } = require('./middleware/error');
 
 // Route imports
 const authRoute = require('./routes/AuthRoute');
@@ -23,6 +24,7 @@ const reportRoute = require('./routes/ReportRoute');
 const adminRoute = require('./routes/AdminRoute');
 const viewingRoute = require('./routes/ViewingRoute');
 const uploadRoute = require('./routes/UploadRoute');
+const mapRoute = require('./routes/MapRoute');
 
 const app = express();
 const server = http.createServer(app);
@@ -95,11 +97,16 @@ app.use('/api/reports', reportRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/viewings', viewingRoute);
 app.use('/api/upload', uploadRoute);
+app.use('/api/map', mapRoute);
 
 // Basic route to verify
 app.get('/', (req, res) => {
   res.json({ message: 'Roommate Finder API is running... Swagger docs available at /api-docs' });
 });
+
+// 404 & Global Error Handling Middleware
+app.use(notFound);
+app.use(errorHandler);
 
 // Socket.io connection logic
 io.on('connection', (socket) => {

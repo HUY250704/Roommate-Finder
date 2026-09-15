@@ -1,0 +1,25 @@
+﻿{
+  "name": "Roommate Finder - Tìm Bạn Ở Ghép & Phòng Trọ",
+  "short_name": "RoommateFinder",
+  "description": "Nền tảng kết nối bạn cùng phòng lý tưởng và phòng trọ an toàn, thông minh tại Việt Nam.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ab3500",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vite.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["lifestyle", "utilities", "social"]
+}

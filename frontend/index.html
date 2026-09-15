@@ -1,18 +1,30 @@
-<!doctype html>
-<html lang="en">
+﻿<!doctype html>
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Roommate Finder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#ab3500" />
+    <meta name="description" content="Nền tảng tìm kiếm phòng trọ và bạn ở ghép thông minh, tiện lợi, an toàn tại Việt Nam." />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RoommateFinder" />
+    
+    <title>Roommate Finder - Tìm Bạn Ở Ghép & Phòng Trọ</title>
+    
     <!-- Google Fonts: Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
     <!-- Google Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   </head>
-  <body class="bg-[#f8f9fa] text-[#191c1d]">
+  <body class="bg-[#f8f9fa] text-[#191c1d] overscroll-none select-none md:select-auto">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

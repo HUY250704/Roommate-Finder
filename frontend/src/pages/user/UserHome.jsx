@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
+import { Compass, MapPin } from 'lucide-react';
+import VietmapModal from '../../components/common/VietmapModal';
 
 export default function UserHome() {
   const { users, rooms, favorites } = useStore();
@@ -9,6 +11,7 @@ export default function UserHome() {
   // Tab state: 'roommates' | 'rooms'
   const [activeTab, setActiveTab] = useState('roommates');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showVietmapModal, setShowVietmapModal] = useState(false);
 
   // Filter drawer / controls state
   const [showFilters, setShowFilters] = useState(false);
@@ -21,9 +24,9 @@ export default function UserHome() {
 
   const handleCardClick = (id, type) => {
     if (type === 'roommate') {
-      navigate(/roommates/);
+      navigate(`/roommates/${id}`);
     } else {
-      navigate(/rooms/);
+      navigate(`/rooms/${id}`);
     }
   };
 
@@ -63,26 +66,39 @@ export default function UserHome() {
               />
             </div>
 
-            {/* Custom Toggle Switch & Filter Trigger */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            {/* Custom Toggle Switch, Vietmap Button & Filter Trigger */}
+            <div className="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
               <div className="inline-flex bg-gray-100 rounded-full p-1 select-none border">
                 <button
                   onClick={() => setActiveTab('roommates')}
-                  className="px-5 py-2 rounded-full text-xs font-bold transition-all"
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                    activeTab === 'roommates' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-600'
+                  }`}
                 >
                   Roommates
                 </button>
                 <button
                   onClick={() => setActiveTab('rooms')}
-                  className="px-5 py-2 rounded-full text-xs font-bold transition-all"
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                    activeTab === 'rooms' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-600'
+                  }`}
                 >
                   Rooms
                 </button>
               </div>
 
+              {/* Vietmap Button */}
+              <button
+                onClick={() => setShowVietmapModal(true)}
+                className="px-4 py-2.5 rounded-full text-xs font-bold border border-[#ab3500]/30 bg-orange-50 text-[#ab3500] hover:bg-orange-100 flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <Compass className="w-4 h-4 text-[#ab3500]" />
+                <span>Bản đồ Vietmap</span>
+              </button>
+
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors bg-white hover:bg-gray-50"
               >
                 <span className="material-symbols-outlined text-base">tune</span>
                 Filters
@@ -111,26 +127,27 @@ export default function UserHome() {
                 </div>
               ) : (
                 <>
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-1">Smoking Habit</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-gray-700">Smoking</label>
                     <select
                       value={selectedSmoking}
                       onChange={(e) => setSelectedSmoking(e.target.value)}
                       className="w-full border rounded-lg p-2 bg-white outline-none focus:ring-1 focus:ring-[#ab3500]"
                     >
-                      <option value="All">Any Smoking Preference</option>
-                      <option value="No smoking">Non-Smoker Only</option>
+                      <option value="All">All</option>
+                      <option value="No smoking">No smoking</option>
+                      <option value="Outside only">Outside only</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block font-bold text-gray-700 mb-1">Pet Policy</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-gray-700">Pets</label>
                     <select
                       value={selectedPets}
                       onChange={(e) => setSelectedPets(e.target.value)}
                       className="w-full border rounded-lg p-2 bg-white outline-none focus:ring-1 focus:ring-[#ab3500]"
                     >
-                      <option value="All">Any Pet Preference</option>
-                      <option value="dog">Love Dogs / Pets</option>
+                      <option value="All">All</option>
+                      <option value="Pet Friendly">Pet Friendly</option>
                       <option value="No Pets">No Pets</option>
                     </select>
                   </div>
@@ -204,7 +221,7 @@ export default function UserHome() {
                     )}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                       <h2 className="text-xl text-white font-bold">
-                        {room.price >= 1000000 ? M : room.price.toLocaleString()} / mo
+                        {room.price >= 1000000 ? `${(room.price / 1000000).toFixed(1)}M` : room.price.toLocaleString()} / mo
                       </h2>
                       <p className="text-xs text-white/90 flex items-center gap-1 mt-0.5">
                         <span className="material-symbols-outlined text-sm">location_on</span>
@@ -224,6 +241,9 @@ export default function UserHome() {
           )}
         </section>
       </main>
+
+      {/* Vietmap Modal Triggered by Button */}
+      <VietmapModal isOpen={showVietmapModal} onClose={() => setShowVietmapModal(false)} />
     </div>
   );
 }

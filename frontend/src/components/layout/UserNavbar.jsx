@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building } from 'lucide-react';
+import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building, MapPin, Compass } from 'lucide-react';
+import VietmapModal from '../common/VietmapModal';
 
 export default function UserNavbar() {
   const { currentUser, logout, favorites, addRoom, addRequest } = useStore();
   const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
+  const [showVietmapModal, setShowVietmapModal] = useState(false);
   const [postType, setPostType] = useState('room'); // 'room' or 'request'
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -75,13 +77,21 @@ export default function UserNavbar() {
                 <span className="text-gray-900">Roommate</span>
                 <span className="text-[#ab3500]">Finder</span>
               </Link>
-              <div className="hidden md:flex ml-10 space-x-6">
+              <div className="hidden md:flex ml-8 space-x-5">
                 <Link to="/" className="text-gray-600 hover:text-[#ab3500] flex items-center gap-1 font-medium text-sm">
                   <Search className="w-4 h-4" /> Find Rooms & Roommates
                 </Link>
                 <Link to="/requests" className="text-gray-600 hover:text-[#ab3500] flex items-center gap-1 font-medium text-sm">
                   <Building className="w-4 h-4" /> Roommate Posts
                 </Link>
+                {/* Vietmap Button in Navbar */}
+                <button
+                  onClick={() => setShowVietmapModal(true)}
+                  className="text-[#ab3500] bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold text-xs transition border border-orange-200"
+                >
+                  <Compass className="w-3.5 h-3.5 text-[#ab3500]" />
+                  <span>Bản đồ Vietmap</span>
+                </button>
               </div>
             </div>
 
@@ -135,53 +145,67 @@ export default function UserNavbar() {
                     <MessageSquare className="w-5 h-5" />
                   </Link>
 
-                  {currentUser.role === 'admin' && (
-                    <Link to="/admin/dashboard" className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg text-sm font-medium border border-purple-200">
-                      <ShieldAlert className="w-4 h-4" /> Admin
+                  <div className="flex items-center gap-2 pl-2 border-l">
+                    <Link to="/profile" className="flex items-center gap-2 hover:opacity-80">
+                      <img
+                        src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
+                        alt={currentUser.name}
+                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                      />
+                      <span className="text-sm font-semibold text-gray-700 hidden sm:inline">{currentUser.name}</span>
                     </Link>
-                  )}
-
-                  <div className="flex items-center space-x-2 border-l pl-3">
-                    <Link to="/profile" className="flex items-center space-x-2 hover:opacity-80">
-                      <img src={currentUser.avatar} alt={currentUser.name} className="w-8 h-8 rounded-full border object-cover" />
-                      <span className="hidden sm:inline text-sm font-medium text-gray-700">{currentUser.name}</span>
-                    </Link>
-                    <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 p-1.5" title="Logout">
-                      <LogOut className="w-5 h-5" />
+                    <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-600" title="Logout">
+                      <LogOut className="w-4 h-4" />
                     </button>
                   </div>
                 </>
               ) : (
-                <Link to="/login" className="px-4 py-2 text-sm font-medium text-white bg-[#ab3500] hover:bg-[#ab3500]/90 rounded-lg">
-                  Sign In
-                </Link>
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-[#ab3500]"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-semibold text-white bg-[#ab3500] hover:bg-[#ab3500]/90 rounded-lg shadow-sm"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Post Modal */}
+      {/* Vietmap Interactive Modal */}
+      <VietmapModal isOpen={showVietmapModal} onClose={() => setShowVietmapModal(false)} />
+
+      {/* Create Listing Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 border">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="text-lg font-bold text-gray-900">Create New Listing / Request</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
-                &times;
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-lg font-bold text-gray-900">Create New Ad</h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
 
             <div className="flex border rounded-lg p-1 bg-gray-50">
               <button
                 onClick={() => setPostType('room')}
-                className="flex-1 py-2 text-xs font-bold rounded-md transition-colors"
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${
+                  postType === 'room' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'
+                }`}
               >
                 Post Room Listing
               </button>
               <button
                 onClick={() => setPostType('request')}
-                className="flex-1 py-2 text-xs font-bold rounded-md transition-colors"
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${
+                  postType === 'request' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'
+                }`}
               >
                 Post Roommate Request
               </button>

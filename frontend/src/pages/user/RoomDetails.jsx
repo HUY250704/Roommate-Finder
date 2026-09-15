@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+﻿import React, { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../store';
+import VietmapView from '../../components/common/VietmapView';
+import { Home, ArrowLeft } from 'lucide-react';
 
 export default function RoomDetails() {
   const { id } = useParams();
@@ -8,8 +10,8 @@ export default function RoomDetails() {
   const { rooms, users, scheduleViewing, toggleFavorite, favorites } = useStore();
 
   const roomId = id || 'haichau';
-  const room = rooms.find(r => r.id === roomId) || rooms[0];
-  const owner = users.find(u => u.id === room.ownerId) || users[0];
+  const room = rooms.find(r => r.id === roomId || r._id === roomId);
+  const owner = room ? (users.find(u => u.id === room.ownerId) || users[0]) : null;
 
   const [showViewingModal, setShowViewingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -17,6 +19,40 @@ export default function RoomDetails() {
   const [time, setTime] = useState('');
   const [reportReason, setReportReason] = useState('Fake listing');
   const [reportDetails, setReportDetails] = useState('');
+
+  if (!room) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16 font-sans">
+        <div className="max-w-md w-full text-center space-y-5 bg-white p-8 rounded-3xl shadow-lg border border-gray-150">
+          <div className="w-16 h-16 bg-orange-50 text-[#ab3500] rounded-full flex items-center justify-center mx-auto border border-orange-100">
+            <span className="material-symbols-outlined text-3xl">home_work</span>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-900">Không tìm thấy phòng trọ</h2>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Phòng trọ có mã <strong>{roomId}</strong> không tồn tại hoặc đã được gỡ xuống.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2.5 rounded-xl border text-xs font-semibold text-gray-700 hover:bg-gray-50 transition flex items-center gap-1.5"
+            >
+              <ArrowLeft size={14} />
+              <span>Quay lại</span>
+            </button>
+            <Link
+              to="/"
+              className="px-5 py-2.5 rounded-xl bg-[#ab3500] text-white text-xs font-semibold hover:bg-[#8e2800] transition flex items-center gap-1.5"
+            >
+              <Home size={14} />
+              <span>Khám phá phòng khác</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isFav = favorites.includes(room.id);
 
@@ -101,7 +137,7 @@ export default function RoomDetails() {
                 <img
                   key={idx}
                   className="w-full h-72 object-cover snap-center flex-shrink-0"
-                  alt={Slide }
+                  alt={`Slide ${idx}`}
                   src={img}
                 />
               ))}
@@ -117,7 +153,7 @@ export default function RoomDetails() {
                 <h1 className="text-2xl font-bold text-[#191c1d] mt-2">{room.title}</h1>
                 <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                   <span className="material-symbols-outlined text-base">location_on</span>
-                  {room.location}
+                  {room.address ? `${room.address}, ${room.location}` : room.location}
                 </p>
               </div>
               <button
@@ -149,6 +185,17 @@ export default function RoomDetails() {
                 ))}
               </div>
             </div>
+
+            <hr />
+
+            {/* Vietmap GIS Section */}
+            <div>
+              <VietmapView 
+                address={room.address} 
+                location={room.location} 
+                title={room.title} 
+              />
+            </div>
           </div>
         </div>
 
@@ -157,7 +204,7 @@ export default function RoomDetails() {
           <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-150 sticky top-24 space-y-5">
             <div>
               <span className="text-3xl font-extrabold text-[#ab3500]">
-                {room.price >= 1000000 ? M : room.price.toLocaleString()} VND
+                {room.price >= 1000000 ? `${(room.price / 1000000).toFixed(1)}M` : room.price.toLocaleString()} VND
               </span>
               <span className="text-gray-500 text-sm font-medium"> / month</span>
             </div>
@@ -179,13 +226,15 @@ export default function RoomDetails() {
               </button>
             </div>
 
-            <div className="flex items-center gap-3 bg-gray-50 p-3.5 rounded-xl border">
-              <img src={owner.avatar} alt={owner.name} className="w-10 h-10 rounded-full object-cover border" />
-              <div>
-                <p className="text-sm font-bold text-gray-900">{owner.name}</p>
-                <p className="text-xs text-gray-500">Property Host</p>
+            {owner && (
+              <div className="flex items-center gap-3 bg-gray-50 p-3.5 rounded-xl border">
+                <img src={owner.avatar} alt={owner.name} className="w-10 h-10 rounded-full object-cover border" />
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{owner.name}</p>
+                  <p className="text-xs text-gray-500">Property Host</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

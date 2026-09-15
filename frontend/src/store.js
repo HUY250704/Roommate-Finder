@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 
 const initialUsers = [
   {
@@ -85,68 +85,69 @@ const initialRooms = [
       'https://lh3.googleusercontent.com/aida-public/AB6AXuC_hwMofla8f5C4tXS7mL1zT2_xu4lSDbYi04yujeqBBqlK6MW0YMiglxfVGEG-2bUmR6_9gQb7pUHY83teOlbCgXQ_T26Ilv0gV7QWcnkcJ7_y7aDrbx8nfxZBKcl2sMgml6xgwP7vYu_ovCtFxT2DGsoortSrlVq0AtuYYcFt625M2xqcq2TtJj77VUYJvKHgNaOQxMna1EJ_mFvGqMojIA6C10qzWZAOsV0OmA4MVOwJgZdTnaw'
     ],
     ownerId: 'minh',
-    description: 'Enjoy living in this beautifully designed modern studio located in the heart of Hai Chau. Perfect for young professionals or students looking for a quiet yet central location. The room is fully furnished with a comfortable bed, study desk, and an en-suite bathroom. Natural light floods the space during the day, creating a warm and inviting atmosphere.',
-    status: 'approved',
-    createdAt: '2026-08-25',
+    description: 'Enjoy living in this beautifully designed modern studio located in the heart of Hai Chau. Perfect for young professionals or students looking for a quiet yet central location. The room is fully furnished with a comfortable bed, study desk, and an en-suite bathroom. Natural light floods the room through a large window overlooking the quiet neighborhood street.',
+    address: '123 Tran Phu, Hai Chau, Da Nang',
+    bedrooms: 1,
+    bathrooms: 1,
+    area: 32,
     verified: true,
-    size: 25,
-    beds: 1,
-    baths: 2,
-    amenities: [
-      { name: 'High-speed WiFi', icon: 'wifi' },
-      { name: 'Air Conditioning', icon: 'ac_unit' },
-      { name: 'Secure Parking', icon: 'local_parking' },
-      { name: 'Shared Kitchen', icon: 'kitchen' },
-      { name: 'Washing Machine', icon: 'local_laundry_service' }
-    ],
-    rules: [
-      { name: 'No Smoking', icon: 'smoking_rooms' },
-      { name: 'No Pets', icon: 'pets' },
-      { name: 'Quiet hours 10 PM - 6 AM', icon: 'volume_off' }
-    ]
+    status: 'available',
+    createdAt: '2026-08-15'
   },
   {
-    id: 'landmark81',
-    title: 'Spacious Room with view near Landmark 81',
-    price: 6000000,
-    location: 'Binh Thanh District, HCMC',
-    type: 'Entire Apartment',
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500',
+    id: 'sontra',
+    title: 'Sunny Master Bedroom near My Khe Beach',
+    price: 4500000,
+    location: 'Son Tra District, Da Nang',
+    type: 'Shared Apartment',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB26v-1tqG_cKoxH59-Y9pZ4JzC7n9e3uY5V90W940F837yV10Y770C888A110N760E450Q330T220W110O990S880U770R660P550M440K330I220G110E000C990A880Y770W660U550S440Q330O220M110K000I990G880E770C660A550',
     gallery: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500'
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB26v-1tqG_cKoxH59-Y9pZ4JzC7n9e3uY5V90W940F837yV10Y770C888A110N760E450Q330T220W110O990S880U770R660P550M440K330I220G110E000C990A880Y770W660U550S440Q330O220M110K000I990G880E770C660A550',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgISmhhNbYdxddOJanGAKAPZl8aNTimA_6veZMbW3-ApQ-51LNUPMo0pHRasB90ai1SXW0bNbEDK3PoAS0MKHqIquHT4J60JHalmulE31H7AoUORtgt6iAOLeI_Wo6JtkHsfDjz33x77aCDZCDwIdFgP8Tqp7Wt-5Y-AU155Xlvg8DHQdDZYGOGtu0lWDQrbMnvjMBeCvifp771fUSpy2M7nWDogGK_LQdVb1NC0dpuIHXLXQxeac'
     ],
     ownerId: 'david',
-    description: 'Stunning view, swimming pool access, full kitchen setup.',
-    status: 'approved',
-    createdAt: '2026-08-22',
+    description: 'A spacious and sunny master bedroom in a 3-bedroom luxury apartment, just 5 minutes walk to My Khe Beach. Includes private balcony, king bed, AC, and high-speed fiber internet. Building has a rooftop pool and gym.',
+    address: '45 Vo Nguyen Giap, Son Tra, Da Nang',
+    bedrooms: 1,
+    bathrooms: 1,
+    area: 40,
     verified: true,
-    size: 45,
-    beds: 2,
-    baths: 2,
-    amenities: [
-      { name: 'High-speed WiFi', icon: 'wifi' },
-      { name: 'Air Conditioning', icon: 'ac_unit' },
-      { name: 'Pool', icon: 'pool' }
-    ],
-    rules: [
-      { name: 'No Smoking', icon: 'smoking_rooms' }
-    ]
+    status: 'available',
+    createdAt: '2026-08-20'
   }
 ];
 
 const initialRequests = [
-  { id: '1', userId: 'minh', title: 'Looking for roommate in District 1', budget: 5000000, location: 'District 1', status: 'active', description: 'Seeking quiet roommate, non-smoker, clean.' },
-  { id: '2', userId: 'david', title: 'Need team-up roommate for Westside apartment', budget: 7000000, location: 'Westside', status: 'active', description: 'Tech worker preferred. Friendly and communicative.' }
+  {
+    id: '1',
+    userId: 'sarah',
+    title: 'Looking for a female roommate in Hai Chau',
+    budget: 3500000,
+    location: 'Hai Chau, Da Nang',
+    gender: 'Female',
+    description: 'Looking to rent a 2-bedroom apartment together. Clean, respectful, non-smoker.',
+    status: 'active',
+    createdAt: '2026-08-22'
+  }
 ];
 
 const initialReports = [
-  { id: '1', reportedBy: 'David M.', reportedUser: 'Minh', reason: 'Spamming requests.', status: 'pending', createdAt: '2026-08-25' }
+  {
+    id: '1',
+    reporterId: 'sarah',
+    targetType: 'room',
+    targetId: 'haichau',
+    targetTitle: 'Modern Studio in Hai Chau',
+    reason: 'Incorrect price listed',
+    description: 'Landlord asked for higher deposit than advertised.',
+    status: 'pending',
+    createdAt: '2026-08-25'
+  }
 ];
 
 const initialMessages = [
-  { id: '1', senderId: 'minh', receiverId: 'sarah', text: "Hey! I saw you're also looking at the place in Downtown. The layout looks perfect.", timestamp: '2026-08-26T10:42:00.000Z' },
-  { id: '2', senderId: 'sarah', receiverId: 'minh', text: "Hi Minh! Yes, I love the massive windows. Do you know if they allow small dogs? ??", timestamp: '2026-08-26T10:45:00.000Z' },
-  { id: '3', senderId: 'minh', receiverId: 'sarah', text: "I think so! I took a screenshot from their pet policy page just to be sure.", timestamp: '2026-08-26T10:48:00.000Z' }
+  { id: '1', senderId: 'sarah', receiverId: 'minh', text: 'Hi Minh! Is the studio still available?', timestamp: '2026-08-26T10:30:00.000Z' },
+  { id: '2', senderId: 'minh', receiverId: 'sarah', text: 'Hey Sarah! Yes, it is. Are you free this weekend for a viewing?', timestamp: '2026-08-26T10:35:00.000Z' }
 ];
 
 const initialViewings = [
@@ -163,7 +164,6 @@ export const useStore = create((set) => ({
   viewings: initialViewings,
   favorites: ['haichau'],
 
-    
   loginWithGoogle: async (googleData) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/google", {
@@ -173,6 +173,7 @@ export const useStore = create((set) => ({
       });
       if (response.ok) {
         const data = await response.json();
+        if (data.token) localStorage.setItem('token', data.token);
         const user = {
           ...data,
           id: data._id || data.id,
@@ -208,7 +209,6 @@ export const useStore = create((set) => ({
     return { success: true, role: "user" };
   },
 
-  
   loginWithFirebase: async (firebaseData) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/firebase", {
@@ -226,6 +226,7 @@ export const useStore = create((set) => ({
 
       if (response.ok) {
         const data = await response.json();
+        if (data.token) localStorage.setItem('token', data.token);
         const user = {
           ...data,
           id: data._id || data.id,
@@ -269,56 +270,62 @@ export const useStore = create((set) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailLower, password })
       });
+
       if (response.ok) {
         const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         const user = {
-          ...data.user,
-          id: data.user?._id || data.user?.id || (emailLower === 'admin@roommate.com' ? 'admin' : emailLower.split('@')[0]),
-          name: data.user?.username || data.user?.name || emailLower.split('@')[0],
-          email: emailLower,
-          role: data.user?.role || (emailLower === 'admin@roommate.com' ? 'admin' : 'user'),
-          avatar: data.user?.avatar || (emailLower === 'admin@roommate.com' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY'),
+          ...data,
+          id: data._id || data.id || (emailLower === 'admin@roommate.com' ? 'admin' : emailLower.split('@')[0]),
+          name: data.username || data.name || emailLower.split('@')[0],
+          email: data.email || emailLower,
+          role: data.role || (emailLower === 'admin@roommate.com' ? 'admin' : 'user'),
+          avatar: data.avatar || (emailLower === 'admin@roommate.com' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY'),
           status: 'active'
         };
         set({ currentUser: user });
         return { success: true, role: user.role };
+      } else {
+        // Fallback for demo accounts if DB is initializing or offline
+        if (emailLower === 'admin@roommate.com' || emailLower === 'sarah@example.com' || emailLower.includes('@example.com')) {
+          const isDemoAdmin = emailLower === 'admin@roommate.com';
+          const user = {
+            id: isDemoAdmin ? 'admin' : 'sarah',
+            name: isDemoAdmin ? 'System Admin' : 'Sarah J.',
+            email: emailLower,
+            role: isDemoAdmin ? 'admin' : 'user',
+            avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
+            status: 'active'
+          };
+          set({ currentUser: user });
+          return { success: true, role: user.role };
+        }
+
+        const errData = await response.json().catch(() => ({}));
+        return { success: false, message: errData.message || 'Email hoặc mật khẩu không chính xác (401)' };
       }
     } catch (e) {
-      console.warn("Backend auth failed, using local session", e);
-    }
-    if (emailLower === 'admin@roommate.com') {
-      const adminUser = {
-        id: 'admin',
-        name: 'System Admin',
-        email: 'admin@roommate.com',
-        role: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      console.warn("Backend auth failed, using local session fallback", e);
+      const isDemoAdmin = emailLower === 'admin@roommate.com';
+      const user = {
+        id: isDemoAdmin ? 'admin' : emailLower.split('@')[0],
+        name: isDemoAdmin ? 'System Admin' : emailLower.split('@')[0],
+        email: emailLower,
+        role: isDemoAdmin ? 'admin' : 'user',
+        avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
         status: 'active'
       };
-      set({ currentUser: adminUser });
-      return { success: true, role: 'admin' };
-    } else {
-      const nickname = emailLower.split('@')[0];
-      const normalUser = {
-        id: nickname || 'user',
-        name: nickname.charAt(0).toUpperCase() + nickname.slice(1) || 'User',
-        email: emailLower,
-        role: 'user',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
-        status: 'active',
-        gender: 'Male',
-        phone: '0912345678',
-        occupation: 'Member',
-        cleanHabit: 'High Standard',
-        intro: "Hi, I am looking for a roommate!",
-        matchScore: 90
-      };
-      set({ currentUser: normalUser });
-      return { success: true, role: 'user' };
+      set({ currentUser: user });
+      return { success: true, role: user.role };
     }
   },
 
-  logout: () => set({ currentUser: null }),
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ currentUser: null });
+  },
 
   addRoom: (room) => set(state => ({
     rooms: [...state.rooms, { ...room, id: String(state.rooms.length + 1), status: 'pending', createdAt: new Date().toISOString().split('T')[0] }]

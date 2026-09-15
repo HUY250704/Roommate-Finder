@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+﻿import React, { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../store';
+import { Home, ArrowLeft } from 'lucide-react';
 
 export default function RoommateProfile() {
   const { id } = useParams();
@@ -8,7 +9,7 @@ export default function RoommateProfile() {
   const { users, currentUser } = useStore();
 
   const roommateId = id || 'minh';
-  const user = users.find(u => u.id === roommateId) || users[0];
+  const user = users.find(u => u.id === roommateId || u._id === roommateId);
 
   const [saved, setSaved] = useState(false);
   const [showMatchBreakdown, setShowMatchBreakdown] = useState(false);
@@ -16,6 +17,40 @@ export default function RoommateProfile() {
   const [reportReason, setReportReason] = useState('Scam');
   const [reportDetails, setReportDetails] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-16 font-sans">
+        <div className="max-w-md w-full text-center space-y-5 bg-white p-8 rounded-3xl shadow-lg border border-gray-150">
+          <div className="w-16 h-16 bg-orange-50 text-[#ab3500] rounded-full flex items-center justify-center mx-auto border border-orange-100">
+            <span className="material-symbols-outlined text-3xl">person_off</span>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-900">Không tìm thấy hồ sơ người dùng</h2>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Hồ sơ người tìm phòng có mã <strong>{roommateId}</strong> không tồn tại hoặc đã ngừng hoạt động.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2.5 rounded-xl border text-xs font-semibold text-gray-700 hover:bg-gray-50 transition flex items-center gap-1.5"
+            >
+              <ArrowLeft size={14} />
+              <span>Quay lại</span>
+            </button>
+            <Link
+              to="/"
+              className="px-5 py-2.5 rounded-xl bg-[#ab3500] text-white text-xs font-semibold hover:bg-[#8e2800] transition flex items-center gap-1.5"
+            >
+              <Home size={14} />
+              <span>Tìm người ở ghép khác</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const matchDetails = [
     { label: 'Budget Compatibility (20%)', score: 95, color: 'bg-green-500' },
@@ -108,72 +143,66 @@ export default function RoommateProfile() {
                       strokeWidth="3"
                     ></path>
                   </svg>
-                  <span className="font-headline-sm text-[20px] text-[#ab3500] font-bold">
+                  <span className="font-display-sm text-[16px] font-bold text-[#ab3500] absolute">
                     {user.matchScore || 92}%
                   </span>
                 </div>
                 <div>
-                  <h2 className="font-headline-sm text-[20px] text-[#191c1d] font-bold">Lifestyle Match</h2>
-                  <p className="font-body-md text-[14px] text-[#594139]">{user.matchReason || 'High compatibility score'}</p>
+                  <h3 className="font-headline-sm text-[18px] font-bold text-[#191c1d]">Compatibility Match</h3>
+                  <p className="font-body-md text-[14px] text-[#594139]">{user.matchReason || 'High match on lifestyle and cleanliness'}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowMatchBreakdown(!showMatchBreakdown)}
-                className="bg-[#ab3500]/10 text-[#ab3500] text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#ab3500]/20 transition-colors flex items-center gap-1"
+                className="text-[#ab3500] font-label-md text-[14px] font-bold hover:underline"
               >
                 {showMatchBreakdown ? 'Hide Breakdown' : 'View Breakdown'}
-                <span className="material-symbols-outlined text-[16px]">
-                  {showMatchBreakdown ? 'expand_less' : 'expand_more'}
-                </span>
               </button>
             </div>
 
-            {/* Matching Breakdown Accordion */}
             {showMatchBreakdown && (
-              <div className="mt-5 pt-4 border-t border-gray-100 space-y-3">
-                <h4 className="font-label-md text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Compatibility Breakdown (Weighted Score)
-                </h4>
-                {matchDetails.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-medium text-[#191c1d]">
-                      <span>{item.label}</span>
-                      <span className="font-bold">{item.score}%</span>
+              <div className="mt-4 pt-4 border-t space-y-3">
+                <h4 className="font-label-md text-[14px] font-bold text-[#191c1d]">Compatibility Breakdown</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {matchDetails.map((item, idx) => (
+                    <div key={idx} className="bg-gray-50 p-3 rounded-lg flex flex-col gap-1 border">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-medium text-gray-700">{item.label}</span>
+                        <span className="font-bold text-gray-900">{item.score}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${item.color} rounded-full transition-all duration-500`}
+                          style={{ width: `${item.score}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                        style={{ width: `${item.score}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </section>
 
-          {/* Bio */}
-          <section className="bg-white rounded-xl p-5 shadow-[0_4px_20px_0px_rgba(0,0,0,0.05)] border border-gray-150">
-            <h3 className="font-headline-sm text-[20px] text-[#191c1d] font-bold mb-3">About {user.name}</h3>
-            <p className="text-[#594139] text-[15px] leading-relaxed whitespace-pre-line">
-              {user.intro}
-            </p>
+          {/* About Me */}
+          <section className="bg-white rounded-xl p-5 shadow-sm border border-gray-150 space-y-3">
+            <h3 className="font-headline-sm text-[18px] font-bold text-[#191c1d]">About Me</h3>
+            <p className="font-body-md text-[15px] text-[#594139] leading-relaxed">{user.intro}</p>
           </section>
 
-          {/* Lifestyle Bento Grid */}
-          <section>
-            <h3 className="font-headline-sm text-[20px] text-[#191c1d] font-bold mb-3 px-1">Lifestyle Habits</h3>
-            <div className="grid grid-cols-2 gap-4">
+          {/* Preferences */}
+          <section className="bg-white rounded-xl p-5 shadow-sm border border-gray-150 space-y-3">
+            <h3 className="font-headline-sm text-[18px] font-bold text-[#191c1d]">Lifestyle & Preferences</h3>
+            <div className="grid grid-cols-2 gap-3">
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-150 flex flex-col items-start gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#005fac]/10 text-[#005fac] flex items-center justify-center">
-                  <span className="material-symbols-outlined">bedtime</span>
+                <div className="w-10 h-10 rounded-full bg-orange-100 text-[#ab3500] flex items-center justify-center">
+                  <span className="material-symbols-outlined">schedule</span>
                 </div>
                 <h4 className="font-label-md text-[14px] text-[#594139] font-medium">Sleep Schedule</h4>
-                <p className="font-body-md text-[16px] text-[#191c1d] font-semibold">{user.sleepSchedule || 'Usually by 23:00'}</p>
+                <p className="font-body-md text-[16px] text-[#191c1d] font-semibold">{user.sleepSchedule || 'Early Bird'}</p>
               </div>
 
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-150 flex flex-col items-start gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#00696b]/10 text-[#00696b] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
                   <span className="material-symbols-outlined">cleaning_services</span>
                 </div>
                 <h4 className="font-label-md text-[14px] text-[#594139] font-medium">Cleanliness</h4>
@@ -181,7 +210,7 @@ export default function RoommateProfile() {
               </div>
 
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-150 flex flex-col items-start gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#ab3500]/10 text-[#ab3500] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
                   <span className="material-symbols-outlined">pets</span>
                 </div>
                 <h4 className="font-label-md text-[14px] text-[#594139] font-medium">Pets</h4>

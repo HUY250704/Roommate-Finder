@@ -1,11 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useStore } from './store';
 
 // Layouts
 import UserNavbar from './components/layout/UserNavbar';
 import AdminSidebar from './components/layout/AdminSidebar';
+import MobileBottomNav from './components/layout/MobileBottomNav';
+import PwaInstallPrompt from './components/common/PwaInstallPrompt';
 import bgImage from './assets/bg-image.jpg';
+
+// Common Pages
+import NotFound from './pages/common/NotFound';
 
 // User Pages
 import UserHome from './pages/user/UserHome';
@@ -24,18 +29,17 @@ import AdminRooms from './pages/admin/AdminRooms';
 import AdminReports from './pages/admin/AdminReports';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 
-// User Layout wrapper
+// User Layout wrapper with desktop and mobile responsive shell
 function UserLayout() {
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans relative overflow-hidden">
-      {/* Blurred City Background Image */}
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans relative overflow-x-hidden pb-16 md:pb-0">
+      {/* City Background Image */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
         <img 
           src={bgImage} 
           alt="City Background" 
           className="w-full h-full object-cover opacity-100 scale-100"
         />
-        {/* Soft gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-transparent" />
       </div>
 
@@ -44,15 +48,21 @@ function UserLayout() {
         <main className="flex-grow">
           <Outlet />
         </main>
-        <footer className="bg-white/80 backdrop-blur-md border-t py-6 text-center text-sm text-gray-500 relative z-10">
+        <footer className="bg-white/80 backdrop-blur-md border-t py-6 text-center text-xs text-gray-500 relative z-10 hidden md:block">
           &copy; {new Date().getFullYear()} Roommate Finder. All rights reserved.
         </footer>
       </div>
+
+      {/* PWA Mobile Bottom Navigation */}
+      <MobileBottomNav />
+
+      {/* PWA Install Banner */}
+      <PwaInstallPrompt />
     </div>
   );
 }
 
-// Admin Layout wrapper with simple auth check
+// Admin Layout wrapper with mobile drawer and desktop sidebar
 function AdminLayout() {
   const { currentUser } = useStore();
 
@@ -61,8 +71,8 @@ function AdminLayout() {
   }
 
   return (
-    <div className="flex bg-[#fff8f6] min-h-screen font-sans relative overflow-hidden">
-      {/* Blurred City Background Image for Admin Console */}
+    <div className="flex bg-[#fff8f6] min-h-screen font-sans relative overflow-x-hidden pt-14 md:pt-0">
+      {/* City Background for Admin Console */}
       <div className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden">
         <img 
           src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?q=80&w=1920" 
@@ -74,7 +84,7 @@ function AdminLayout() {
 
       <div className="relative z-10 flex w-full">
         <AdminSidebar />
-        <main className="flex-grow overflow-y-auto relative z-10">
+        <main className="flex-grow overflow-y-auto relative z-10 p-4 sm:p-6 md:p-8">
           <Outlet />
         </main>
       </div>
@@ -100,6 +110,9 @@ export default function App() {
           <Route path="/requests" element={currentUser ? <RoommateRequests /> : <Navigate to="/login" replace />} />
           <Route path="/saved" element={currentUser ? <SavedRooms /> : <Navigate to="/login" replace />} />
           <Route path="/chat" element={currentUser ? <Chat /> : <Navigate to="/login" replace />} />
+          
+          {/* 404 Inside User Layout */}
+          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* Admin layout routes */}
@@ -110,10 +123,8 @@ export default function App() {
           <Route path="rooms" element={<AdminRooms />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
-
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

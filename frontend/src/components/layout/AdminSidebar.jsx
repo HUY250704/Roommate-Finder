@@ -1,11 +1,13 @@
-import React from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
+import { Menu, X } from 'lucide-react';
 
 export default function AdminSidebar() {
   const { currentUser, logout, reports } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -25,26 +27,35 @@ export default function AdminSidebar() {
     { path: '/admin/analytics', name: 'Analytics', icon: 'analytics' }
   ];
 
-  return (
-    <aside className="w-64 bg-white border-r border-[#e6beb2] flex flex-col hidden md:flex h-screen sticky top-0 flex-shrink-0 font-sans">
+  const sidebarContent = (
+    <div className="flex flex-col h-full font-sans bg-white">
       {/* Brand Header */}
-      <div className="p-6 flex items-center gap-2 border-b border-[#ffe9e3]">
-        <span className="material-symbols-outlined text-[#aa3000] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-          home_pin
-        </span>
-        <span className="font-headline-md text-[20px] text-[#aa3000] font-extrabold tracking-tight">
-          RoomMate Admin
-        </span>
+      <div className="p-6 flex items-center justify-between border-b border-[#ffe9e3]">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#aa3000] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            home_pin
+          </span>
+          <span className="font-headline-md text-[20px] text-[#aa3000] font-extrabold tracking-tight">
+            RoomMate Admin
+          </span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-full transition-all ${
                 isActive
                   ? 'bg-[#ffdbd0]/40 text-[#aa3000] font-bold'
@@ -98,6 +109,39 @@ export default function AdminSidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Top Navbar for Admin */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#ffe9e3] px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#aa3000] text-[24px]">home_pin</span>
+          <span className="font-bold text-sm text-[#aa3000]">Admin Console</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 rounded-xl text-gray-700 hover:bg-[#ffe9e3]/50 transition"
+        >
+          <Menu size={22} />
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay Drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="relative w-4/5 max-w-xs h-full z-10 shadow-2xl">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sticky Sidebar */}
+      <aside className="w-64 bg-white border-r border-[#e6beb2] hidden md:flex flex-col h-screen sticky top-0 flex-shrink-0">
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
