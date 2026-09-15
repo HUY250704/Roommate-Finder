@@ -1,26 +1,16 @@
-// Firebase config helper
-let app = null;
-let auth = null;
-let googleProvider = null;
+﻿import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
 
-export const signInWithPopup = async (auth, provider) => {
-  return {
-    user: {
-      uid: 'google_' + Date.now(),
-      email: 'user@example.com',
-      displayName: 'Google User',
-      photoURL: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg'
-    }
-  };
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAgUFKtfEtvesTSEB60pvfdX2jnvzcxHSs",
+  authDomain: (import.meta.env.VITE_FIREBASE_PROJECT_ID || "roommate-finder-b3f9b") + ".firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "roommate-finder-b3f9b",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:627775114243:web:4b45d4f8022482b5fe9236"
 };
 
-export const signInWithEmailAndPassword = async () => {};
-export const createUserWithEmailAndPassword = async () => {};
-export const signOut = async () => {};
-export const onAuthStateChanged = (auth, cb) => { cb(null); return () => {}; };
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export { 
-  app, 
-  auth, 
-  googleProvider 
-};
+export { app, auth, googleProvider, signInWithPopup };

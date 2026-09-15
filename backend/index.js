@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -22,12 +22,13 @@ const notificationRoute = require('./routes/NotificationRoute');
 const reportRoute = require('./routes/ReportRoute');
 const adminRoute = require('./routes/AdminRoute');
 const viewingRoute = require('./routes/ViewingRoute');
+const uploadRoute = require('./routes/UploadRoute');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
@@ -37,10 +38,11 @@ app.set('io', io);
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 // Swagger configuration
 const swaggerOptions = {
@@ -92,6 +94,7 @@ app.use('/api/notifications', notificationRoute);
 app.use('/api/reports', reportRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/viewings', viewingRoute);
+app.use('/api/upload', uploadRoute);
 
 // Basic route to verify
 app.get('/', (req, res) => {

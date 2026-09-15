@@ -30,6 +30,50 @@ export default function Auth() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoadingFirebase(true);
+    try {
+      let resultUser = null;
+      if (auth && googleProvider && signInWithPopup) {
+        const result = await signInWithPopup(auth, googleProvider);
+        if (result && result.user) {
+          resultUser = result.user;
+        }
+      }
+
+      if (!resultUser) {
+        throw new Error('Không lấy được thông tin tài khoản Google');
+      }
+
+      const res = await loginWithFirebase({
+        uid: resultUser.uid,
+        email: resultUser.email,
+        displayName: resultUser.displayName || resultUser.email?.split('@')[0],
+        photoURL: resultUser.photoURL,
+        idToken: resultUser.accessToken || (await resultUser.getIdToken?.()),
+        providerId: 'google'
+      });
+
+      if (res.success) {
+        navigate('/');
+      } else {
+        setError(res.message || 'Đăng nhập Google thất bại');
+      }
+    } catch (err) {
+      console.error('Google Auth Error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Bạn đã đóng cửa sổ đăng nhập Google');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('Yêu cầu đăng nhập đã bị hủy');
+      } else {
+        setError(err.message || 'Đăng nhập Google thất bại');
+      }
+    } finally {
+      setLoadingFirebase(false);
+    }
+  };
+
   const autofill = (type) => {
     if (type === 'user') {
       setEmail('sarah@example.com');
@@ -144,7 +188,7 @@ export default function Auth() {
             </button>
           </form>
 
-          {/* Firebase Google Auth Button */}
+          {/* Real Google / Firebase Auth Button */}
           <div className="space-y-3">
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-gray-200"></div>
@@ -154,19 +198,7 @@ export default function Auth() {
 
             <button
               type="button"
-              onClick={async () => {
-                setError("");
-                setLoadingFirebase(true);
-                const res = await loginWithFirebase({
-                  uid: "google_" + Date.now(),
-                  email: "google.user@gmail.com",
-                  displayName: "Google User",
-                  providerId: "google"
-                });
-                setLoadingFirebase(false);
-                if (res.success) navigate("/");
-                else setError(res.message || "Đăng nhập Google thất bại");
-              }}
+              onClick={handleGoogleSignIn}
               disabled={loadingFirebase}
               className="w-full py-3 px-4 bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 text-gray-700 font-semibold transition flex items-center justify-center gap-3 active:scale-[0.99] disabled:opacity-50"
             >
@@ -176,7 +208,7 @@ export default function Auth() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>{loadingFirebase ? "Đang xử lý..." : "Sign in with Firebase Auth"}</span>
+              <span>{loadingFirebase ? "Đang kết nối Google..." : "Đăng nhập với Google"}</span>
             </button>
           </div>
 
