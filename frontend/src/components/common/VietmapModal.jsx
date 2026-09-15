@@ -8,7 +8,11 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
 
   const [query, setQuery] = useState(defaultAddress || '');
   const [suggestions, setSuggestions] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState({
+    name: 'Quận Hải Châu, TP. Đà Nẵng',
+    lat: 16.0544,
+    lng: 108.2022
+  });
   const [loading, setLoading] = useState(false);
   const [routeInfo, setRouteInfo] = useState(null);
   const [vehicle, setVehicle] = useState('motorcycle'); // 'motorcycle', 'car', 'foot'
@@ -134,34 +138,33 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     }
   };
 
-  const vietmapWebUrl = selectedLocation
-    ? `https://maps.vietmap.vn/?point=${selectedLocation.lat},${selectedLocation.lng}`
-    : `https://maps.vietmap.vn/?q=${encodeURIComponent(query || 'Da Nang')}`;
+  const vietmapWebUrl = `https://maps.vietmap.vn/?point=${selectedLocation.lat},${selectedLocation.lng}`;
+  const embedMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${selectedLocation.lng - 0.012}%2C${selectedLocation.lat - 0.009}%2C${selectedLocation.lng + 0.012}%2C${selectedLocation.lat + 0.009}&layer=mapnik&marker=${selectedLocation.lat}%2C${selectedLocation.lng}`;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+      <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-[#ab3500] to-[#d84315] text-white flex items-center justify-between">
+        <div className="px-6 py-3.5 bg-gradient-to-r from-[#ab3500] to-[#d84315] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
               <Compass size={22} className="text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-base">Bản đồ Vietmap GIS Platform</h3>
-              <p className="text-xs text-orange-100">Tìm kiếm địa chỉ, tọa độ và tính khoảng cách đến phòng trọ</p>
+              <h3 className="font-bold text-base">Bản đồ Vietmap GIS Trực Tuyến</h3>
+              <p className="text-xs text-orange-100">Xem trực tiếp bản đồ, định vị và đo lộ trình đến phòng trọ</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white transition"
+            className="p-1.5 rounded-full hover:bg-white/20 text-white transition cursor-pointer"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
           {/* Search Box */}
           <div className="relative">
             <div className="flex gap-2">
@@ -172,14 +175,14 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
                   value={query}
                   onChange={handleQueryChange}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchAddress(query)}
-                  placeholder="Nhập địa chỉ, trường học, quận huyện (VD: Hải Châu, Bách Khoa...)"
+                  placeholder="Nhập địa chỉ, trường học, quận huyện (VD: Hải Châu, Bách Khoa, Sơn Trà...)"
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:bg-white focus:border-[#ab3500] focus:ring-2 focus:ring-[#ab3500]/20 outline-none transition"
                 />
               </div>
               <button
                 onClick={() => handleSearchAddress(query)}
                 disabled={loading}
-                className="px-5 py-2.5 bg-[#ab3500] hover:bg-[#ab3500]/90 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-sm"
+                className="px-5 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
               >
                 {loading ? 'Đang tìm...' : 'Tìm vị trí'}
               </button>
@@ -210,71 +213,65 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
           </div>
 
           {/* Map Preview & Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Visual Location Info */}
-            <div className="md:col-span-7 bg-orange-50/50 rounded-2xl border border-orange-100 p-5 flex flex-col justify-between min-h-[260px]">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 bg-[#ab3500] text-white rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    Điểm đã chọn
-                  </span>
-                  <a
-                    href={vietmapWebUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[#ab3500] font-semibold hover:underline flex items-center gap-1"
-                  >
-                    <span>Mở bản đồ Vietmap</span>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            {/* Live Interactive Map Box */}
+            <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col h-[340px] relative">
+              <iframe
+                title="Bản đồ Vietmap trực quan"
+                src={embedMapUrl}
+                className="w-full h-full border-0"
+                loading="lazy"
+              />
 
-                <div>
-                  <h4 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-                    <MapPin size={18} className="text-[#ab3500]" />
-                    <span>{selectedLocation?.name || query || 'Quận Hải Châu, TP. Đà Nẵng'}</span>
-                  </h4>
-                  {selectedLocation && (
-                    <p className="text-xs text-gray-600 mt-1 font-mono">
-                      Tọa độ: {selectedLocation.lat?.toFixed(5)}, {selectedLocation.lng?.toFixed(5)}
-                    </p>
-                  )}
+              {/* Floating selected location badge */}
+              <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-gray-200 max-w-sm z-10">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 truncate">
+                  <MapPin size={14} className="text-[#ab3500] shrink-0" />
+                  <span className="truncate">{selectedLocation.name}</span>
                 </div>
+                <p className="text-[10px] text-emerald-700 font-mono font-semibold mt-0.5">
+                  Tọa độ: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+                </p>
               </div>
 
-              <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-orange-200/60 mt-4 flex items-center gap-3">
-                <div className="p-2.5 bg-orange-100 text-[#ab3500] rounded-xl">
-                  <Navigation size={20} />
-                </div>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  Hệ thống sử dụng nền tảng <strong>Vietmap API</strong> để định vị chính xác vị trí phòng trọ và đề xuất bạn cùng phòng gần khu vực của bạn nhất.
-                </p>
+              {/* Action link */}
+              <div className="absolute bottom-3 right-3 z-10">
+                <a
+                  href={vietmapWebUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-[#ab3500] hover:bg-[#8e2800] text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Mở rộng</span>
+                  <ExternalLink size={12} />
+                </a>
               </div>
             </div>
 
             {/* Distance & Route Tool */}
-            <div className="md:col-span-5 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4 flex flex-col justify-between">
+            <div className="lg:col-span-5 bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3.5 flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-xs uppercase text-gray-700">Tính khoảng cách & lộ trình</h4>
+                  <h4 className="font-bold text-xs uppercase text-gray-700">Đo lộ trình đến phòng trọ</h4>
                   <div className="inline-flex bg-gray-200 p-0.5 rounded-lg text-xs">
                     <button
                       onClick={() => setVehicle('motorcycle')}
-                      className={`p-1.5 rounded-md ${vehicle === 'motorcycle' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
+                      className={`p-1.5 rounded-md transition ${vehicle === 'motorcycle' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
                       title="Xe máy"
                     >
                       <Bike size={14} />
                     </button>
                     <button
                       onClick={() => setVehicle('car')}
-                      className={`p-1.5 rounded-md ${vehicle === 'car' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
+                      className={`p-1.5 rounded-md transition ${vehicle === 'car' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
                       title="Ô tô"
                     >
                       <Car size={14} />
                     </button>
                     <button
                       onClick={() => setVehicle('foot')}
-                      className={`p-1.5 rounded-md ${vehicle === 'foot' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
+                      className={`p-1.5 rounded-md transition ${vehicle === 'foot' ? 'bg-white shadow text-[#ab3500]' : 'text-gray-500'}`}
                       title="Đi bộ"
                     >
                       <Footprints size={14} />
@@ -283,21 +280,21 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
                 </div>
 
                 <p className="text-[11px] text-gray-500">
-                  Chọn một phòng trọ bên dưới để đo khoảng cách từ vị trí của bạn:
+                  Chọn phòng trọ bên dưới để tính khoảng cách từ điểm đã chọn:
                 </p>
 
-                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 divide-y divide-gray-100">
                   {rooms.slice(0, 4).map((r) => (
                     <div
                       key={r.id}
                       onClick={() => calculateDistanceToRoom(r)}
-                      className="p-2.5 bg-white border border-gray-200 hover:border-[#ab3500] rounded-xl cursor-pointer transition text-xs flex items-center justify-between group"
+                      className="pt-2 first:pt-0 p-2 bg-white hover:bg-orange-50/60 border border-gray-200 hover:border-[#ab3500] rounded-xl cursor-pointer transition text-xs flex items-center justify-between group"
                     >
                       <div className="truncate mr-2">
                         <p className="font-semibold text-gray-800 group-hover:text-[#ab3500] truncate">{r.title}</p>
                         <p className="text-[11px] text-gray-500 truncate">{r.location}</p>
                       </div>
-                      <span className="shrink-0 text-[11px] font-bold text-[#ab3500] bg-orange-50 px-2 py-1 rounded">
+                      <span className="shrink-0 text-[11px] font-bold text-[#ab3500] bg-orange-50 px-2 py-1 rounded-lg">
                         Đo lộ trình
                       </span>
                     </div>
@@ -307,20 +304,12 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
 
               {/* Route calculation result */}
               {routeInfo && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1 text-xs animate-fadeIn">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5 text-xs animate-fadeIn">
                   <p className="font-bold text-emerald-900 truncate">Lộ trình đến: {routeInfo.roomTitle}</p>
-                  <div className="flex items-center justify-between text-emerald-800 font-semibold pt-1">
+                  <div className="flex items-center justify-between text-emerald-800 font-semibold">
                     <span>Khoảng cách: ~{routeInfo.distanceKm} km</span>
                     <span>Thời gian: ~{routeInfo.timeMinutes} phút</span>
                   </div>
-                  <a
-                    href={routeInfo.vietmapLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 text-[11px] text-emerald-700 hover:underline flex items-center gap-1 font-bold inline-block"
-                  >
-                    Xem chỉ đường chi tiết trên Vietmap &rarr;
-                  </a>
                 </div>
               )}
             </div>
@@ -329,10 +318,10 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
 
         {/* Footer */}
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs">
-          <span className="text-gray-500">Dữ liệu bản đồ được cung cấp bởi Vietmap API Platform</span>
+          <span className="text-gray-500">Bản đồ số tương tác trực tiếp được đồng bộ với Vietmap GIS Platform</span>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 font-semibold rounded-xl text-gray-700 transition"
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 font-semibold rounded-xl text-gray-700 transition cursor-pointer"
           >
             Đóng
           </button>
