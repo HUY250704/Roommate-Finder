@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store';
+import { translations } from '../../utils/translations';
 
 export default function AdminUsers() {
-  const { users, updateUserStatus } = useStore();
+  const { users, updateUserStatus, language } = useStore();
+  const t = translations[language] || translations.vi;
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
 
@@ -18,7 +20,7 @@ export default function AdminUsers() {
   const handleToggleStatus = (userId, currentStatus) => {
     const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
     updateUserStatus(userId, nextStatus);
-    alert(`User status changed to ${nextStatus}`);
+    alert(`${t.status}: ${nextStatus}`);
   };
 
   // Mock stats from design
@@ -31,9 +33,9 @@ export default function AdminUsers() {
       {/* Title */}
       <div>
         <h1 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">
-          User Management
+          {t.adminUsersTitle}
         </h1>
-        <p className="font-body-md text-[16px] text-[#5c4037]">Review, verify, and moderate registered users.</p>
+        <p className="font-body-md text-[16px] text-[#5c4037]">{t.adminUsersSubtitle}</p>
       </div>
 
       {/* Summary Cards Bento */}
@@ -45,11 +47,11 @@ export default function AdminUsers() {
                 group
               </span>
             </div>
-            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+18% today</span>
+            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+18% {t.today}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{totalUsersCount}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Total Users</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.totalUsersLabel}</p>
           </div>
         </div>
 
@@ -60,11 +62,11 @@ export default function AdminUsers() {
                 how_to_reg
               </span>
             </div>
-            <span className="bg-blue-100 text-[#005FAC] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Active Seekers</span>
+            <span className="bg-blue-100 text-[#005FAC] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.activeSeekers}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{activeSeekersCount}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Active Match Seekers</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.activeSeekers}</p>
           </div>
         </div>
 
@@ -75,11 +77,11 @@ export default function AdminUsers() {
                 person_add
               </span>
             </div>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">New Accounts</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.newRegistrations}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{newRegistrationsCount}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">New Registrations</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.newRegistrations}</p>
           </div>
         </div>
       </div>
@@ -92,7 +94,7 @@ export default function AdminUsers() {
           </span>
           <input
             className="w-full pl-12 pr-4 py-3 rounded-full border border-[#e6beb2] bg-white font-body-md text-[14px] text-[#281712] focus:outline-none focus:border-[#aa3000]"
-            placeholder="Search by name, email, or handle..."
+            placeholder={t.searchUsersPlaceholder}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -100,7 +102,7 @@ export default function AdminUsers() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {['All', 'Active', 'Verified', 'Suspended'].map(f => (
+          {[t.filterAll, t.active, t.verified, t.suspended].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -140,7 +142,7 @@ export default function AdminUsers() {
                   <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                     verified
                   </span>
-                  Verified
+                  {t.verified}
                 </span>
               ) : (
                 <span className="px-3 py-1 bg-gray-100 text-gray-600 font-label-md text-[12px] rounded-full font-bold">
@@ -151,14 +153,14 @@ export default function AdminUsers() {
 
             <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-[#ffe9e3]">
               <div>
-                <p className="font-label-md text-[10px] uppercase text-[#5c4037] font-semibold">Joined</p>
+                <p className="font-label-md text-[10px] uppercase text-[#5c4037] font-semibold">{t.joined}</p>
                 <p className="font-body-md text-[13px] text-[#281712] font-bold">Oct 12, 2023</p>
               </div>
               <div>
-                <p className="font-label-md text-[10px] uppercase text-[#5c4037] font-semibold">Status</p>
+                <p className="font-label-md text-[10px] uppercase text-[#5c4037] font-semibold">{t.status}</p>
                 <p className="font-body-md text-[13px] text-[#281712] flex items-center gap-1 font-bold">
                   <span className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                  {user.status === 'active' ? 'Active' : 'Suspended'}
+                  {user.status === 'active' ? t.active : t.suspended}
                 </p>
               </div>
             </div>
@@ -168,7 +170,7 @@ export default function AdminUsers() {
                 onClick={() => alert(`Showing details for ${user.name}`)}
                 className="flex-1 h-12 rounded-full bg-[#FFF0EA] text-[#aa3000] font-label-md text-[13px] font-bold hover:bg-[#ffdbd0] transition-colors"
               >
-                View Details
+                {t.viewDetails}
               </button>
               <button
                 onClick={() => navigate('/admin/reports')}
@@ -184,7 +186,7 @@ export default function AdminUsers() {
                       ? 'border-red-200 text-[#ba1a1a] hover:bg-red-50'
                       : 'border-green-200 text-green-600 hover:bg-green-50'
                   }`}
-                  title={user.status === 'active' ? 'Suspend User' : 'Activate User'}
+                  title={user.status === 'active' ? t.suspendUser : t.activateUser}
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     {user.status === 'active' ? 'block' : 'check_circle'}

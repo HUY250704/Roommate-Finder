@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
+import { translations } from '../../utils/translations';
 
 export default function AdminDashboard() {
-  const { users, rooms, reports, resolveReport } = useStore();
+  const { users, rooms, reports, resolveReport, language } = useStore();
+  const t = translations[language] || translations.vi;
   const navigate = useNavigate();
 
   const totalUsers = users.length;
@@ -13,7 +15,7 @@ export default function AdminDashboard() {
 
   const handleResolve = (id) => {
     resolveReport(id);
-    alert('Report marked as resolved!');
+    alert(t.reportMarkedResolved);
   };
 
   return (
@@ -22,16 +24,16 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-display-lg text-[32px] md:text-[40px] font-extrabold text-[#281712] tracking-tight">
-            Overview
+            {t.overview}
           </h1>
-          <p className="font-body-md text-[16px] text-[#5c4037]">Welcome back! Here is what's happening on your platform.</p>
+          <p className="font-body-md text-[16px] text-[#5c4037]">{t.overviewSubtitle}</p>
         </div>
         <button
           onClick={() => navigate('/admin/analytics')}
           className="px-6 py-3 rounded-full bg-[#aa3000] hover:bg-[#aa3000]/95 text-white font-label-lg text-[14px] font-bold shadow-md transition-all active:scale-95 flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-[18px]">analytics</span>
-          View Analytics
+          {t.viewAnalytics}
         </button>
       </div>
 
@@ -45,11 +47,11 @@ export default function AdminDashboard() {
                 group
               </span>
             </div>
-            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+2% today</span>
+            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+2% {t.today}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{totalUsers + 12000}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Total Users</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.totalUsers}</p>
           </div>
         </div>
 
@@ -61,11 +63,11 @@ export default function AdminDashboard() {
                 list_alt
               </span>
             </div>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+4% today</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+4% {t.today}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{approvedRooms + 3800}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Active Listings</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.activeListings}</p>
           </div>
         </div>
 
@@ -77,11 +79,11 @@ export default function AdminDashboard() {
                 pending_actions
               </span>
             </div>
-            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Needs Action</span>
+            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.needsAction}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{pendingRooms}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Pending Listings</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.pendingListings}</p>
           </div>
         </div>
 
@@ -93,11 +95,11 @@ export default function AdminDashboard() {
                 flag
               </span>
             </div>
-            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Urgent</span>
+            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.urgent}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">{pendingReports}</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Recent Reports</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.recentReports}</p>
           </div>
         </div>
       </div>
@@ -107,7 +109,7 @@ export default function AdminDashboard() {
         
         {/* Growth Chart Panel */}
         <div className="bg-white rounded-[24px] p-6 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] lg:col-span-2">
-          <h2 className="font-headline-md text-[20px] font-bold mb-4">User Growth Over Time</h2>
+          <h2 className="font-headline-md text-[20px] font-bold mb-4">{t.userGrowth}</h2>
           {/* Beautiful SVG graph representing chart.js design */}
           <div className="h-64 relative flex items-end justify-between px-2 pt-6">
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
@@ -145,7 +147,7 @@ export default function AdminDashboard() {
         {/* Recent Reports Panel */}
         <div className="bg-white rounded-[24px] p-6 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] flex flex-col justify-between">
           <div>
-            <h2 className="font-headline-md text-[20px] font-bold mb-4">Recent Reports</h2>
+            <h2 className="font-headline-md text-[20px] font-bold mb-4">{t.recentReports}</h2>
             <div className="space-y-4">
               {reports.slice(0, 3).map(rep => (
                 <div key={rep.id} className="p-4 bg-[#fff8f6] rounded-xl border border-[#ffe9e3] flex flex-col gap-1">
@@ -167,7 +169,7 @@ export default function AdminDashboard() {
             onClick={() => navigate('/admin/reports')}
             className="w-full text-center text-[#aa3000] hover:underline font-bold text-[13px] pt-4"
           >
-            Manage All Reports
+            {t.manageAllReports}
           </button>
         </div>
 

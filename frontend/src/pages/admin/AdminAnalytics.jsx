@@ -1,6 +1,11 @@
 import React from 'react';
+import { useStore } from '../../store';
+import { translations } from '../../utils/translations';
 
 export default function AdminAnalytics() {
+  const { language } = useStore();
+  const t = translations[language] || translations.vi;
+
   const popularLocations = [
     { name: 'Hai Chau', value: 42, color: 'bg-[#aa3000]' },
     { name: 'Thanh Khe', value: 28, color: 'bg-[#73584f]' },
@@ -9,9 +14,9 @@ export default function AdminAnalytics() {
   ];
 
   const successCategories = [
-    { name: 'Lifestyle Compatibility', value: 92, icon: 'coffee', desc: 'Cleanliness, habits, hours' },
-    { name: 'Budget Alignment', value: 88, icon: 'payments', desc: 'Rent range, utilities' },
-    { name: 'Location Preference', value: 76, icon: 'location_on', desc: 'Distance to work/uni' }
+    { name: t.lifestyleCompatibility, value: 92, icon: 'coffee', desc: 'Cleanliness, habits, hours' },
+    { name: t.budgetAlignment, value: 88, icon: 'payments', desc: 'Rent range, utilities' },
+    { name: t.locationPreference, value: 76, icon: 'location_on', desc: 'Distance to work/uni' }
   ];
 
   const highPerformers = [
@@ -24,8 +29,8 @@ export default function AdminAnalytics() {
     <div className="p-8 space-y-8 bg-[#fff8f6] min-h-screen font-sans text-[#281712]">
       {/* Title */}
       <div>
-        <h1 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">Platform Analytics</h1>
-        <p className="font-body-md text-[16px] text-[#5c4037]">Key metrics and performance insights.</p>
+        <h1 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">{t.platformAnalyticsTitle}</h1>
+        <p className="font-body-md text-[16px] text-[#5c4037]">{t.platformAnalyticsSubtitle}</p>
       </div>
 
       {/* Stats row */}
@@ -39,7 +44,7 @@ export default function AdminAnalytics() {
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">+12.4k</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">User Growth</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.userGrowthMetric}</p>
           </div>
         </div>
 
@@ -52,7 +57,7 @@ export default function AdminAnalytics() {
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">4,821</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Active Listings</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.activeListingsMetric}</p>
           </div>
         </div>
 
@@ -65,7 +70,7 @@ export default function AdminAnalytics() {
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">2,104</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Successful Matches</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.successfulMatches}</p>
           </div>
         </div>
 
@@ -78,7 +83,7 @@ export default function AdminAnalytics() {
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">87%</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Avg Match Score</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.avgMatchScore}</p>
           </div>
         </div>
       </div>
@@ -88,7 +93,7 @@ export default function AdminAnalytics() {
         
         {/* Popular Locations */}
         <div className="bg-white rounded-[24px] p-6 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] space-y-6">
-          <h2 className="font-headline-md text-[20px] font-bold">Popular Locations</h2>
+          <h2 className="font-headline-md text-[20px] font-bold">{t.popularLocations}</h2>
           <div className="space-y-4">
             {popularLocations.map(loc => (
               <div key={loc.name} className="space-y-2">
@@ -106,7 +111,7 @@ export default function AdminAnalytics() {
 
         {/* Match Success by Category */}
         <div className="bg-white rounded-[24px] p-6 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] space-y-6">
-          <h2 className="font-headline-md text-[20px] font-bold">Match Success by Category</h2>
+          <h2 className="font-headline-md text-[20px] font-bold">{t.matchSuccessByCategory}</h2>
           <div className="space-y-4">
             {successCategories.map(cat => (
               <div key={cat.name} className="flex items-center justify-between p-4 bg-[#fff8f6] rounded-xl border border-[#ffe9e3]">
@@ -125,7 +130,7 @@ export default function AdminAnalytics() {
 
         {/* High Performance Listings */}
         <div className="bg-white rounded-[24px] p-6 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] lg:col-span-2 space-y-6">
-          <h2 className="font-headline-md text-[20px] font-bold">High Performance Listings</h2>
+          <h2 className="font-headline-md text-[20px] font-bold">{t.highPerformanceListings}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {highPerformers.map(item => (
               <div key={item.title} className="p-4 bg-[#fff8f6] rounded-xl border border-[#ffe9e3] flex flex-col justify-between h-40">
@@ -143,8 +148,8 @@ export default function AdminAnalytics() {
                   <h4 className="font-bold text-[15px] text-[#281712] truncate">{item.title}</h4>
                 </div>
                 <div className="border-t border-[#ffe9e3] pt-3 flex justify-between text-xs text-[#5c4037] font-semibold">
-                  <span>{item.matches} Matches</span>
-                  <span>{item.inquiries} Inquiries</span>
+                  <span>{item.matches} {t.matches}</span>
+                  <span>{item.inquiries} {t.inquiries}</span>
                 </div>
               </div>
             ))}

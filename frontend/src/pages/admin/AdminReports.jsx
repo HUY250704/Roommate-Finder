@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store';
+import { translations } from '../../utils/translations';
 
 export default function AdminReports() {
-  const { reports, resolveReport } = useStore();
+  const { reports, resolveReport, language } = useStore();
+  const t = translations[language] || translations.vi;
   const [filter, setFilter] = useState('All');
 
   const filteredReports = reports.filter(r => {
@@ -14,7 +16,7 @@ export default function AdminReports() {
 
   const handleResolve = (id) => {
     resolveReport(id);
-    alert('Report marked as resolved!');
+    alert(t.reportMarkedResolved);
   };
 
   // Mock safety list from template
@@ -56,13 +58,13 @@ export default function AdminReports() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">Reports Management</h2>
-          <p className="font-body-md text-[16px] text-[#5c4037]">Review and action community safety flags.</p>
+          <h2 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">{t.adminReportsTitle}</h2>
+          <p className="font-body-md text-[16px] text-[#5c4037]">{t.adminReportsSubtitle}</p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          {['All', 'Pending', 'Resolved'].map(f => (
+          {[t.filterAll, t.pending, t.verified].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -87,7 +89,7 @@ export default function AdminReports() {
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">1,248</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Total Reports</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.allReports}</p>
           </div>
         </div>
 
@@ -96,11 +98,11 @@ export default function AdminReports() {
             <div className="p-3 bg-yellow-100 rounded-full text-yellow-700">
               <span className="material-symbols-outlined text-[28px]">hourglass_empty</span>
             </div>
-            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Active</span>
+            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.active}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">84</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Pending Review</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.reportsPending}</p>
           </div>
         </div>
 
@@ -109,11 +111,11 @@ export default function AdminReports() {
             <div className="p-3 bg-green-100 rounded-full text-green-700">
               <span className="material-symbols-outlined text-[28px]">check_circle</span>
             </div>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Resolved</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.verified}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">42</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Resolved Today</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.resolvedReports}</p>
           </div>
         </div>
 
@@ -122,11 +124,11 @@ export default function AdminReports() {
             <div className="p-3 bg-red-100 rounded-full text-[#ba1a1a]">
               <span className="material-symbols-outlined text-[28px]">warning</span>
             </div>
-            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Urgent</span>
+            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.urgent}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">7</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Safety Alerts</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.safetyAlerts}</p>
           </div>
         </div>
       </div>
@@ -166,14 +168,14 @@ export default function AdminReports() {
               </div>
 
               <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
-                <span className="text-[12px] text-[#5c4037] font-bold">Status: {rep.status}</span>
+                <span className="text-[12px] text-[#5c4037] font-bold">{t.statusLabel}: {rep.status}</span>
                 <div className="flex gap-2">
                   {rep.status !== 'Resolved' && (
                     <button
                       onClick={() => alert(`Action taken on ${rep.reportedEntity}`)}
                       className="px-4 py-1.5 bg-[#aa3000] text-white font-label-md text-[11px] font-bold rounded-full transition-transform active:scale-95 shadow-sm"
                     >
-                      Take Action
+                      {t.takeAction}
                     </button>
                   )}
                   <button className="p-1 rounded-full hover:bg-gray-100">

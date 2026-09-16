@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store';
+import { translations } from '../../utils/translations';
 
 export default function AdminRooms() {
-  const { rooms, updateRoomStatus, deleteRoom } = useStore();
+  const { rooms, updateRoomStatus, deleteRoom, language } = useStore();
+  const t = translations[language] || translations.vi;
   const [filter, setFilter] = useState('All');
 
   const filteredRooms = rooms.filter(room => {
@@ -18,9 +20,9 @@ export default function AdminRooms() {
   };
 
   const handleDelete = (roomId) => {
-    if (window.confirm('Are you sure you want to delete this listing?')) {
+    if (window.confirm(t.confirmDeleteListing)) {
       deleteRoom(roomId);
-      alert('Listing deleted.');
+      alert(t.listingDeleted);
     }
   };
 
@@ -29,13 +31,13 @@ export default function AdminRooms() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h2 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">Listing Management</h2>
-          <p className="font-body-md text-[16px] text-[#5c4037]">Review, moderate, and manage property listings.</p>
+          <h2 className="font-display-lg text-[32px] md:text-[40px] font-extrabold tracking-tight">{t.adminRoomsTitle}</h2>
+          <p className="font-body-md text-[16px] text-[#5c4037]">{t.adminRoomsSubtitle}</p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 bg-white rounded-full p-2 shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3]">
-          {['All Listings', 'Pending', 'Reported'].map(f => {
+          {[t.allListings, t.pending, t.reported].map(f => {
             const isSel = (f === 'All Listings' && filter === 'All') || (f === 'Pending' && filter === 'Pending') || (f === 'Reported' && filter === 'Reported');
             return (
               <button
@@ -61,11 +63,11 @@ export default function AdminRooms() {
                 pending_actions
               </span>
             </div>
-            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+12% today</span>
+            <span className="bg-[#aa3000]/10 text-[#aa3000] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">+12% {t.today}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">42</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Pending Approvals</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.pendingApprovals}</p>
           </div>
         </div>
 
@@ -76,11 +78,11 @@ export default function AdminRooms() {
                 apartment
               </span>
             </div>
-            <span className="bg-blue-100 text-[#005FAC] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Total Rooms</span>
+            <span className="bg-blue-100 text-[#005FAC] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.totalUsers}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">1,204</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Active Listings</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.activeListings}</p>
           </div>
         </div>
 
@@ -91,11 +93,11 @@ export default function AdminRooms() {
                 warning
               </span>
             </div>
-            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">Needs Review</span>
+            <span className="bg-red-100 text-[#ba1a1a] px-3 py-1 rounded-full font-label-md text-[12px] font-bold">{t.needsAction}</span>
           </div>
           <div>
             <h3 className="font-display-lg text-[28px] font-extrabold text-[#281712] mb-1">8</h3>
-            <p className="font-body-md text-[14px] text-[#5c4037]">Reported Listings</p>
+            <p className="font-body-md text-[14px] text-[#5c4037]">{t.reportedListings}</p>
           </div>
         </div>
       </div>
@@ -103,11 +105,11 @@ export default function AdminRooms() {
       {/* Listings Table Layout */}
       <div className="bg-white rounded-[24px] shadow-[0_10px_40px_0px_rgba(255,77,0,0.04)] border border-[#ffe9e3] overflow-hidden">
         <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-[#ffe9e3] text-xs font-bold uppercase tracking-wider text-[#5c4037]">
-          <div className="col-span-5 md:col-span-4">Room Details</div>
-          <div className="hidden md:block col-span-2">Owner</div>
-          <div className="hidden md:block col-span-2">Location</div>
-          <div className="col-span-3 md:col-span-1 text-right">Price</div>
-          <div className="col-span-4 md:col-span-3 text-right">Actions</div>
+          <div className="col-span-5 md:col-span-4">{t.roomDetails}</div>
+          <div className="hidden md:block col-span-2">{t.owner}</div>
+          <div className="hidden md:block col-span-2">{t.locationLabel}</div>
+          <div className="col-span-3 md:col-span-1 text-right">{t.price}</div>
+          <div className="col-span-4 md:col-span-3 text-right">{t.actions}</div>
         </div>
 
         <div className="divide-y divide-[#ffe9e3]">
@@ -171,7 +173,7 @@ export default function AdminRooms() {
                   <button
                     onClick={() => handleStatusChange(room.id, 'pending')}
                     className="p-2 rounded-full text-yellow-600 hover:bg-yellow-50 transition-colors"
-                    title="Revoke Approval"
+                    title={t.revokeApproval}
                   >
                     <span className="material-symbols-outlined">cancel</span>
                   </button>
@@ -179,7 +181,7 @@ export default function AdminRooms() {
                 <button
                   onClick={() => handleDelete(room.id)}
                   className="p-2 rounded-full text-[#ba1a1a] hover:bg-red-50 transition-colors"
-                  title="Delete"
+                  title={t.deleteListing}
                 >
                   <span className="material-symbols-outlined">delete</span>
                 </button>
