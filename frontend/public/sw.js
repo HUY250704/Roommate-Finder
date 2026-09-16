@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'roommate-finder-v1';
+﻿const CACHE_NAME = 'roommate-finder-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -45,6 +45,9 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/socket.io') ||
+    url.pathname.startsWith('/@vite') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
     url.hostname.includes('googleapis') ||
     url.hostname.includes('firebase')
   ) {

@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
-// Register PWA Service Worker
-if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+// Register the PWA worker only for production builds. Vite dev modules must stay network-served.
+if (import.meta.env.PROD && 'serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
