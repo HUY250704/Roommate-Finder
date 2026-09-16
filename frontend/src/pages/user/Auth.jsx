@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Mail, Lock, LogIn, AlertCircle, X, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, X, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { auth, googleProvider, facebookProvider, signInWithPopup } from '../../config/firebase';
 import bgImage from '../../assets/bg-image.jpg';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
@@ -176,6 +176,19 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex bg-[#fff8f6] font-sans relative">
+      {/* Top Header Controls: Back to Home + Language Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-30 flex items-center gap-3">
+        <Link
+          to="/"
+          className="px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-gray-250 text-xs font-bold text-gray-700 hover:text-[#ab3500] hover:bg-white shadow-sm flex items-center gap-1.5 transition active:scale-95"
+        >
+          <ArrowLeft size={14} />
+          <span>{language === 'vi' ? 'Trang ch?' : 'Home'}</span>
+        </Link>
+        <div className="shadow-sm rounded-full">
+          <LanguageSwitcher />
+        </div>
+      </div>
       {/* Left side: Styled Blurred Image banner with Project Name overlay */}
       <div className="hidden lg:block lg:w-[58%] relative overflow-hidden bg-[#281712]">
         <img

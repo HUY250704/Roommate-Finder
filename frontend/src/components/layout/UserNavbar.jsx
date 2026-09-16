@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building, Compass } from 'lucide-react';
+import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building, Compass, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import VietmapModal from '../common/VietmapModal';
 import { translations } from '../../utils/translations';
 
@@ -21,6 +21,8 @@ export default function UserNavbar() {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('Private Studio');
+  const [images, setImages] = useState([]);
+  const [imageUrlInput, setImageUrlInput] = useState('');
 
   // Form states for Roommate Request
   const [budget, setBudget] = useState('');
@@ -29,6 +31,38 @@ export default function UserNavbar() {
     { id: 1, title: language === 'vi' ? 'Minh đã đồng ý yêu cầu xem phòng của bạn' : 'Minh accepted your viewing request', time: '10m ago', unread: true },
     { id: 2, title: language === 'vi' ? 'Có phòng trọ mới phù hợp với bạn ở Hải Châu' : 'New room listing matches your budget in Hai Chau', time: '2h ago', unread: true },
   ];
+
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setImages((prev) => [...prev, reader.result]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const handleAddImageUrl = (e) => {
+    e.preventDefault();
+    if (!imageUrlInput.trim()) return;
+    const urls = imageUrlInput
+      .split(',')
+      .map((u) => u.trim())
+      .filter(Boolean);
+    setImages((prev) => [...prev, ...urls]);
+    setImageUrlInput('');
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
 
   const handleLogout = () => {
     logout();
@@ -66,6 +100,8 @@ export default function UserNavbar() {
     setLocation('');
     setDescription('');
     setBudget('');
+    setImages([]);
+    setImageUrlInput('');
   };
 
   return (
@@ -310,6 +346,79 @@ export default function UserNavbar() {
                     placeholder="3500000"
                     className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#ab3500] outline-none"
                   />
+                </div>
+              )}
+
+              {postType === 'room' && (
+                <div className="space-y-2 border border-gray-150 rounded-xl p-3 bg-gray-50/70">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-[#ab3500]" />
+                      <span>{t.roomImages}</span>
+                    </label>
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      {images.length} {language === 'vi' ? '?nh �? ch?n' : 'photos selected'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">{t.uploadImagesHint}</p>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 border border-dashed border-[#ab3500]/40 hover:border-[#ab3500] bg-white hover:bg-orange-50/40 text-[#ab3500] py-2 px-3 rounded-lg text-xs font-semibold transition">
+                      <Upload className="w-4 h-4" />
+                      <span>{t.chooseImages}</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Manual URL Input */}
+                  <div className="flex gap-1.5 mt-1.5">
+                    <input
+                      type="url"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      placeholder={t.pasteImageUrl}
+                      className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-[#ab3500] outline-none bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-xs font-semibold transition"
+                    >
+                      {t.addImageUrl}
+                    </button>
+                  </div>
+
+                  {/* Images Preview Grid */}
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2">
+                      {images.map((img, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-video bg-gray-100">
+                          <img src={img} alt={"Uploaded preview " + idx} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              className="p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition shadow"
+                              title={t.removeImage}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                          {idx === 0 && (
+                            <span className="absolute bottom-1 left-1 bg-[#ab3500] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                              {t.primaryImage}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
