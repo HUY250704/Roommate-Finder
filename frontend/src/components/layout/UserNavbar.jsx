@@ -359,7 +359,7 @@ export default function UserNavbar() {
                       <span>{t.roomImages}</span>
                     </label>
                     <span className="text-[11px] text-gray-500 font-medium">
-                      {images.length} {language === 'vi' ? '?nh �? ch?n' : 'photos selected'}
+                      {images.length} {language === 'vi' ? 'ảnh đã chọn' : 'photos selected'}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-500">{t.uploadImagesHint}</p>
