@@ -1,7 +1,33 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Navigation, X, ExternalLink, Compass, Car, Bike, Footprints } from 'lucide-react';
+import {
+  MapPin,
+  Search,
+  Navigation,
+  X,
+  ExternalLink,
+  Compass,
+  Car,
+  Bike,
+  Footprints,
+  ZoomIn,
+  ZoomOut,
+  Crosshair,
+  Layers,
+  GraduationCap,
+  Building,
+  Map,
+} from 'lucide-react';
 import { getVietmapAutocomplete, searchVietmapAddress, calculateVietmapRoute } from '../../utils/vietmap';
 import { useStore } from '../../store';
+
+const POPULAR_AREAS = [
+  { label: 'Q. Hải Châu (ĐN)', query: 'Quận Hải Châu Đà Nẵng' },
+  { label: 'Q. Sơn Trà (ĐN)', query: 'Quận Sơn Trà Đà Nẵng' },
+  { label: 'ĐH Bách Khoa', query: 'Đại học Bách Khoa Đà Nẵng' },
+  { label: 'ĐH Kinh Tế', query: 'Đại học Kinh Tế Đà Nẵng' },
+  { label: 'Q. 1 (TP.HCM)', query: 'Quận 1 TP. Hồ Chí Minh' },
+  { label: 'Q. Cầu Giấy (HN)', query: 'Quận Cầu Giấy Hà Nội' },
+];
 
 export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
   const { rooms } = useStore();
@@ -11,12 +37,17 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
   const [selectedLocation, setSelectedLocation] = useState({
     name: 'Quận Hải Châu, TP. Đà Nẵng',
     lat: 16.0544,
-    lng: 108.2022
+    lng: 108.2022,
   });
   const [loading, setLoading] = useState(false);
   const [routeInfo, setRouteInfo] = useState(null);
   const [vehicle, setVehicle] = useState('motorcycle'); // 'motorcycle', 'car', 'foot'
+  const [mapLayer, setMapLayer] = useState('street'); // 'street' | 'satellite'
+  const [locatingUser, setLocatingUser] = useState(false);
+
   const debounceTimer = useRef(null);
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   useEffect(() => {
     if (defaultAddress) {
@@ -24,6 +55,88 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
       handleSearchAddress(defaultAddress);
     }
   }, [defaultAddress, isOpen]);
+
+  // Leaflet map initialization
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
+
+      if (window.L && !mapInstanceRef.current) {
+        try {
+          const map = window.L.map(mapContainerRef.current, {
+            center: [selectedLocation.lat, selectedLocation.lng],
+            zoom: 14,
+            zoomControl: false,
+          });
+
+          const tileUrl =
+            mapLayer === 'satellite'
+              ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+              : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+          const tiles = window.L.tileLayer(tileUrl, {
+            maxZoom: 19,
+            attribution: '&copy; Vietmap GIS / OpenStreetMap',
+          }).addTo(map);
+
+          const customIcon = window.L.divIcon({
+            className: 'custom-vietmap-pin-modal',
+            html: `<div style="
+              width: 36px; height: 36px;
+              background: #ab3500;
+              border: 3px solid #ffffff;
+              border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg);
+              box-shadow: 0 6px 18px rgba(171, 53, 0, 0.5);
+              display: flex; align-items: center; justify-content: center;
+            ">
+              <span style="
+                width: 12px; height: 12px;
+                background: #ffffff;
+                border-radius: 50%;
+                transform: rotate(45deg);
+                display: block;
+              "></span>
+            </div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -34],
+          });
+
+          const marker = window.L.marker([selectedLocation.lat, selectedLocation.lng], { icon: customIcon }).addTo(
+            map
+          );
+          marker.bindPopup(`
+            <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
+              <b style="color: #ab3500; font-size: 13px;">${selectedLocation.name}</b><br/>
+              <span style="color: #4b5563;">Tọa độ: ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}</span>
+            </div>
+          `);
+
+          mapInstanceRef.current = { map, tiles, marker, routeLayer: null };
+        } catch (e) {
+          console.warn('Leaflet modal init fallback:', e);
+        }
+      } else if (mapInstanceRef.current) {
+        const { map, marker } = mapInstanceRef.current;
+        map.invalidateSize();
+        map.flyTo([selectedLocation.lat, selectedLocation.lng], 14, { duration: 0.8 });
+        if (marker) {
+          marker.setLatLng([selectedLocation.lat, selectedLocation.lng]);
+          marker.getPopup()?.setContent(`
+            <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
+              <b style="color: #ab3500; font-size: 13px;">${selectedLocation.name}</b><br/>
+              <span style="color: #4b5563;">Tọa độ: ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}</span>
+            </div>
+          `);
+        }
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, selectedLocation]);
 
   if (!isOpen) return null;
 
@@ -35,22 +148,22 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
       clearTimeout(debounceTimer.current);
     }
 
-    if (val.trim().length >= 2) {
+    if (val.trim().length >= 1) {
       debounceTimer.current = setTimeout(async () => {
         try {
           const results = await getVietmapAutocomplete(val);
-          setSuggestions(results.slice(0, 5));
+          setSuggestions(results.slice(0, 7));
         } catch {
           setSuggestions([]);
         }
-      }, 250);
+      }, 150);
     } else {
       setSuggestions([]);
     }
   };
 
   const handleSelectSuggestion = (item) => {
-    const text = item.label || item.properties?.name || item.name || query;
+    const text = item.label || item.properties?.label || item.name || query;
     setQuery(text);
     setSuggestions([]);
     if (item.geometry && item.geometry.coordinates) {
@@ -70,7 +183,7 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
       if (feature && feature.geometry) {
         const [lng, lat] = feature.geometry.coordinates;
         setSelectedLocation({
-          name: feature.properties?.name || feature.properties?.label || textToSearch,
+          name: feature.properties?.name || feature.properties?.label || feature.label || textToSearch,
           lat,
           lng,
         });
@@ -88,15 +201,41 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     }
   };
 
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+      return;
+    }
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setSelectedLocation({
+          name: 'Vị trí hiện tại của bạn',
+          lat: latitude,
+          lng: longitude,
+        });
+        setQuery('Vị trí hiện tại của bạn');
+        setLocatingUser(false);
+      },
+      (err) => {
+        console.warn('GPS error:', err);
+        setLocatingUser(false);
+        alert('Không thể truy cập GPS hiện tại. Vui lòng cho phép quyền truy cập vị trí.');
+      },
+      { timeout: 8000 }
+    );
+  };
+
   const calculateDistanceToRoom = async (room) => {
     if (!selectedLocation) {
-      alert('Vui lòng chọn hoặc tìm một địa điểm xuất phát trên Vietmap trước.');
+      alert('Vui lòng chọn hoặc tìm một địa điểm xuất phát trên bản đồ.');
       return;
     }
 
     setLoading(true);
     try {
-      let roomCoords = { lat: 16.0544, lng: 108.2022 }; // default Da Nang center
+      let roomCoords = { lat: 16.0544, lng: 108.2022 };
       const roomSearch = await searchVietmapAddress(room.address ? `${room.address}, ${room.location}` : room.location);
       const feature = roomSearch?.data?.features?.[0] || roomSearch?.features?.[0];
       if (feature?.geometry) {
@@ -131,6 +270,27 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
           vietmapLink: `https://maps.vietmap.vn/?point=${selectedLocation.lat},${selectedLocation.lng}`,
         });
       }
+
+      // Draw polyline on map if Leaflet is active
+      if (mapInstanceRef.current && window.L) {
+        const { map } = mapInstanceRef.current;
+        if (mapInstanceRef.current.routeLayer) {
+          map.removeLayer(mapInstanceRef.current.routeLayer);
+        }
+        const latlngs = [
+          [selectedLocation.lat, selectedLocation.lng],
+          [roomCoords.lat, roomCoords.lng],
+        ];
+        const routeLine = window.L.polyline(latlngs, {
+          color: '#ab3500',
+          weight: 4,
+          dashArray: '6, 8',
+          opacity: 0.8,
+        }).addTo(map);
+
+        mapInstanceRef.current.routeLayer = routeLine;
+        map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -138,96 +298,172 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     }
   };
 
+  const switchLayer = (layerName) => {
+    setMapLayer(layerName);
+    if (mapInstanceRef.current && window.L) {
+      const { map, tiles } = mapInstanceRef.current;
+      map.removeLayer(tiles);
+      const newUrl =
+        layerName === 'satellite'
+          ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      const newTiles = window.L.tileLayer(newUrl, {
+        maxZoom: 19,
+        attribution: '&copy; Vietmap GIS / OpenStreetMap',
+      }).addTo(map);
+      mapInstanceRef.current.tiles = newTiles;
+    }
+  };
+
+  const handleZoom = (delta) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.map.setZoom(mapInstanceRef.current.map.getZoom() + delta);
+    }
+  };
+
   const vietmapWebUrl = `https://maps.vietmap.vn/?point=${selectedLocation.lat},${selectedLocation.lng}`;
-  const embedMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${selectedLocation.lng - 0.012}%2C${selectedLocation.lat - 0.009}%2C${selectedLocation.lng + 0.012}%2C${selectedLocation.lat + 0.009}&layer=mapnik&marker=${selectedLocation.lat}%2C${selectedLocation.lng}`;
+
+  const renderIconCategory = (cat) => {
+    if (cat === 'university') return <GraduationCap size={14} className="text-emerald-600 shrink-0" />;
+    if (cat === 'district' || cat === 'city') return <Building size={14} className="text-blue-600 shrink-0" />;
+    return <MapPin size={14} className="text-[#ab3500] shrink-0" />;
+  };
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl border border-gray-150 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 animate-fadeIn my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-3.5 bg-gradient-to-r from-[#ab3500] to-[#d84315] text-white flex items-center justify-between">
+        <div className="px-5 sm:px-6 py-4 border-b border-gray-150 flex items-center justify-between bg-gradient-to-r from-orange-50/70 to-white shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <Compass size={22} className="text-white" />
+            <div className="w-8 h-8 rounded-xl bg-[#ab3500] text-white flex items-center justify-center shadow-sm">
+              <Compass size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-base">Bản đồ Vietmap GIS Trực Tuyến</h3>
-              <p className="text-xs text-orange-100">Xem trực tiếp bản đồ, định vị và đo lộ trình đến phòng trọ</p>
+              <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+                Bản đồ vị trí & Đo khoảng cách (Vietmap GIS Live)
+              </h3>
+              <p className="text-[11px] text-gray-500">
+                Tìm kiếm vị trí, tra cứu tọa độ và tính toán lộ trình thông minh
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white transition cursor-pointer"
+            className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
-          {/* Search Box */}
-          <div className="relative">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={handleQueryChange}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchAddress(query)}
-                  placeholder="Nhập địa chỉ, trường học, quận huyện (VD: Hải Châu, Bách Khoa, Sơn Trà...)"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:bg-white focus:border-[#ab3500] focus:ring-2 focus:ring-[#ab3500]/20 outline-none transition"
-                />
+        {/* Search & Suggestions Toolbar */}
+        <div className="p-4 sm:p-5 border-b border-gray-150 bg-gray-50/50 space-y-2.5 shrink-0">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <Search size={16} />
               </div>
-              <button
-                onClick={() => handleSearchAddress(query)}
-                disabled={loading}
-                className="px-5 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-              >
-                {loading ? 'Đang tìm...' : 'Tìm vị trí'}
-              </button>
-            </div>
+              <input
+                type="text"
+                value={query}
+                onChange={handleQueryChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchAddress(query)}
+                placeholder="Nhập địa chỉ, trường ĐH, quận huyện (VD: Bách Khoa, Hải Châu, Cầu Rồng)..."
+                className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-250 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#ab3500] focus:border-transparent outline-none transition shadow-sm"
+              />
+              {query && (
+                <button
+                  onClick={() => {
+                    setQuery('');
+                    setSuggestions([]);
+                  }}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
 
-            {/* Suggestions Dropdown */}
-            {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100">
-                {suggestions.map((item, idx) => {
-                  const name = item.properties?.name || item.name || item.label || 'Địa điểm';
-                  const address = item.properties?.label || item.properties?.address || item.label || '';
-                  return (
+              {/* Suggestions Dropdown */}
+              {suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100 max-h-60 overflow-y-auto">
+                  {suggestions.map((item, idx) => (
                     <div
                       key={item.id || idx}
                       onClick={() => handleSelectSuggestion(item)}
-                      className="px-4 py-2.5 hover:bg-orange-50 cursor-pointer flex items-start gap-2.5 text-xs transition"
+                      className="p-3 hover:bg-orange-50/60 cursor-pointer flex items-center gap-2.5 text-xs transition text-gray-800"
                     >
-                      <MapPin size={14} className="text-[#ab3500] shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-800 truncate">{name}</p>
-                        {address && <p className="text-[11px] text-gray-500 truncate">{address}</p>}
+                      {renderIconCategory(item.properties?.category || item.category)}
+                      <div className="truncate">
+                        <p className="font-semibold truncate">
+                          {item.name || item.properties?.name || item.label}
+                        </p>
+                        <p className="text-[11px] text-gray-500 truncate">
+                          {item.label || item.properties?.label || item.properties?.address}
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => handleSearchAddress(query)}
+              disabled={loading || !query}
+              className="px-4 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] disabled:bg-gray-300 text-white text-xs sm:text-sm font-bold rounded-xl shadow transition shrink-0 cursor-pointer active:scale-95"
+            >
+              {loading ? 'Đang tìm...' : 'Tìm kiếm'}
+            </button>
+
+            <button
+              onClick={handleGetCurrentLocation}
+              disabled={locatingUser}
+              className="px-3 py-2.5 bg-white hover:bg-orange-50 text-gray-700 hover:text-[#ab3500] border border-gray-250 text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Lấy vị trí GPS hiện tại"
+            >
+              <Crosshair size={15} className={locatingUser ? 'animate-spin text-[#ab3500]' : ''} />
+              <span className="hidden sm:inline">Vị trí của tôi</span>
+            </button>
           </div>
 
-          {/* Map Preview & Details Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            
-            {/* Live Interactive Map Box */}
-            <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col h-[340px] relative">
-              <iframe
-                title="Bản đồ Vietmap trực quan"
-                src={embedMapUrl}
-                className="w-full h-full border-0"
-                loading="lazy"
-              />
+          {/* Quick Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
+            <span className="text-gray-500 font-semibold shrink-0">Gợi ý nhanh:</span>
+            {POPULAR_AREAS.map((area) => (
+              <button
+                key={area.label}
+                onClick={() => {
+                  setQuery(area.query);
+                  handleSearchAddress(area.query);
+                }}
+                className="px-2.5 py-1 bg-white hover:bg-orange-50 hover:border-orange-200 border border-gray-200 rounded-lg text-gray-700 shrink-0 font-medium transition cursor-pointer"
+              >
+                {area.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-              {/* Floating selected location badge */}
-              <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-gray-200 max-w-sm z-10">
+        {/* Modal Body: Map + Route Panel */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Interactive Leaflet Map */}
+            <div className="lg:col-span-7 relative h-72 sm:h-96 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner">
+              <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+              {/* Fallback frame */}
+              {!window.L && (
+                <iframe
+                  title="Bản đồ Vietmap GIS"
+                  src={`https://maps.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=14&output=embed`}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                />
+              )}
+
+              {/* Floating Selected Location Badge */}
+              <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl shadow-md border border-gray-200 max-w-[260px] z-[500]">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 truncate">
-                  <MapPin size={14} className="text-[#ab3500] shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ab3500] shrink-0 animate-pulse"></span>
                   <span className="truncate">{selectedLocation.name}</span>
                 </div>
                 <p className="text-[10px] text-emerald-700 font-mono font-semibold mt-0.5">
@@ -235,15 +471,51 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
                 </p>
               </div>
 
+              {/* Map Layer Switcher */}
+              <div className="absolute top-3 right-3 z-[500] flex items-center gap-1.5">
+                <div className="inline-flex bg-white/95 backdrop-blur-md border border-gray-200 p-0.5 rounded-xl shadow-sm text-[11px] font-semibold">
+                  <button
+                    onClick={() => switchLayer('street')}
+                    className={`px-2 py-1 rounded-lg transition ${mapLayer === 'street' ? 'bg-[#ab3500] text-white' : 'text-gray-600'}`}
+                  >
+                    Đường phố
+                  </button>
+                  <button
+                    onClick={() => switchLayer('satellite')}
+                    className={`px-2 py-1 rounded-lg transition ${mapLayer === 'satellite' ? 'bg-[#ab3500] text-white' : 'text-gray-600'}`}
+                  >
+                    Vệ tinh
+                  </button>
+                </div>
+              </div>
+
+              {/* Zoom Controls */}
+              <div className="absolute bottom-14 right-3 z-[500] flex flex-col gap-1.5">
+                <button
+                  onClick={() => handleZoom(1)}
+                  className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-md text-gray-700 hover:text-[#ab3500] flex items-center justify-center transition active:scale-95 cursor-pointer"
+                  title="Phóng to"
+                >
+                  <ZoomIn size={16} />
+                </button>
+                <button
+                  onClick={() => handleZoom(-1)}
+                  className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-md text-gray-700 hover:text-[#ab3500] flex items-center justify-center transition active:scale-95 cursor-pointer"
+                  title="Thu nhỏ"
+                >
+                  <ZoomOut size={16} />
+                </button>
+              </div>
+
               {/* Action link */}
-              <div className="absolute bottom-3 right-3 z-10">
+              <div className="absolute bottom-3 right-3 z-[500]">
                 <a
                   href={vietmapWebUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-[#ab3500] hover:bg-[#8e2800] text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 bg-[#ab3500] hover:bg-[#8e2800] text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>Mở rộng</span>
+                  <span>Mở rộng Vietmap</span>
                   <ExternalLink size={12} />
                 </a>
               </div>
@@ -280,15 +552,15 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
                 </div>
 
                 <p className="text-[11px] text-gray-500">
-                  Chọn phòng trọ bên dưới để tính khoảng cách từ điểm đã chọn:
+                  Chọn phòng trọ bên dưới để đo khoảng cách và lộ trình từ vị trí đang chọn:
                 </p>
 
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 divide-y divide-gray-100">
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 divide-y divide-gray-100">
                   {rooms.slice(0, 4).map((r) => (
                     <div
                       key={r.id}
                       onClick={() => calculateDistanceToRoom(r)}
-                      className="pt-2 first:pt-0 p-2 bg-white hover:bg-orange-50/60 border border-gray-200 hover:border-[#ab3500] rounded-xl cursor-pointer transition text-xs flex items-center justify-between group"
+                      className="pt-2 first:pt-0 p-2 bg-white hover:bg-orange-50/70 border border-gray-200 hover:border-[#ab3500] rounded-xl cursor-pointer transition text-xs flex items-center justify-between group"
                     >
                       <div className="truncate mr-2">
                         <p className="font-semibold text-gray-800 group-hover:text-[#ab3500] truncate">{r.title}</p>
@@ -310,6 +582,15 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
                     <span>Khoảng cách: ~{routeInfo.distanceKm} km</span>
                     <span>Thời gian: ~{routeInfo.timeMinutes} phút</span>
                   </div>
+                  <a
+                    href={routeInfo.vietmapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline pt-0.5"
+                  >
+                    <span>Mở chỉ đường trên Vietmap</span>
+                    <ExternalLink size={11} />
+                  </a>
                 </div>
               )}
             </div>
@@ -317,8 +598,10 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs">
-          <span className="text-gray-500">Bản đồ số tương tác trực tiếp được đồng bộ với Vietmap GIS Platform</span>
+        <div className="px-6 py-3 bg-gray-50 border-t border-gray-150 flex items-center justify-between text-xs shrink-0">
+          <span className="text-gray-500 text-[11px] sm:text-xs">
+            Bản đồ tương tác thời gian thực tích hợp Vietmap GIS Platform
+          </span>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 font-semibold rounded-xl text-gray-700 transition cursor-pointer"

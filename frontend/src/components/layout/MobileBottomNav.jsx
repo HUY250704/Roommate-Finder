@@ -80,7 +80,7 @@ export default function MobileBottomNav() {
             }
           >
             {currentUser?.avatar ? (
-              <img src={currentUser.avatar} alt="Profile" className="w-5 h-5 rounded-full object-cover border border-gray-300" />
+              <img src={currentUser.avatar} alt="Profile" className="w-5 h-5 rounded-full object-cover border border-gray-300" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'; }} />
             ) : (
               <User size={20} />
             )}

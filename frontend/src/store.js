@@ -7,7 +7,7 @@ const initialUsers = [
     age: 24,
     email: 'minh@example.com',
     role: 'user',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
     status: 'active',
     gender: 'Male',
     phone: '0912345678',
@@ -27,7 +27,7 @@ const initialUsers = [
     age: 24,
     email: 'sarah@example.com',
     role: 'user',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
     status: 'active',
     gender: 'Female',
     phone: '0987654321',
@@ -47,7 +47,7 @@ const initialUsers = [
     age: 27,
     email: 'david@example.com',
     role: 'user',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA5rm5OI-opWr5IMmYm0ZkwX7QOZpadvDZRQjnzhN494BSKFwcQcXyqp4f9FU-VsvMrxvIMV9qM5WEIpn81Fh6rB_aXXji7AhLzxh8MEXxMjNLlHZprv2Lz450V5cjd1HsPLxwBmwlgVREm5iQUqXVj6FzQ85JaXaWkArfMP4kUXn9BAfJMqAL3axx-6v61m5t7qGnRNysFL9A_7jkmWtpTiiUDy9a1x7gYVwBNSCW0yYA0zhVaXSw',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
     status: 'active',
     gender: 'Male',
     phone: '0905556677',
@@ -78,11 +78,11 @@ const initialRooms = [
     price: 3000000,
     location: 'Hai Chau District, Da Nang',
     type: 'Private Studio',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgISmhhNbYdxddOJanGAKAPZl8aNTimA_6veZMbW3-ApQ-51LNUPMo0pHRasB90ai1SXW0bNbEDK3PoAS0MKHqIquHT4J60JHalmulE31H7AoUORtgt6iAOLeI_Wo6JtkHsfDjz33x77aCDZCDwIdFgP8Tqp7Wt-5Y-AU155Xlvg8DHQdDZYGOGtu0lWDQrbMnvjMBeCvifp771fUSpy2M7nWDogGK_LQdVb1NC0dpuIHXLXQxeac',
+    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
     gallery: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgISmhhNbYdxddOJanGAKAPZl8aNTimA_6veZMbW3-ApQ-51LNUPMo0pHRasB90ai1SXW0bNbEDK3PoAS0MKHqIquHT4J60JHalmulE31H7AoUORtgt6iAOLeI_Wo6JtkHsfDjz33x77aCDZCDwIdFgP8Tqp7Wt-5Y-AU155Xlvg8DHQdDZYGOGtu0lWDQrbMnvjMBeCvifp771fUSpy2M7nWDogGK_LQdVb1NC0dpuIHXLXQxeac',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAUY90f9rBaxQa10tswZs4G-kf_IktyqBWK34kLUf1QdJYl1KJQhkIado7w-T2b-pBU1s0RShJ-TShRonkp5qCLRFu-ogYYJcRgTUQRTBikbrefcpyYOsZQwZhNQqx8IdYptwLUPeMRnhvD05j4Xz_Q735PhB5u7GT_nT8w7o2CNLAJmgBEGOsk5VHUMmV39n2xbuUrLyRLiufzd4dx8JVPDsKlp6wqYmB5cXEk31Ldw_to3BPgwDw',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC_hwMofla8f5C4tXS7mL1zT2_xu4lSDbYi04yujeqBBqlK6MW0YMiglxfVGEG-2bUmR6_9gQb7pUHY83teOlbCgXQ_T26Ilv0gV7QWcnkcJ7_y7aDrbx8nfxZBKcl2sMgml6xgwP7vYu_ovCtFxT2DGsoortSrlVq0AtuYYcFt625M2xqcq2TtJj77VUYJvKHgNaOQxMna1EJ_mFvGqMojIA6C10qzWZAOsV0OmA4MVOwJgZdTnaw'
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800'
     ],
     ownerId: 'minh',
     description: 'Enjoy living in this beautifully designed modern studio located in the heart of Hai Chau. Perfect for young professionals or students looking for a quiet yet central location. The room is fully furnished with a comfortable bed, study desk, and an en-suite bathroom. Natural light floods the room through a large window overlooking the quiet neighborhood street.',
@@ -100,10 +100,10 @@ const initialRooms = [
     price: 4500000,
     location: 'Son Tra District, Da Nang',
     type: 'Shared Apartment',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB26v-1tqG_cKoxH59-Y9pZ4JzC7n9e3uY5V90W940F837yV10Y770C888A110N760E450Q330T220W110O990S880U770R660P550M440K330I220G110E000C990A880Y770W660U550S440Q330O220M110K000I990G880E770C660A550',
+    image: 'https://images.unsplash.com/photo-1502005229762-ae1b46000e58?w=800',
     gallery: [
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB26v-1tqG_cKoxH59-Y9pZ4JzC7n9e3uY5V90W940F837yV10Y770C888A110N760E450Q330T220W110O990S880U770R660P550M440K330I220G110E000C990A880Y770W660U550S440Q330O220M110K000I990G880E770C660A550',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgISmhhNbYdxddOJanGAKAPZl8aNTimA_6veZMbW3-ApQ-51LNUPMo0pHRasB90ai1SXW0bNbEDK3PoAS0MKHqIquHT4J60JHalmulE31H7AoUORtgt6iAOLeI_Wo6JtkHsfDjz33x77aCDZCDwIdFgP8Tqp7Wt-5Y-AU155Xlvg8DHQdDZYGOGtu0lWDQrbMnvjMBeCvifp771fUSpy2M7nWDogGK_LQdVb1NC0dpuIHXLXQxeac'
+      'https://images.unsplash.com/photo-1502005229762-ae1b46000e58?w=800',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'
     ],
     ownerId: 'david',
     description: 'A spacious and sunny master bedroom in a 3-bedroom luxury apartment, just 5 minutes walk to My Khe Beach. Includes private balcony, king bed, AC, and high-speed fiber internet. Building has a rooftop pool and gym.',
@@ -183,7 +183,7 @@ export const useStore = create((set) => ({
           ...data,
           id: data._id || data.id,
           name: data.username || data.name || googleData.name || "Google User",
-          avatar: data.avatar || googleData.avatar || googleData.picture || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+          avatar: data.avatar || googleData.avatar || googleData.picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
           status: "active"
         };
         set({ currentUser: user });
@@ -200,7 +200,7 @@ export const useStore = create((set) => ({
       name: nickname,
       email: emailLower,
       role: "user",
-      avatar: googleData.avatar || googleData.picture || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+      avatar: googleData.avatar || googleData.picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
       status: "active",
       authProvider: "google",
       gender: "Male",
@@ -236,7 +236,7 @@ export const useStore = create((set) => ({
           ...data,
           id: data._id || data.id,
           name: data.username || data.name || firebaseData.displayName || "Firebase User",
-          avatar: data.avatar || firebaseData.photoURL || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+          avatar: data.avatar || firebaseData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
           status: "active"
         };
         set({ currentUser: user });
@@ -253,7 +253,7 @@ export const useStore = create((set) => ({
       name: nickname,
       email: emailLower,
       role: "user",
-      avatar: firebaseData.photoURL || firebaseData.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuAW5tXAl29HfLPgJzezpubAmN60dyoEReg0lrpGTvaY6rG4UhV6uOgId7Pan-Kiof5Yr8OmzRf_xNF7NaCs0ZU2zxopGnPKuCswUWKob9LxYT3cKw7KdFuABoZQPvrg0GqXIKdLj4Jk2t4fgBnIT3liWZ5ItXuvtJuBw_5Cn-7zUg8nDA9W1o30g_F3h7F_r7kUuQKDds2C-clINixwEqHyxovo4eIXuvZR3xZMxZ1TWN1ywSodwwg",
+      avatar: firebaseData.photoURL || firebaseData.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
       status: "active",
       authProvider: firebaseData.providerId || "firebase",
       gender: "Male",
@@ -287,7 +287,7 @@ export const useStore = create((set) => ({
           name: data.username || data.name || emailLower.split('@')[0],
           email: data.email || emailLower,
           role: data.role || (emailLower === 'admin@roommate.com' ? 'admin' : 'user'),
-          avatar: data.avatar || (emailLower === 'admin@roommate.com' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY'),
+          avatar: data.avatar || (emailLower === 'admin@roommate.com' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
           status: 'active'
         };
         set({ currentUser: user });
@@ -301,7 +301,7 @@ export const useStore = create((set) => ({
             name: isDemoAdmin ? 'System Admin' : 'Sarah J.',
             email: emailLower,
             role: isDemoAdmin ? 'admin' : 'user',
-            avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
+            avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
             status: 'active'
           };
           set({ currentUser: user });
@@ -319,7 +319,7 @@ export const useStore = create((set) => ({
         name: isDemoAdmin ? 'System Admin' : emailLower.split('@')[0],
         email: emailLower,
         role: isDemoAdmin ? 'admin' : 'user',
-        avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBuVa8j942YG0i667QhZ9TjefRxPYJGdCQmz3O9FMH7eWqEtq2wK6bdJcWHX7XDzKFcGUGeYsVtwkfM3qGNBXaHc87MxqPsWCAb3SKv-QP9HxipyZ-v9xbQiXIBM592cJAMM8JrKFHTA4rVf5Qag6UT8D8ItanO6XRtp0h49MHy1AEm42itLicNyytRTPOyj90sO4iKbu7ueJUP9GQs-BYDnhocVGg5w3wM1YCxOXaSCrPOkq-lKAY',
+        avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
         status: 'active'
       };
       set({ currentUser: user });

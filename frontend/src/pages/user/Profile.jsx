@@ -37,6 +37,8 @@ export default function Profile() {
               src={currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
               alt={name}
               className="w-20 h-20 rounded-full border-4 border-white object-cover shadow-md ring-2 ring-[#ab3500]/20"
+              referrerPolicy="no-referrer"
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'; }}
             />
           </div>
         </div>

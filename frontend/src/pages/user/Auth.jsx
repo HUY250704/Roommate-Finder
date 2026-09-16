@@ -34,7 +34,7 @@ export default function Auth() {
         navigate('/');
       }
     } else {
-      setError(res.message || (language === 'vi' ? 'Email hoặc mật khẩu không chính xác' : 'Invalid email or password'));
+      setError(res?.message || t.invalidCredentials);
     }
   };
 
@@ -77,7 +77,7 @@ export default function Auth() {
           navigate('/');
           return;
         } else {
-          setError(res.message || (language === 'vi' ? 'Đăng nhập Google thất bại' : 'Google sign-in failed'));
+          setError(res?.message || t.googleFailed);
         }
       } else {
         setSocialProviderType('google');
@@ -120,9 +120,9 @@ export default function Auth() {
       if (resultUser) {
         const res = await loginWithFirebase({
           uid: resultUser.uid,
-          email: resultUser.email || `fb_${resultUser.uid}@facebook.com`,
+          email: resultUser.email || ('fb_' + resultUser.uid + '@facebook.com'),
           displayName: resultUser.displayName || 'Facebook User',
-          photoURL: resultUser.photoURL || `https://graph.facebook.com/${resultUser.providerData?.[0]?.uid || resultUser.uid}/picture?type=large`,
+          photoURL: resultUser.photoURL || ('https://graph.facebook.com/' + (resultUser.providerData?.[0]?.uid || resultUser.uid) + '/picture?type=large'),
           idToken: resultUser.accessToken || (await resultUser.getIdToken?.()),
           providerId: 'facebook'
         });
@@ -131,7 +131,7 @@ export default function Auth() {
           navigate('/');
           return;
         } else {
-          setError(res.message || (language === 'vi' ? 'Đăng nhập Facebook thất bại' : 'Facebook sign-in failed'));
+          setError(res?.message || t.loginFailed);
         }
       } else {
         setSocialProviderType('facebook');
@@ -156,10 +156,10 @@ export default function Auth() {
     const isFb = socialProviderType === 'facebook';
 
     const res = await loginWithFirebase({
-      uid: `${socialProviderType}_` + Date.now(),
+      uid: (socialProviderType + '_' + Date.now()),
       email: cleanEmail,
       displayName: cleanName,
-      photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=${isFb ? '1877F2' : 'EA4335'}&color=fff`,
+      photoURL: ('https://ui-avatars.com/api/?name=' + encodeURIComponent(cleanName) + '&background=' + (isFb ? '1877F2' : 'EA4335') + '&color=fff'),
       providerId: socialProviderType
     });
 
@@ -168,7 +168,7 @@ export default function Auth() {
     if (res.success) {
       navigate('/');
     } else {
-      setError(res.message || (language === 'vi' ? 'Đăng nhập thất bại' : 'Login failed'));
+      setError(res?.message || t.loginFailed);
     }
   };
 
@@ -177,18 +177,19 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-[#fff8f6] font-sans relative">
       {/* Top Header Controls: Back to Home + Language Switcher */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-30 flex items-center gap-3">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-30 flex items-center gap-2.5 sm:gap-3">
         <Link
           to="/"
           className="px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-gray-250 text-xs font-bold text-gray-700 hover:text-[#ab3500] hover:bg-white shadow-sm flex items-center gap-1.5 transition active:scale-95"
         >
           <ArrowLeft size={14} />
-          <span>{language === 'vi' ? 'Trang ch?' : 'Home'}</span>
+          <span>{t.backToHome || (language === 'vi' ? 'Trang chủ' : 'Home')}</span>
         </Link>
         <div className="shadow-sm rounded-full">
           <LanguageSwitcher />
         </div>
       </div>
+
       {/* Left side: Styled Blurred Image banner with Project Name overlay */}
       <div className="hidden lg:block lg:w-[58%] relative overflow-hidden bg-[#281712]">
         <img
@@ -212,31 +213,27 @@ export default function Auth() {
               RoomMate <span className="text-[#ffdbcf]">Finder</span>
             </h1>
             <p className="text-[#ffdbcf]/90 text-lg max-w-md font-light leading-relaxed">
-              {language === 'vi'
-                ? 'Dễ dàng kết nối bạn cùng phòng lý tưởng và không gian sống hoàn hảo, an toàn và minh bạch.'
-                : 'Easily connect with compatible roommates and quality living spaces, securely and transparently.'}
+              {t.platformHeroDesc}
             </p>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-[#ffdbcf]/80">
-            <span>✓ {language === 'vi' ? 'Xác thực hồ sơ 100%' : '100% Verified Profiles'}</span>
-            <span>✓ {language === 'vi' ? 'Tìm kiếm thông minh' : 'Smart Search & GIS'}</span>
-            <span>✓ {language === 'vi' ? 'An toàn & Tiện lợi' : 'Safe & Convenient'}</span>
+            <span>? {t.verifiedProfiles100}</span>
+            <span>? {t.smartSearch}</span>
+            <span>? {t.safeAndConvenient}</span>
           </div>
         </div>
       </div>
 
       {/* Right side: Login form */}
-      <div className="w-full lg:w-[42%] flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-16 py-10">
+      <div className="w-full lg:w-[42%] flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-16 py-12 pt-20 lg:pt-12">
         <div className="max-w-md w-full mx-auto space-y-5">
           <div>
             <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">
-              {language === 'vi' ? 'Đăng nhập tài khoản' : 'Sign in to Account'}
+              {t.signInTitle}
             </h2>
             <p className="text-sm text-gray-500 mt-1.5">
-              {language === 'vi'
-                ? 'Chào mừng bạn quay lại hệ thống RoomMate Finder'
-                : 'Welcome back to RoomMate Finder Platform'}
+              {t.welcomeBack}
             </p>
           </div>
 
@@ -251,7 +248,7 @@ export default function Auth() {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="block text-xs font-bold text-[#5c4037] mb-1.5 uppercase tracking-wider">
-                {language === 'vi' ? 'Địa chỉ Email' : 'Email Address'}
+                {t.emailAddress}
               </label>
               <div className="relative">
                 <Mail className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -269,10 +266,10 @@ export default function Auth() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-xs font-bold text-[#5c4037] uppercase tracking-wider">
-                  {language === 'vi' ? 'Mật khẩu' : 'Password'}
+                  {t.password}
                 </label>
                 <a href="#forgot" className="text-xs font-bold text-[#aa3000] hover:underline">
-                  {language === 'vi' ? 'Quên mật khẩu?' : 'Forgot password?'}
+                  {t.forgotPassword}
                 </a>
               </div>
               <div className="relative">
@@ -283,7 +280,7 @@ export default function Auth() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white"
-                  placeholder="••••••••"
+                  placeholder="��������"
                 />
               </div>
             </div>
@@ -302,7 +299,7 @@ export default function Auth() {
           <div className="flex items-center justify-center gap-3 my-0.5">
             <div className="flex-grow border-t border-gray-200"></div>
             <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider px-2 shrink-0">
-              {language === 'vi' ? 'hoặc tiếp tục với' : 'or continue with'}
+              {t.orContinueWith}
             </span>
             <div className="flex-grow border-t border-gray-200"></div>
           </div>
@@ -322,7 +319,7 @@ export default function Auth() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>{loadingFirebase ? (language === 'vi' ? 'Đang kết nối...' : 'Connecting...') : (language === 'vi' ? 'Đăng nhập với Google' : 'Sign in with Google')}</span>
+              <span>{loadingFirebase ? t.connecting : t.signInGoogle}</span>
             </button>
 
             {/* Facebook Sign In Button via Firebase */}
@@ -335,14 +332,14 @@ export default function Auth() {
               <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
-              <span>{loadingFirebase ? (language === 'vi' ? 'Đang kết nối...' : 'Connecting...') : (language === 'vi' ? 'Đăng nhập với Facebook' : 'Sign in with Facebook')}</span>
+              <span>{loadingFirebase ? t.connecting : t.signInFacebook}</span>
             </button>
           </div>
 
           {/* Bottom Language Switcher */}
           <div className="flex items-center justify-center gap-3 pt-3 border-t border-gray-100">
             <span className="text-xs font-semibold text-gray-500">
-              {language === 'vi' ? 'Ngôn ngữ:' : 'Language:'}
+              {t.languageLabel}
             </span>
             <LanguageSwitcher />
           </div>
@@ -368,7 +365,7 @@ export default function Auth() {
                   </svg>
                 )}
                 <h3 className="font-bold text-gray-900 text-base">
-                  {socialProviderType === 'google' ? 'Đăng nhập với Google' : 'Đăng nhập với Facebook'}
+                  {socialProviderType === 'google' ? t.signInGoogle : t.signInFacebook}
                 </h3>
               </div>
               <button onClick={() => setShowSocialModal(false)} className="text-gray-400 hover:text-gray-600">
@@ -379,17 +376,17 @@ export default function Auth() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 space-y-1">
               <p className="font-bold flex items-center gap-1">
                 <ShieldAlert size={14} className="text-blue-700" />
-                Xác thực Firebase Authentication
+                {t.firebaseAuthTitle}
               </p>
               <p>
-                Nhập thông tin tài khoản để hoàn tất đăng nhập trực tiếp qua hệ thống Firebase.
+                {t.firebaseAuthDesc}
               </p>
             </div>
 
             <form onSubmit={handleCustomSocialSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  {socialProviderType === 'google' ? 'Email Google / Gmail' : 'Email / SĐT Facebook'}
+                  {socialProviderType === 'google' ? (language === 'vi' ? 'Email Google / Gmail' : 'Google Email / Gmail') : (language === 'vi' ? 'Email / S�T Facebook' : 'Facebook Email / Phone')}
                 </label>
                 <input
                   type="email"
@@ -402,12 +399,12 @@ export default function Auth() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Họ và tên hiển thị</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">{t.displayName}</label>
                 <input
                   type="text"
                   value={socialCustomName}
                   onChange={(e) => setSocialCustomName(e.target.value)}
-                  placeholder="Ví dụ: Nguyễn Văn A"
+                  placeholder={t.displayNamePlaceholder}
                   className="w-full border rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-[#aa3000] outline-none"
                 />
               </div>
@@ -418,16 +415,14 @@ export default function Auth() {
                   onClick={() => setShowSocialModal(false)}
                   className="flex-1 py-2.5 border rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                 >
-                  Hủy
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={loadingFirebase || !socialCustomEmail}
-                  className={`flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow transition ${
-                    socialProviderType === 'facebook' ? 'bg-[#1877F2] hover:bg-[#166fe5]' : 'bg-[#4285F4] hover:bg-[#3367D6]'
-                  }`}
+                  className={'flex-1 py-2.5 text-white rounded-xl text-xs font-semibold shadow transition ' + (socialProviderType === 'facebook' ? 'bg-[#1877F2] hover:bg-[#166fe5]' : 'bg-[#4285F4] hover:bg-[#3367D6]')}
                 >
-                  {loadingFirebase ? "Đang xử lý..." : "Xác nhận đăng nhập"}
+                  {loadingFirebase ? t.processing : t.confirmLogin}
                 </button>
               </div>
             </form>

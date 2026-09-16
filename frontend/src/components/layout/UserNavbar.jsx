@@ -229,6 +229,8 @@ export default function UserNavbar() {
                         className="h-8 w-8 rounded-full object-cover border border-gray-200 ring-2 ring-[#ab3500]/15"
                         src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
                         alt={currentUser.name}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'; }}
                       />
                       <span className="text-xs font-bold text-gray-800 hidden xl:inline max-w-[90px] truncate">{currentUser.name}</span>
                     </Link>

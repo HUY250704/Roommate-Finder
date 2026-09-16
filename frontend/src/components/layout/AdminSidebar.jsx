@@ -95,6 +95,8 @@ export default function AdminSidebar() {
             src={currentUser?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
             alt="Admin Avatar"
             className="w-10 h-10 rounded-full object-cover border border-[#aa3000]/20"
+            referrerPolicy="no-referrer"
+            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'; }}
           />
           <div className="min-w-0">
             <p className="text-sm font-bold text-[#281712] truncate">{currentUser?.name || 'System Admin'}</p>
