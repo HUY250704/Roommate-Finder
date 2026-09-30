@@ -8,12 +8,14 @@ import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { translations } from '../../utils/translations';
 
 export default function Auth() {
-  const { login, loginWithFirebase, language } = useStore();
+  const { login, register, loginWithFirebase, language } = useStore();
   const t = translations[language] || translations.vi;
   const [loadingFirebase, setLoadingFirebase] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
   const [imgError, setImgError] = useState(false);
   const fallbackImgUrl = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000';
@@ -21,7 +23,9 @@ export default function Auth() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const res = await login(email, password);
+    const res = isRegistering
+      ? await register(username, email, password)
+      : await login(email, password);
     if (res?.success) navigate(res.role === 'admin' ? '/admin/dashboard' : '/');
     else setError(res?.message || t.invalidCredentials);
   };
@@ -114,7 +118,7 @@ export default function Auth() {
         <div className="max-w-md w-full mx-auto space-y-5">
           <div>
             <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">
-              {t.signInTitle}
+              {isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.signInTitle}
             </h2>
             <p className="text-sm text-gray-500 mt-1.5">
               {t.welcomeBack}
@@ -130,6 +134,23 @@ export default function Auth() {
 
           {/* Main Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
+            {isRegistering && (
+              <div>
+                <label className="block text-xs font-bold text-[#5c4037] mb-1.5 uppercase tracking-wider">
+                  {language === 'vi' ? 'Tên người dùng' : 'Username'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  minLength={3}
+                  autoComplete="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white"
+                  placeholder={language === 'vi' ? 'Tên hiển thị' : 'Your username'}
+                />
+              </div>
+            )}
             <div>
               <label className="block text-xs font-bold text-[#5c4037] mb-1.5 uppercase tracking-wider">
                 {t.emailAddress}
@@ -161,6 +182,8 @@ export default function Auth() {
                 <input
                   type="password"
                   required
+                  minLength={isRegistering ? 6 : undefined}
+                  autoComplete={isRegistering ? 'new-password' : 'current-password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white"
@@ -175,7 +198,7 @@ export default function Auth() {
               className="w-full py-3 rounded-full bg-[#aa3000] hover:bg-[#8e2800] text-white font-bold text-sm shadow-md transition duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogIn size={18} />
-              <span>{t.login}</span>
+              <span>{isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.login}</span>
             </button>
           </form>
 
@@ -197,6 +220,19 @@ export default function Auth() {
               {loadingFirebase ? t.connecting : t.signInFacebook}
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegistering(value => !value);
+              setError('');
+            }}
+            className="w-full text-center text-sm font-semibold text-[#ab3500] hover:underline"
+          >
+            {isRegistering
+              ? (language === 'vi' ? 'Đã có tài khoản? Đăng nhập' : 'Already registered? Sign in')
+              : (language === 'vi' ? 'Chưa có tài khoản? Tạo tài khoản' : 'New here? Create an account')}
+          </button>
 
           <div className="flex items-center justify-center gap-3 pt-3 border-t border-gray-100">
             <span className="text-xs font-semibold text-gray-500">{t.languageLabel}</span>

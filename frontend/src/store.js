@@ -206,6 +206,35 @@ export const useStore = create((set) => ({
     }
   },
 
+  register: async (username, email, password) => {
+    localStorage.removeItem('token');
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), email: email.toLowerCase().trim(), password }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return { success: false, message: data.message || 'Could not create account' };
+      if (!data.token) return { success: false, message: 'Registration did not create an authenticated session' };
+
+      localStorage.setItem('token', data.token);
+      const user = {
+        ...data,
+        id: data._id || data.id,
+        name: data.username || username,
+        email: data.email || email,
+        avatar: data.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+        status: 'active',
+      };
+      set({ currentUser: user });
+      return { success: true, role: user.role || 'user' };
+    } catch (error) {
+      console.warn('Backend registration failed', error);
+      return { success: false, message: 'Không thể kết nối dịch vụ đăng ký' };
+    }
+  },
+
   login: async (email, password) => {
     localStorage.removeItem('token');
     const emailLower = email.toLowerCase().trim();
