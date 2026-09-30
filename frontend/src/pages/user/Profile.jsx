@@ -64,17 +64,6 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>{t.logout}</span>
-            </button>
-          </div>
-
           <form onSubmit={handleSave} className="mt-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -154,10 +143,18 @@ export default function Profile() {
               />
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-red-700 transition hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>{t.logout}</span>
+              </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white font-bold text-sm rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
+                className="px-3 sm:px-6 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>{t.saveChanges}</span>
