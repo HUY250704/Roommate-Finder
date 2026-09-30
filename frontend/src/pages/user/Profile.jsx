@@ -1,12 +1,14 @@
 ﻿import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { User, Mail, Phone, Briefcase, Award, Save, Sparkles } from 'lucide-react';
+import { User, Phone, Briefcase, Save, LogOut } from 'lucide-react';
 import { translations } from '../../utils/translations';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 
 export default function Profile() {
-  const { currentUser, language } = useStore();
+  const { currentUser, language, logout } = useStore();
   const t = translations[language] || translations.vi;
+  const navigate = useNavigate();
 
   const [name, setName] = useState(currentUser?.name || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
@@ -17,6 +19,11 @@ export default function Profile() {
   const handleSave = (e) => {
     e.preventDefault();
     alert(t.profileUpdatedSuccess);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -55,6 +62,17 @@ export default function Profile() {
             <div className="sm:hidden">
               <LanguageSwitcher />
             </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3.5 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>{t.logout}</span>
+            </button>
           </div>
 
           <form onSubmit={handleSave} className="mt-8 space-y-6">
