@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getMessages, sendMessage, getConversations } = require('../controllers/MessageController');
+const { getMessages, sendMessage, getConversations, getChatContacts } = require('../controllers/MessageController');
 const { protect } = require('../middleware/auth');
 
 /**
@@ -14,21 +14,22 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/conversations:
  *   get:
- *     summary: L?y danh sách các cu?c h?i tho?i
+ *     summary: L?y danh sï¿½ch cï¿½c cu?c h?i tho?i
  *     tags: [Chats & Conversations]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Tr? v? danh sách h?i tho?i thành công
+ *         description: Tr? v? danh sï¿½ch h?i tho?i thï¿½nh cï¿½ng
  */
 router.get('/', protect, getConversations);
+router.get('/contacts', protect, getChatContacts);
 
 /**
  * @swagger
  * /api/conversations/messages/{conversationId}:
  *   get:
- *     summary: L?y danh sách tin nh?n trong m?t cu?c h?i tho?i
+ *     summary: L?y danh sï¿½ch tin nh?n trong m?t cu?c h?i tho?i
  *     tags: [Chats & Conversations]
  *     security:
  *       - bearerAuth: []
@@ -40,7 +41,7 @@ router.get('/', protect, getConversations);
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? danh sách tin nh?n thành công
+ *         description: Tr? v? danh sï¿½ch tin nh?n thï¿½nh cï¿½ng
  */
 router.get('/messages/:conversationId', protect, getMessages);
 
@@ -48,7 +49,7 @@ router.get('/messages/:conversationId', protect, getMessages);
  * @swagger
  * /api/conversations/messages:
  *   post:
- *     summary: G?i tin nh?n m?i (phát realtime qua Socket.io)
+ *     summary: G?i tin nh?n m?i (phï¿½t realtime qua Socket.io)
  *     tags: [Chats & Conversations]
  *     security:
  *       - bearerAuth: []
@@ -67,10 +68,10 @@ router.get('/messages/:conversationId', protect, getMessages);
  *                 type: string
  *               text:
  *                 type: string
- *                 example: Chào b?n, ph?ng này có c?n ð?t c?c trý?c nhi?u không ??
+ *                 example: Chï¿½o b?n, ph?ng nï¿½y cï¿½ c?n ï¿½?t c?c trï¿½?c nhi?u khï¿½ng ??
  *     responses:
  *       201:
- *         description: G?i tin nh?n thành công
+ *         description: G?i tin nh?n thï¿½nh cï¿½ng
  */
 router.post('/messages', protect, sendMessage);
 

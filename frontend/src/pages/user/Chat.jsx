@@ -3,62 +3,219 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Send, ArrowLeft, Search, CheckCheck, Smile, Paperclip, MoreVertical, Sparkles } from 'lucide-react';
 import { translations } from '../../utils/translations';
+import { io } from 'socket.io-client';
+import { API_BASE_URL } from '../../config/api';
 
 export default function Chat() {
   const navigate = useNavigate();
-  const { messages, sendMessage, currentUser, users, language } = useStore();
+  const { language } = useStore();
   const t = translations[language] || translations.vi;
 
-  const [activeContactId, setActiveContactId] = useState('minh');
+  const [contacts, setContacts] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [activeContactId, setActiveContactId] = useState('');
+  const [authenticatedUserId, setAuthenticatedUserId] = useState('');
   const [inputText, setInputText] = useState('');
   const [searchContact, setSearchContact] = useState('');
+  const [loadingChats, setLoadingChats] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState('');
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
+  const token = localStorage.getItem('token');
 
-  const activeContact = users.find(u => u.id === activeContactId) || users[0];
+  const activeContact = contacts.find(contact => contact.id === activeContactId) || contacts[0] || {
+    id: '',
+    name: language === 'vi' ? 'Chưa có liên hệ' : 'No contacts yet',
+    email: '',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+  };
 
   const filteredMessages = messages.filter(
-    m => (m.senderId === currentUser?.id && m.receiverId === activeContactId) ||
-         (m.senderId === activeContactId && m.receiverId === currentUser?.id)
+    message => (activeContact.conversationId && message.conversationId === activeContact.conversationId) || (
+      (message.senderId === authenticatedUserId && message.receiverId === activeContactId) ||
+      (message.senderId === activeContactId && message.receiverId === authenticatedUserId)
+    )
   );
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadContacts = async () => {
+      if (!token) {
+        setChatError(language === 'vi'
+          ? 'Phiên đăng nhập chưa được xác thực. Vui lòng đăng nhập lại để sử dụng tin nhắn.'
+          : 'Your session is not verified. Sign in again to use messaging.');
+        setLoadingChats(false);
+        return;
+      }
+
+      try {
+        const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const profile = await profileResponse.json().catch(() => ({}));
+        if (!profileResponse.ok) throw new Error(profile.message || 'Please sign in again');
+        const userId = String(profile.user?._id || profile.user?.id || '');
+        if (!userId) throw new Error('Could not identify the signed-in account');
+        if (!isMounted) return;
+        setAuthenticatedUserId(userId);
+
+        const response = await fetch(`${API_BASE_URL}/conversations/contacts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json().catch(() => []);
+        if (!response.ok) throw new Error(data.message || 'Could not load contacts');
+        if (!isMounted) return;
+        setContacts(data.map(contact => ({
+          ...contact,
+          id: String(contact.id),
+          avatar: contact.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+        })));
+        setActiveContactId(currentId => currentId || (data[0] ? String(data[0].id) : ''));
+        setChatError('');
+      } catch (error) {
+        if (isMounted) setChatError(error.message);
+      } finally {
+        if (isMounted) setLoadingChats(false);
+      }
+    };
+
+    loadContacts();
+    return () => { isMounted = false; };
+  }, [token, language]);
+
+  useEffect(() => {
+    if (!token || !authenticatedUserId) return undefined;
+
+    const socket = io(API_BASE_URL.replace(/\/api\/?$/, ''), {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+    socketRef.current = socket;
+    socket.on('connect_error', () => {
+      setChatError(language === 'vi'
+        ? 'Không kết nối được dịch vụ tin nhắn realtime.'
+        : 'Could not connect to real-time messaging.');
+    });
+    socket.on('messageReceived', message => {
+      const senderId = String(message.sender?._id || message.sender);
+      if (senderId === authenticatedUserId) return;
+      const conversationId = String(message.conversation?._id || message.conversation);
+      const contactId = senderId;
+      const normalized = {
+        id: String(message._id),
+        conversationId,
+        senderId,
+        receiverId: contactId,
+        text: message.text,
+        timestamp: message.createdAt,
+      };
+      setMessages(existing => existing.some(item => item.id === normalized.id)
+        ? existing
+        : [...existing, normalized]);
+      setContacts(existing => existing.map(contact => (
+        contact.id === contactId ? { ...contact, conversationId } : contact
+      )));
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [token, authenticatedUserId, language]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const conversationId = activeContact?.conversationId;
+    if (!token || !conversationId) return undefined;
+
+    fetch(`${API_BASE_URL}/conversations/messages/${conversationId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => []);
+        if (!response.ok) throw new Error(data.message || 'Could not load messages');
+        return data;
+      })
+      .then(data => {
+        if (!isMounted) return;
+        const normalized = data.map(message => {
+          const senderId = String(message.sender?._id || message.sender);
+          return {
+            id: String(message._id),
+            conversationId: String(message.conversation),
+            senderId,
+            receiverId: senderId === authenticatedUserId ? activeContactId : senderId,
+            text: message.text,
+            timestamp: message.createdAt,
+          };
+        });
+        setMessages(existing => {
+          const byId = new Map(existing.map(message => [message.id, message]));
+          normalized.forEach(message => byId.set(message.id, message));
+          return [...byId.values()];
+        });
+      })
+      .catch(error => {
+        if (isMounted) setChatError(error.message);
+      });
+
+    return () => { isMounted = false; };
+  }, [token, activeContact?.conversationId, activeContactId, authenticatedUserId]);
 
   // Auto scroll to bottom when new message arrives or contact changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [filteredMessages.length, activeContactId]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !token || !activeContactId || sending) return;
     const textToSend = inputText.trim();
-    sendMessage(activeContactId, textToSend);
-    setInputText('');
+    setSending(true);
+    setChatError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/conversations/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientId: activeContactId,
+          text: textToSend,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not send message');
 
-    // Simulate real-time bot / roommate reply after 1.2s for interactive demo
-    if (activeContactId === 'minh' || activeContactId === 'david') {
-      setTimeout(() => {
-        const repliesVi = [
-          'Chào bạn! Mình nhận được tin nhắn rồi, phòng vẫn đang còn nhé!',
-          'Cuối tuần này bạn có rảnh qua xem phòng trực tiếp không?',
-          'Tuyệt vời, lối sống của tụi mình rất hợp nhau đấy!',
-          'Ok bạn nhé, có gì nhắn lại mình nhé.'
-        ];
-        const repliesEn = [
-          'Hey there! I got your message, the room is still available!',
-          'Are you free this weekend to come and view the place?',
-          'Awesome, looks like our lifestyles match really well!',
-          'Sounds great, let me know if you need any more details.'
-        ];
-        const list = language === 'vi' ? repliesVi : repliesEn;
-        const randomReply = list[Math.floor(Math.random() * list.length)];
-        sendMessage(currentUser?.id || 'sarah', randomReply);
-      }, 1200);
+      const conversationId = String(data.conversation?._id || data.conversation);
+      const normalized = {
+        id: String(data._id),
+        conversationId,
+        senderId: String(data.sender?._id || authenticatedUserId),
+        receiverId: activeContactId,
+        text: data.text,
+        timestamp: data.createdAt,
+      };
+      setMessages(existing => existing.some(message => message.id === normalized.id)
+        ? existing
+        : [...existing, normalized]);
+      setContacts(existing => existing.map(contact => (
+        contact.id === activeContactId ? { ...contact, conversationId } : contact
+      )));
+      setInputText('');
+    } catch (error) {
+      setChatError(error.message);
+    } finally {
+      setSending(false);
     }
   };
 
-  const contacts = users
-    .filter(u => u.id !== currentUser?.id && u.role !== 'admin')
-    .filter(u => u.name.toLowerCase().includes(searchContact.toLowerCase()) || 
-                 (u.occupation && u.occupation.toLowerCase().includes(searchContact.toLowerCase())));
+  const filteredContacts = contacts.filter(contact => (
+    contact.name.toLowerCase().includes(searchContact.toLowerCase()) ||
+    contact.email.toLowerCase().includes(searchContact.toLowerCase())
+  ));
 
   const formatTime = (ts) => {
     if (!ts) return '10:30';
@@ -101,7 +258,7 @@ export default function Chat() {
 
           {/* Contact scroll list */}
           <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-            {contacts.map(user => {
+            {filteredContacts.map(user => {
               const isSelected = activeContactId === user.id;
               return (
                 <button
@@ -125,7 +282,7 @@ export default function Chat() {
                       <div className="font-bold text-gray-900 text-sm truncate">{user.name}</div>
                       <span className="text-[10px] text-gray-400">10:30</span>
                     </div>
-                    <div className="text-xs text-gray-500 truncate mt-0.5">{user.occupation || user.intro}</div>
+                    <div className="text-xs text-gray-500 truncate mt-0.5">{user.email}</div>
                   </div>
                 </button>
               );
@@ -200,6 +357,11 @@ export default function Chat() {
 
           {/* Conversation Bubble List */}
           <div className="flex-grow p-4 sm:p-6 overflow-y-auto space-y-4">
+            {loadingChats && <p className="text-center text-sm text-gray-500">{language === 'vi' ? 'Đang tải hội thoại...' : 'Loading conversations...'}</p>}
+            {chatError && <p role="alert" className="text-center text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{chatError}</p>}
+            {!loadingChats && !contacts.length && !chatError && (
+              <p className="text-center text-sm text-gray-500">{language === 'vi' ? 'Chỉ nhắn tin được với người đã chấp nhận yêu cầu ở ghép.' : 'Messaging is available after a roommate request is accepted.'}</p>
+            )}
             <div className="text-center">
               <span className="text-[11px] font-semibold text-gray-400 bg-white border px-3 py-1 rounded-full shadow-2xs">
                 {language === 'vi' ? 'Hôm nay' : 'Today'}
@@ -207,7 +369,7 @@ export default function Chat() {
             </div>
 
             {filteredMessages.map(msg => {
-              const isSelf = msg.senderId === currentUser?.id;
+              const isSelf = msg.senderId === authenticatedUserId;
               return (
                 <div key={msg.id} className={`flex gap-2.5 ${isSelf ? 'justify-end' : 'justify-start'}`}>
                   {!isSelf && (
@@ -263,7 +425,7 @@ export default function Chat() {
             </button>
             <button
               type="submit"
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || sending || !token || !activeContactId}
               className="p-2.5 bg-[#ab3500] hover:bg-[#8e2800] disabled:opacity-50 text-white rounded-full flex items-center justify-center transition active:scale-95 shadow-xs shrink-0 cursor-pointer"
             >
               <Send size={16} />

@@ -146,11 +146,6 @@ const initialReports = [
   }
 ];
 
-const initialMessages = [
-  { id: '1', senderId: 'sarah', receiverId: 'minh', text: 'Hi Minh! Is the studio still available?', timestamp: '2026-08-26T10:30:00.000Z' },
-  { id: '2', senderId: 'minh', receiverId: 'sarah', text: 'Hey Sarah! Yes, it is. Are you free this weekend for a viewing?', timestamp: '2026-08-26T10:35:00.000Z' }
-];
-
 const initialViewings = [
   { id: '1', roomId: 'haichau', userId: 'sarah', date: '2026-08-30', time: '14:30', status: 'scheduled' }
 ];
@@ -166,56 +161,16 @@ export const useStore = create((set) => ({
   rooms: initialRooms,
   requests: initialRequests,
   reports: initialReports,
-  messages: initialMessages,
   viewings: initialViewings,
   favorites: ['haichau'],
 
   loginWithGoogle: async (googleData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(googleData)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.token) localStorage.setItem('token', data.token);
-        const user = {
-          ...data,
-          id: data._id || data.id,
-          name: data.username || data.name || googleData.name || "Google User",
-          avatar: data.avatar || googleData.avatar || googleData.picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-          status: "active"
-        };
-        set({ currentUser: user });
-        return { success: true, role: user.role || "user" };
-      }
-    } catch (e) {
-      console.warn("Backend auth failed, using Google local session", e);
-    }
-
-    const emailLower = (googleData.email || "googleuser@gmail.com").toLowerCase().trim();
-    const nickname = googleData.name || emailLower.split("@")[0];
-    const googleUser = {
-      id: googleData.googleId || "google_" + Date.now(),
-      name: nickname,
-      email: emailLower,
-      role: "user",
-      avatar: googleData.avatar || googleData.picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-      status: "active",
-      authProvider: "google",
-      gender: "Male",
-      phone: "0900000000",
-      occupation: "Member",
-      cleanHabit: "High Standard",
-      intro: "Signed in with Google.",
-      matchScore: 95
-    };
-    set({ currentUser: googleUser });
-    return { success: true, role: "user" };
+    localStorage.removeItem('token');
+    return { success: false, message: 'Use verified Firebase sign-in' };
   },
 
   loginWithFirebase: async (firebaseData) => {
+    localStorage.removeItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase`, {
         method: "POST",
@@ -243,32 +198,16 @@ export const useStore = create((set) => ({
         set({ currentUser: user });
         return { success: true, role: user.role || "user" };
       }
-    } catch (e) {
-      console.warn("Backend auth failed, using Firebase client session", e);
+      const error = await response.json().catch(() => ({}));
+      return { success: false, message: error.message || 'Firebase sign-in could not be verified' };
+    } catch (error) {
+      console.warn("Backend Firebase verification failed", error);
+      return { success: false, message: 'Could not connect to authentication service' };
     }
-
-    const emailLower = (firebaseData.email || "firebaseuser@gmail.com").toLowerCase().trim();
-    const nickname = firebaseData.displayName || firebaseData.name || emailLower.split("@")[0];
-    const firebaseUser = {
-      id: firebaseData.uid || "firebase_" + Date.now(),
-      name: nickname,
-      email: emailLower,
-      role: "user",
-      avatar: firebaseData.photoURL || firebaseData.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-      status: "active",
-      authProvider: firebaseData.providerId || "firebase",
-      gender: "Male",
-      phone: "0900000000",
-      occupation: "Member",
-      cleanHabit: "High Standard",
-      intro: "Signed in with Firebase Authentication.",
-      matchScore: 95
-    };
-    set({ currentUser: firebaseUser });
-    return { success: true, role: "user" };
   },
 
   login: async (email, password) => {
+    localStorage.removeItem('token');
     const emailLower = email.toLowerCase().trim();
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -294,37 +233,12 @@ export const useStore = create((set) => ({
         set({ currentUser: user });
         return { success: true, role: user.role };
       } else {
-        // Fallback for demo accounts if DB is initializing or offline
-        if (emailLower === 'admin@roommate.com' || emailLower === 'sarah@example.com' || emailLower.includes('@example.com')) {
-          const isDemoAdmin = emailLower === 'admin@roommate.com';
-          const user = {
-            id: isDemoAdmin ? 'admin' : 'sarah',
-            name: isDemoAdmin ? 'System Admin' : 'Sarah J.',
-            email: emailLower,
-            role: isDemoAdmin ? 'admin' : 'user',
-            avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-            status: 'active'
-          };
-          set({ currentUser: user });
-          return { success: true, role: user.role };
-        }
-
         const errData = await response.json().catch(() => ({}));
         return { success: false, message: errData.message || 'Email hoặc mật khẩu không chính xác (401)' };
       }
-    } catch (e) {
-      console.warn("Backend auth failed, using local session fallback", e);
-      const isDemoAdmin = emailLower === 'admin@roommate.com';
-      const user = {
-        id: isDemoAdmin ? 'admin' : emailLower.split('@')[0],
-        name: isDemoAdmin ? 'System Admin' : emailLower.split('@')[0],
-        email: emailLower,
-        role: isDemoAdmin ? 'admin' : 'user',
-        avatar: isDemoAdmin ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-        status: 'active'
-      };
-      set({ currentUser: user });
-      return { success: true, role: user.role };
+    } catch (error) {
+      console.warn('Backend authentication failed', error);
+      return { success: false, message: 'Không thể kết nối dịch vụ đăng nhập' };
     }
   },
 
@@ -344,16 +258,6 @@ export const useStore = create((set) => ({
       : [...state.favorites, roomId];
     return { favorites };
   }),
-
-  sendMessage: (receiverId, text) => set(state => ({
-    messages: [...state.messages, {
-      id: String(state.messages.length + 1),
-      senderId: state.currentUser?.id || 'sarah',
-      receiverId,
-      text,
-      timestamp: new Date().toISOString()
-    }]
-  })),
 
   addRequest: (req) => set(state => ({
     requests: [...state.requests, { ...req, id: String(state.requests.length + 1), userId: state.currentUser?.id || 'sarah', status: 'active' }]

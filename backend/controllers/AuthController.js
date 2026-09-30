@@ -1,5 +1,12 @@
 ﻿const User = require('../models/User');
 const generateToken = require('../utils/tokenGenerator');
+const { getApps, initializeApp } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+
+const getFirebaseAdminAuth = () => {
+  const app = getApps()[0] || initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
+  return getAuth(app);
+};
 
 const registerUser = async (req, res) => {
   try {
@@ -137,73 +144,33 @@ const verifyEmail = async (req, res) => {
 };
 
 const googleLogin = async (req, res) => {
-  try {
-    const { credential, googleId, email, name, avatar } = req.body;
-    let userEmail = email;
-    let userName = name;
-    let userGoogleId = googleId;
-    let userAvatar = avatar;
-    if (credential) {
-      try {
-        const response = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + credential);
-        if (response.ok) {
-          const payload = await response.json();
-          userEmail = payload.email;
-          userName = payload.name || payload.email.split("@")[0];
-          userGoogleId = payload.sub;
-          userAvatar = payload.picture;
-        }
-      } catch (err) {
-        console.error("Google token verification error:", err);
-      }
-    }
-    if (!userEmail) {
-      return res.status(400).json({ message: "Email is required for Google login" });
-    }
-    let user = await User.findOne({ email: userEmail });
-    if (user) {
-      if (!user.googleId && userGoogleId) user.googleId = userGoogleId;
-      if (userAvatar && !user.avatar) user.avatar = userAvatar;
-      user.isVerified = true;
-      await user.save({ validateBeforeSave: false });
-    } else {
-      let baseUsername = (userName || userEmail.split("@")[0]).replace(/[^a-zA-Z0-9_]/g, "");
-      if (!baseUsername) baseUsername = "user";
-      let uniqueUsername = baseUsername;
-      let counter = 1;
-      while (await User.findOne({ username: uniqueUsername })) {
-        uniqueUsername = baseUsername + counter;
-        counter++;
-      }
-      user = await User.create({
-        username: uniqueUsername,
-        email: userEmail,
-        googleId: userGoogleId,
-        avatar: userAvatar,
-        authProvider: "google",
-        isVerified: true,
-      });
-    }
-    return res.status(200).json({
-      _id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-      avatar: user.avatar,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+  return res.status(410).json({ message: 'Use Firebase sign-in with a verified ID token' });
 };
 
 const firebaseLogin = async (req, res) => {
   try {
-    const { uid, email, displayName, photoURL, providerId } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required for Firebase login" });
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: 'Firebase ID token is required' });
     }
+
+    let decodedToken;
+    try {
+      decodedToken = await getFirebaseAdminAuth().verifyIdToken(idToken);
+    } catch {
+      return res.status(401).json({ message: 'Invalid Firebase ID token' });
+    }
+
+    const email = decodedToken.email?.toLowerCase();
+    if (!email) return res.status(401).json({ message: 'Verified account email is required' });
+
+    const uid = decodedToken.uid;
+    const displayName = decodedToken.name || email.split('@')[0];
+    const photoURL = decodedToken.picture;
+    const signInProvider = decodedToken.firebase?.sign_in_provider;
+    const providerId = signInProvider === 'google.com'
+      ? 'google'
+      : signInProvider === 'facebook.com' ? 'facebook' : 'firebase';
     let user = await User.findOne({ email });
     if (user) {
       if (!user.firebaseUid && uid) user.firebaseUid = uid;

@@ -5,8 +5,10 @@ const http = require('http');
 const socketIo = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const jwt = require('jsonwebtoken');
 
 const connectDB = require('./config/db');
+const User = require('./models/User');
 const { notFound, errorHandler } = require('./middleware/error');
 
 // Route imports
@@ -33,6 +35,23 @@ const io = socketIo(server, {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
+});
+
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('Authentication required'));
+    if (!process.env.JWT_SECRET) return next(new Error('Authentication is not configured'));
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('_id');
+    if (!user) return next(new Error('Authentication failed'));
+
+    socket.data.userId = user._id.toString();
+    return next();
+  } catch {
+    return next(new Error('Authentication failed'));
+  }
 });
 
 // Set io instance to express app
@@ -111,11 +130,7 @@ app.use(errorHandler);
 // Socket.io connection logic
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
-
-  socket.on('join', (userId) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined room`);
-  });
+  socket.join(socket.data.userId);
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
