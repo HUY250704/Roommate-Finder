@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'roommate-finder-v3';
+﻿const CACHE_NAME = 'roommate-finder-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -51,6 +51,27 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('googleapis') ||
     url.hostname.includes('firebase')
   ) {
+    return;
+  }
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' })
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic' && !response.redirected) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match('/index.html').then((cachedPage) => {
+            return cachedPage || Response.error();
+          });
+        })
+    );
     return;
   }
 
