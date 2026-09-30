@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sendRequest, handleRequest, getRequests } = require('../controllers/RoommateRequestController');
+const { getPeople, sendRequest, handleRequest, getRequests } = require('../controllers/RoommateRequestController');
 const { protect } = require('../middleware/auth');
 
 /**
@@ -14,7 +14,7 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/roommate-requests:
  *   post:
- *     summary: G?i yêu c?u ghép ph?ng m?i t?i m?t ngý?i dùng
+ *     summary: G?i yï¿½u c?u ghï¿½p ph?ng m?i t?i m?t ngï¿½?i dï¿½ng
  *     tags: [Roommate Requests]
  *     security:
  *       - bearerAuth: []
@@ -31,20 +31,21 @@ const { protect } = require('../middleware/auth');
  *                 type: string
  *               message:
  *                 type: string
- *                 example: M?nh th?y l?i s?ng c?a t?i m?nh r?t h?p nhau, hi v?ng ðý?c ghép ph?ng cùng b?n!
+ *                 example: M?nh th?y l?i s?ng c?a t?i m?nh r?t h?p nhau, hi v?ng ï¿½ï¿½?c ghï¿½p ph?ng cï¿½ng b?n!
  *     responses:
  *       201:
- *         description: G?i thành công
+ *         description: G?i thï¿½nh cï¿½ng
  *       400:
- *         description: L?i ð?u vào ho?c yêu c?u ð? t?n t?i
+ *         description: L?i ï¿½?u vï¿½o ho?c yï¿½u c?u ï¿½? t?n t?i
  */
+router.get('/people', protect, getPeople);
 router.post('/', protect, sendRequest);
 
 /**
  * @swagger
  * /api/roommate-requests/{id}:
  *   put:
- *     summary: Ð?ng ? ho?c t? ch?i yêu c?u ghép ph?ng
+ *     summary: ï¿½?ng ? ho?c t? ch?i yï¿½u c?u ghï¿½p ph?ng
  *     tags: [Roommate Requests]
  *     security:
  *       - bearerAuth: []
@@ -68,7 +69,7 @@ router.post('/', protect, sendRequest);
  *                 enum: [accepted, rejected]
  *     responses:
  *       200:
- *         description: Ph?n h?i thành công
+ *         description: Ph?n h?i thï¿½nh cï¿½ng
  */
 router.put('/:id', protect, handleRequest);
 
@@ -76,13 +77,13 @@ router.put('/:id', protect, handleRequest);
  * @swagger
  * /api/roommate-requests:
  *   get:
- *     summary: L?y danh sách yêu c?u ð? nh?n và ð? g?i c?a ngý?i dùng hi?n t?i
+ *     summary: L?y danh sï¿½ch yï¿½u c?u ï¿½? nh?n vï¿½ ï¿½? g?i c?a ngï¿½?i dï¿½ng hi?n t?i
  *     tags: [Roommate Requests]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: L?y danh sách thành công
+ *         description: L?y danh sï¿½ch thï¿½nh cï¿½ng
  */
 router.get('/', protect, getRequests);
 

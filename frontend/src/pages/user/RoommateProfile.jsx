@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../store';
 import { Home, ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { translations } from '../../utils/translations';
+import { API_BASE_URL } from '../../config/api';
 
 export default function RoommateProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { users, currentUser, language } = useStore();
+  const { users, language } = useStore();
   const t = translations[language] || translations.vi;
 
   const roommateId = id || 'minh';
@@ -18,6 +19,8 @@ export default function RoommateProfile() {
   const [reportReason, setReportReason] = useState('Scam');
   const [reportDetails, setReportDetails] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [requestError, setRequestError] = useState('');
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   if (!user) {
     return (
@@ -57,9 +60,33 @@ export default function RoommateProfile() {
     );
   }
 
-  const handleSendRequest = () => {
-    alert(t.requestSentSuccess);
-    navigate('/chat');
+  const handleSendRequest = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setRequestError(language === 'vi' ? 'Vui lòng đăng nhập để gửi lời mời.' : 'Sign in to send a request.');
+      return;
+    }
+    if (!user._id) {
+      navigate(`/requests?search=${encodeURIComponent(user.name)}`);
+      return;
+    }
+
+    setSendingRequest(true);
+    setRequestError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/roommate-requests`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiverId: user._id }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || t.loginFailed);
+      navigate('/requests');
+    } catch (error) {
+      setRequestError(error.message);
+    } finally {
+      setSendingRequest(false);
+    }
   };
 
   const handleReportSubmit = (e) => {
@@ -191,13 +218,15 @@ export default function RoommateProfile() {
           </button>
           <button
             onClick={handleSendRequest}
+            disabled={sendingRequest}
             className="flex-1 py-3 bg-[#ab3500] hover:bg-[#8e2800] text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
           >
             <Send size={16} />
-            <span>{t.sendRoommateRequest}</span>
+            <span>{sendingRequest ? (language === 'vi' ? 'Đang gửi...' : 'Sending...') : t.sendRoommateRequest}</span>
           </button>
         </div>
       </div>
+      {requestError && <div role="alert" className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{requestError}</div>}
 
       {/* Report Modal */}
       {showReportModal && (

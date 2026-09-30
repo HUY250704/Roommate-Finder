@@ -360,7 +360,12 @@ export default function Chat() {
             {loadingChats && <p className="text-center text-sm text-gray-500">{language === 'vi' ? 'Đang tải hội thoại...' : 'Loading conversations...'}</p>}
             {chatError && <p role="alert" className="text-center text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{chatError}</p>}
             {!loadingChats && !contacts.length && !chatError && (
-              <p className="text-center text-sm text-gray-500">{language === 'vi' ? 'Chỉ nhắn tin được với người đã chấp nhận yêu cầu ở ghép.' : 'Messaging is available after a roommate request is accepted.'}</p>
+              <div className="space-y-2 text-center">
+                <p className="text-sm text-gray-500">{language === 'vi' ? 'Chỉ nhắn tin được với người đã chấp nhận yêu cầu ở ghép.' : 'Messaging is available after a roommate request is accepted.'}</p>
+                <button onClick={() => navigate('/requests')} className="text-sm font-semibold text-[#ab3500] hover:underline">
+                  {language === 'vi' ? 'Tìm bạn ở ghép' : 'Find roommates'}
+                </button>
+              </div>
             )}
             <div className="text-center">
               <span className="text-[11px] font-semibold text-gray-400 bg-white border px-3 py-1 rounded-full shadow-2xs">
