@@ -2,7 +2,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { translations } from '../../utils/translations';
-import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 
 export default function UserHome() {
   const { users, rooms, favorites, language } = useStore();
@@ -68,12 +67,12 @@ export default function UserHome() {
             </div>
 
             {/* Custom Toggle Switch & Filter Trigger + Language Switcher on the outside */}
-            <div className="flex items-center gap-2.5 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
-              <div className="inline-flex bg-gray-100/90 rounded-full p-1 select-none border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto sm:justify-between lg:justify-end">
+              <div className="inline-flex w-full sm:w-auto bg-gray-100/90 rounded-full p-1 select-none border border-gray-200">
                 <button
                   type="button"
                   onClick={() => setActiveTab('roommates')}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-4 py-2 rounded-full text-xs font-bold transition-all ${
                     activeTab === 'roommates' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -82,7 +81,7 @@ export default function UserHome() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('rooms')}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-4 py-2 rounded-full text-xs font-bold transition-all ${
                     activeTab === 'rooms' ? 'bg-white shadow-xs text-[#ab3500]' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -94,16 +93,12 @@ export default function UserHome() {
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-4 py-2 rounded-full text-xs font-bold border border-gray-250 bg-gray-50 hover:bg-gray-100 text-gray-700 flex items-center gap-1.5 transition-colors shadow-2xs"
+                className="w-full sm:w-auto justify-center px-4 py-2 rounded-full text-xs font-bold border border-gray-250 bg-gray-50 hover:bg-gray-100 text-gray-700 flex items-center gap-1.5 transition-colors shadow-2xs"
               >
                 <span className="material-symbols-outlined text-[16px]">tune</span>
                 <span>{t.filters}</span>
               </button>
 
-              {/* Language Switcher Button OUTSIDE the Filter button */}
-              <div className="shrink-0 pl-1 border-l border-gray-200">
-                <LanguageSwitcher />
-              </div>
             </div>
           </div>
 
@@ -178,9 +173,9 @@ export default function UserHome() {
                 <article
                   key={roommate.id}
                   onClick={() => handleCardClick(roommate.id, 'roommate')}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col cursor-pointer group hover:scale-[1.02] transition-transform duration-300 border border-gray-150"
+                  className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col cursor-pointer group sm:hover:scale-[1.02] transition-transform duration-300 border border-gray-150"
                 >
-                  <div className="relative h-64 w-full">
+                  <div className="relative h-56 sm:h-64 w-full">
                     <img
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       alt={roommate.name}
@@ -223,9 +218,9 @@ export default function UserHome() {
                 <article
                   key={room.id}
                   onClick={() => handleCardClick(room.id, 'room')}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col cursor-pointer group hover:scale-[1.02] transition-transform duration-300 border border-gray-150"
+                  className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col cursor-pointer group sm:hover:scale-[1.02] transition-transform duration-300 border border-gray-150"
                 >
-                  <div className="relative h-64 w-full">
+                  <div className="relative h-56 sm:h-64 w-full">
                     <img
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       alt={room.title}

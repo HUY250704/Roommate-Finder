@@ -112,10 +112,10 @@ export default function UserNavbar() {
             
             {/* Left: Brand & Main Navigation Links */}
             <div className="flex items-center gap-5 lg:gap-8 min-w-0">
-              <Link to="/" className="flex items-center space-x-2 font-extrabold text-xl text-[#ab3500] shrink-0">
-                <Home className="w-6 h-6 text-[#ab3500]" />
+              <Link to="/" className="flex items-center gap-2 font-extrabold text-base sm:text-xl text-[#ab3500] shrink-0">
+                <Home className="w-6 h-6 text-[#ab3500] shrink-0" />
                 <span className="text-gray-900 tracking-tight">{t.brandName}</span>
-                <span className="text-[#ab3500]">{t.brandFinder}</span>
+                <span className="hidden sm:inline text-[#ab3500]">{t.brandFinder}</span>
               </Link>
 
               <div className="hidden md:flex items-center gap-2 lg:gap-3 text-sm font-semibold text-gray-700">
@@ -154,10 +154,11 @@ export default function UserNavbar() {
                   <button
                     type="button"
                     onClick={() => setShowModal(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all whitespace-nowrap active:scale-98"
+                    aria-label={t.postListing}
+                    className="flex items-center justify-center gap-1.5 p-2 sm:px-3.5 sm:py-2 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all whitespace-nowrap active:scale-98"
                   >
                     <PlusCircle className="w-4 h-4 shrink-0" />
-                    <span>{t.postListing}</span>
+                    <span className="hidden sm:inline">{t.postListing}</span>
                   </button>
 
                   <div className="relative">
@@ -193,7 +194,7 @@ export default function UserNavbar() {
 
                   <Link
                     to="/saved"
-                    className="relative p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
+                    className="relative hidden md:inline-flex p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
                     title={t.savedRooms}
                   >
                     <Heart className="w-5 h-5" />
@@ -208,6 +209,7 @@ export default function UserNavbar() {
                     to="/chat"
                     className="p-2 text-gray-500 hover:text-[#ab3500] hover:bg-gray-50 rounded-xl transition"
                     title={t.messages}
+                    aria-label={t.messages}
                   >
                     <MessageSquare className="w-5 h-5" />
                   </Link>
@@ -223,7 +225,7 @@ export default function UserNavbar() {
                   )}
 
                   {/* Profile avatar & Logout */}
-                  <div className="flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-200">
+                  <div className="hidden md:flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-gray-200">
                     <Link to="/profile" className="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-50 transition">
                       <img
                         className="h-8 w-8 rounded-full object-cover border border-gray-200 ring-2 ring-[#ab3500]/15"
@@ -254,7 +256,7 @@ export default function UserNavbar() {
                   </Link>
                   <Link
                     to="/login"
-                    className="px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#ab3500] hover:bg-[#8e2800] rounded-xl shadow-xs transition"
+                    className="hidden sm:inline-flex px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#ab3500] hover:bg-[#8e2800] rounded-xl shadow-xs transition"
                   >
                     {language === 'vi' ? 'Đăng ký' : 'Sign Up'}
                   </Link>
