@@ -62,12 +62,12 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     if (layer === 'satellite') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     }
-    return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
   };
 
   const getTileAttribution = (layer) => {
     if (layer === 'satellite') return 'Tiles &copy; Esri';
-    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    return 'Tiles &copy; Esri; Sources: Esri, TomTom, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors, and the GIS User Community';
   };
 
   // Leaflet map initialization
