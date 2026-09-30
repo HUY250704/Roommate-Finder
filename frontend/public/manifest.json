@@ -1,7 +1,7 @@
-﻿{
-  "name": "Roommate Finder - Tìm Bạn Ở Ghép & Phòng Trọ",
+{
+  "name": "Roommate Finder - T?m B?n ? Gh�p & Ph?ng Tr?",
   "short_name": "RoommateFinder",
-  "description": "Nền tảng kết nối bạn cùng phòng lý tưởng và phòng trọ an toàn, thông minh tại Việt Nam.",
+  "description": "N?n t?ng k?t n?i b?n c�ng ph?ng l? t�?ng v� ph?ng tr? an to�n, th�ng minh t?i Vi?t Nam.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,16 +9,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "src": "/icons/pwa-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/vite.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ],
   "categories": ["lifestyle", "utilities", "social"]

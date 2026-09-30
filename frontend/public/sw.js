@@ -1,10 +1,9 @@
-﻿const CACHE_NAME = 'roommate-finder-v4';
+const CACHE_NAME = 'roommate-finder-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon.svg',
-  '/vite.svg',
+  '/icons/pwa-logo.png',
 ];
 
 // Install Event
