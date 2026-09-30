@@ -7,14 +7,27 @@ const seedDefaultAccounts = async () => {
 
     const adminExists = await User.findOne({ email: 'admin@roommate.com' });
     if (!adminExists) {
-      await User.create({
-        username: 'admin',
-        email: 'admin@roommate.com',
-        password: '123456',
-        role: 'admin',
-        isVerified: true,
-      });
-      console.log('Seeded default admin account: admin@roommate.com / 123456');
+      const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+      if (!adminPassword || adminPassword.length < 12) {
+        console.warn('Admin seed skipped: set ADMIN_SEED_PASSWORD to a value of at least 12 characters.');
+      } else {
+        const usernameBase = process.env.ADMIN_SEED_USERNAME || 'admin';
+        let username = usernameBase;
+        let suffix = 1;
+        while (await User.exists({ username })) {
+          username = `${usernameBase}${suffix}`;
+          suffix += 1;
+        }
+
+        await User.create({
+          username,
+          email: 'admin@roommate.com',
+          password: adminPassword,
+          role: 'admin',
+          isVerified: true,
+        });
+        console.log('Seeded default admin account.');
+      }
     }
 
     const sarahExists = await User.findOne({ email: 'sarah@example.com' });
