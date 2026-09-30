@@ -62,7 +62,7 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     if (layer === 'satellite') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     }
-    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   };
 
   const getTileAttribution = (layer) => {
@@ -98,7 +98,6 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
 
           const tiles = window.L.tileLayer(getTileUrl(mapLayer), {
             maxZoom: 19,
-            subdomains: 'abcd',
             attribution: getTileAttribution(mapLayer),
           }).addTo(map);
 
@@ -318,7 +317,6 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
       map.removeLayer(tiles);
       const newTiles = window.L.tileLayer(getTileUrl(layerName), {
         maxZoom: 19,
-        subdomains: 'abcd',
         attribution: getTileAttribution(layerName),
       }).addTo(map);
       mapInstanceRef.current.tiles = newTiles;
