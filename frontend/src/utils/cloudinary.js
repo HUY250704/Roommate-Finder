@@ -16,7 +16,8 @@ export const uploadImageToCloudinary = async (image, token = '') => {
     });
   }
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
+  const apiUrl = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
     headers['Authorization'] = Bearer ;

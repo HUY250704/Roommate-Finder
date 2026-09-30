@@ -2,7 +2,8 @@
  * Frontend Vietmap & GIS Map API Client Helper
  * Provides autocomplete, geocoding search, and routing.
  */
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
+const API_URL = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
 
 const normalizeStr = (str) => {
   if (!str) return '';
