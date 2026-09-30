@@ -1,4 +1,5 @@
 ﻿import { create } from 'zustand';
+import { API_BASE_URL } from './config/api';
 
 const initialUsers = [
   {
@@ -171,7 +172,7 @@ export const useStore = create((set) => ({
 
   loginWithGoogle: async (googleData) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/google", {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(googleData)
@@ -216,7 +217,7 @@ export const useStore = create((set) => ({
 
   loginWithFirebase: async (firebaseData) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/firebase", {
+      const response = await fetch(`${API_BASE_URL}/auth/firebase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -270,7 +271,7 @@ export const useStore = create((set) => ({
   login: async (email, password) => {
     const emailLower = email.toLowerCase().trim();
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailLower, password })

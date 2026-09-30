@@ -1,9 +1,9 @@
-﻿/**
+﻿import { API_BASE_URL } from '../config/api';
+
+/**
  * Frontend Vietmap & GIS Map API Client Helper
  * Provides autocomplete, geocoding search, and routing.
  */
-const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
-const API_URL = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
 
 const normalizeStr = (str) => {
   if (!str) return '';
@@ -137,7 +137,7 @@ export const getVietmapAutocomplete = async (text) => {
   if (!text || text.trim().length === 0) return [];
 
   try {
-    const res = await fetch(`${API_URL}/map/autocomplete?text=${encodeURIComponent(text)}`);
+    const res = await fetch(`${API_BASE_URL}/map/autocomplete?text=${encodeURIComponent(text)}`);
     if (res.ok) {
       const data = await res.json();
       const features = data.data?.features || data.features || data.data || [];
@@ -158,7 +158,7 @@ export const getVietmapAutocomplete = async (text) => {
 export const searchVietmapAddress = async (text) => {
   if (!text) return null;
   try {
-    const res = await fetch(`${API_URL}/map/search?text=${encodeURIComponent(text)}`);
+    const res = await fetch(`${API_BASE_URL}/map/search?text=${encodeURIComponent(text)}`);
     if (res.ok) {
       const data = await res.json();
       if (data && (data.features?.length > 0 || data.data?.features?.length > 0)) {
@@ -181,7 +181,7 @@ export const searchVietmapAddress = async (text) => {
 export const calculateVietmapRoute = async (originLat, originLng, destLat, destLng, vehicle = 'motorcycle') => {
   try {
     const res = await fetch(
-      `${API_URL}/map/route?origin=${originLat},${originLng}&destination=${destLat},${destLng}&vehicle=${vehicle}`
+      `${API_BASE_URL}/map/route?origin=${originLat},${originLng}&destination=${destLat},${destLng}&vehicle=${vehicle}`
     );
     if (res.ok) {
       return await res.json();

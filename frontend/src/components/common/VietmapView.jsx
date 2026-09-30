@@ -5,7 +5,7 @@ import { searchVietmapAddress } from '../../utils/vietmap';
 export default function VietmapView({ address, location, title }) {
   const [coordinates, setCoordinates] = useState({ lat: 16.0544, lng: 108.2022 }); // Da Nang default
   const [loading, setLoading] = useState(false);
-  const [mapLayer, setMapLayer] = useState('voyager'); // 'voyager' | 'street' | 'satellite'
+  const [mapLayer, setMapLayer] = useState('street');
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
@@ -37,10 +37,12 @@ export default function VietmapView({ address, location, title }) {
     if (layer === 'satellite') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     }
-    if (layer === 'street') {
-      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    }
-    return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  };
+
+  const getTileAttribution = (layer) => {
+    if (layer === 'satellite') return 'Tiles &copy; Esri';
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   };
 
   // Initialize or update Leaflet Map
@@ -53,12 +55,13 @@ export default function VietmapView({ address, location, title }) {
           center: [coordinates.lat, coordinates.lng],
           zoom: 15,
           zoomControl: false,
-          attributionControl: false,
+          attributionControl: true,
         });
 
         const tiles = window.L.tileLayer(getTileUrl(mapLayer), {
           maxZoom: 19,
           subdomains: 'abcd',
+          attribution: getTileAttribution(mapLayer),
         }).addTo(map);
 
         // Elegant custom pin with glowing drop-shadow
@@ -112,6 +115,7 @@ export default function VietmapView({ address, location, title }) {
       const newTiles = window.L.tileLayer(getTileUrl(layerName), {
         maxZoom: 19,
         subdomains: 'abcd',
+        attribution: getTileAttribution(layerName),
       }).addTo(map);
       mapInstanceRef.current.tiles = newTiles;
     }
@@ -149,9 +153,9 @@ export default function VietmapView({ address, location, title }) {
         <div className="flex items-center gap-2">
           <div className="inline-flex bg-gray-100/80 p-0.5 rounded-xl border border-gray-200/50 text-[11px] font-semibold text-gray-600">
             <button
-              onClick={() => switchLayer('voyager')}
+              onClick={() => switchLayer('street')}
               className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
-                mapLayer === 'voyager' ? 'bg-white shadow-xs text-[#ab3500] font-bold' : 'hover:text-gray-900'
+                mapLayer === 'street' ? 'bg-white shadow-xs text-[#ab3500] font-bold' : 'hover:text-gray-900'
               }`}
             >
               <Map size={12} />

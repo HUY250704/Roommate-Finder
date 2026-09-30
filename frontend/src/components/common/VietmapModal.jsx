@@ -62,7 +62,12 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
     if (layer === 'satellite') {
       return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     }
-    return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  };
+
+  const getTileAttribution = (layer) => {
+    if (layer === 'satellite') return 'Tiles &copy; Esri';
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   };
 
   // Leaflet map initialization
@@ -88,12 +93,13 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
             center: [selectedLocation.lat, selectedLocation.lng],
             zoom: 15,
             zoomControl: false,
-            attributionControl: false,
+            attributionControl: true,
           });
 
           const tiles = window.L.tileLayer(getTileUrl(mapLayer), {
             maxZoom: 19,
             subdomains: 'abcd',
+            attribution: getTileAttribution(mapLayer),
           }).addTo(map);
 
           const customIcon = window.L.divIcon({
@@ -313,6 +319,7 @@ export default function VietmapModal({ isOpen, onClose, defaultAddress = '' }) {
       const newTiles = window.L.tileLayer(getTileUrl(layerName), {
         maxZoom: 19,
         subdomains: 'abcd',
+        attribution: getTileAttribution(layerName),
       }).addTo(map);
       mapInstanceRef.current.tiles = newTiles;
     }
