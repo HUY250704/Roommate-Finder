@@ -1,8 +1,24 @@
 ﻿const User = require('../models/User');
 const generateToken = require('../utils/tokenGenerator');
-const { sendPasswordResetEmail } = require('../services/emailService');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const { sendPasswordResetEmail, sendEmailVerificationCode } = require('../services/emailService');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
+
+const EMAIL_VERIFICATION_CODE_TTL = 10 * 60 * 1000;
+
+const createEmailVerificationCode = () => String(crypto.randomInt(100000, 1000000));
+
+const hashEmailVerificationCode = (code) => bcrypt.hash(code, 10);
+
+const matchesEmailVerificationCode = async (code, storedHash) => {
+  if (!/^\d{6}$/.test(code) || !/^\$2[aby]\$\d\d\$[./A-Za-z0-9]{53}$/.test(storedHash || '')) {
+    return false;
+  }
+
+  return bcrypt.compare(code, storedHash);
+};
 
 const getFirebaseAdminAuth = () => {
   const app = getApps()[0] || initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
@@ -12,24 +28,47 @@ const getFirebaseAdminAuth = () => {
 const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!username || !email || !password) {
+    if (
+      typeof username !== 'string' ||
+      !username.trim() ||
+      typeof email !== 'string' ||
+      !email.trim() ||
+      typeof password !== 'string' ||
+      !password
+    ) {
       return res.status(400).json({ message: 'Please add all fields' });
     }
 
-    const userExists = await User.findOne({ $or: [{ email }, { username }] });
+    const normalizedEmail = email.trim().toLowerCase();
+    const userExists = await User.findOne({ $or: [{ email: normalizedEmail }, { username }] });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ username, email, password });
+    const verificationCode = createEmailVerificationCode();
+    const user = await User.create({
+      username,
+      email: normalizedEmail,
+      password,
+      emailVerificationCodeHash: await hashEmailVerificationCode(verificationCode),
+      emailVerificationExpire: new Date(Date.now() + EMAIL_VERIFICATION_CODE_TTL),
+    });
     if (user) {
+      try {
+        await sendEmailVerificationCode(user.email, verificationCode);
+      } catch (mailError) {
+        console.error('Failed to send email verification code:', mailError.message);
+        await User.deleteOne({ _id: user._id });
+        return res.status(503).json({ message: 'Could not send verification email. Please try again.' });
+      }
+
       return res.status(201).json({
         _id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
-        token: generateToken(user._id),
+        message: 'Account created. Check your email for a verification code.',
       });
     } else {
       return res.status(400).json({ message: 'Invalid user data' });
@@ -42,12 +81,16 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (user && (await user.matchPassword(password))) {
+      if (!user.isVerified) {
+        return res.status(403).json({ message: 'Please verify your email before signing in' });
+      }
+
       return res.json({
         _id: user.id,
         username: user.username,
@@ -128,21 +171,55 @@ const resetPassword = async (req, res) => {
 const verifyEmail = async (req, res) => {
   try {
     const { email, code } = req.body;
-    if (!email || !code) {
+    if (typeof email !== 'string' || !email.trim() || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
       return res.status(400).json({ message: 'Please provide email and code' });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const user = await User.findOne({ email: email.trim().toLowerCase() })
+      .select('+emailVerificationCodeHash');
+    if (
+      !user ||
+      user.isVerified ||
+      !user.emailVerificationExpire ||
+      user.emailVerificationExpire.getTime() <= Date.now() ||
+      !(await matchesEmailVerificationCode(code, user.emailVerificationCodeHash))
+    ) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
     }
 
     user.isVerified = true;
+    user.emailVerificationCodeHash = undefined;
+    user.emailVerificationExpire = undefined;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json({ message: 'Email verified successfully', isVerified: true });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+const resendVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (user && !user.isVerified) {
+      const verificationCode = createEmailVerificationCode();
+      user.emailVerificationCodeHash = await hashEmailVerificationCode(verificationCode);
+      user.emailVerificationExpire = new Date(Date.now() + EMAIL_VERIFICATION_CODE_TTL);
+      await user.save({ validateBeforeSave: false });
+      await sendEmailVerificationCode(user.email, verificationCode);
+    }
+
+    return res.status(200).json({
+      message: 'If an account is awaiting verification, a new code has been sent.',
+    });
+  } catch (error) {
+    console.error('Failed to resend email verification code:', error.message);
+    return res.status(503).json({ message: 'Could not send verification email. Please try again.' });
   }
 };
 
@@ -165,7 +242,9 @@ const firebaseLogin = async (req, res) => {
     }
 
     const email = decodedToken.email?.toLowerCase();
-    if (!email) return res.status(401).json({ message: 'Verified account email is required' });
+    if (!email || decodedToken.email_verified !== true) {
+      return res.status(401).json({ message: 'Verified account email is required' });
+    }
 
     const uid = decodedToken.uid;
     const displayName = decodedToken.name || email.split('@')[0];
@@ -221,4 +300,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerificationCode,
 };

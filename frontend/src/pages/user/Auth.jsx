@@ -8,7 +8,7 @@ import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { translations } from '../../utils/translations';
 
 export default function Auth() {
-  const { login, register, loginWithFirebase, language } = useStore();
+  const { login, register, verifyEmail, resendVerificationCode, loginWithFirebase, language } = useStore();
   const t = translations[language] || translations.vi;
   const [loadingFirebase, setLoadingFirebase] = useState(false);
   const navigate = useNavigate();
@@ -16,22 +16,56 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [imgError, setImgError] = useState(false);
   const fallbackImgUrl = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
+
+    if (verificationPending) {
+      const res = await verifyEmail(email, verificationCode);
+      if (res?.success) {
+        setVerificationPending(false);
+        setIsRegistering(false);
+        setPassword('');
+        setVerificationCode('');
+        setSuccessMessage(t.emailVerified);
+      } else {
+        setError(res?.message || t.loginFailed);
+      }
+      return;
+    }
+
     const res = isRegistering
       ? await register(username, email, password)
       : await login(email, password);
-    if (res?.success) navigate(res.role === 'admin' ? '/admin/dashboard' : '/');
-    else setError(res?.message || t.invalidCredentials);
+    if (res?.success && res.requiresVerification) {
+      setVerificationPending(true);
+      setSuccessMessage(t.verificationSent);
+    } else if (res?.success) {
+      navigate(res.role === 'admin' ? '/admin/dashboard' : '/');
+    } else {
+      setError(res?.message || t.invalidCredentials);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setError('');
+    setSuccessMessage('');
+    const res = await resendVerificationCode(email);
+    if (res?.success) setSuccessMessage(t.verificationResent);
+    else setError(res?.message || t.loginFailed);
   };
 
   const handleSocialSignIn = async (provider, providerName) => {
     setError('');
+    setSuccessMessage('');
     setLoadingFirebase(true);
     try {
       const result = await signInWithPopup(auth, provider);
@@ -118,7 +152,7 @@ export default function Auth() {
         <div className="max-w-md w-full mx-auto space-y-5">
           <div>
             <h2 className="text-3xl font-extrabold text-[#281712] tracking-tight">
-              {isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.signInTitle}
+              {verificationPending ? t.verifyEmailTitle : isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.signInTitle}
             </h2>
             <p className="text-sm text-gray-500 mt-1.5">
               {t.welcomeBack}
@@ -132,9 +166,15 @@ export default function Auth() {
             </div>
           )}
 
+          {successMessage && (
+            <div className="p-3.5 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">
+              {successMessage}
+            </div>
+          )}
+
           {/* Main Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
-            {isRegistering && (
+            {isRegistering && !verificationPending && (
               <div>
                 <label className="block text-xs font-bold text-[#5c4037] mb-1.5 uppercase tracking-wider">
                   {language === 'vi' ? 'Tên người dùng' : 'Username'}
@@ -168,7 +208,28 @@ export default function Auth() {
               </div>
             </div>
 
-            <div>
+            {verificationPending && (
+              <div>
+                <label className="block text-xs font-bold text-[#5c4037] mb-1.5 uppercase tracking-wider">
+                  {t.verificationCode}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  minLength={6}
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#aa3000] focus:border-transparent outline-none transition text-sm bg-white tracking-[0.3em]"
+                  placeholder="123456"
+                />
+              </div>
+            )}
+
+            {!verificationPending && <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-xs font-bold text-[#5c4037] uppercase tracking-wider">
                   {t.password}
@@ -190,7 +251,7 @@ export default function Auth() {
                   placeholder="��������"
                 />
               </div>
-            </div>
+            </div>}
 
             {/* Main Login Button */}
             <button
@@ -198,11 +259,21 @@ export default function Auth() {
               className="w-full py-3 rounded-full bg-[#aa3000] hover:bg-[#8e2800] text-white font-bold text-sm shadow-md transition duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogIn size={18} />
-              <span>{isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.login}</span>
+              <span>{verificationPending ? t.verifyEmailAction : isRegistering ? (language === 'vi' ? 'Tạo tài khoản' : 'Create account') : t.login}</span>
             </button>
           </form>
 
-          <div className="space-y-2.5">
+          {verificationPending && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              className="w-full text-center text-sm font-semibold text-[#ab3500] hover:underline"
+            >
+              {t.resendVerification}
+            </button>
+          )}
+
+          {!verificationPending && <div className="space-y-2.5">
             <button
               type="button"
               onClick={handleGoogleSignIn}
@@ -219,20 +290,42 @@ export default function Auth() {
             >
               {loadingFirebase ? t.connecting : t.signInFacebook}
             </button>
-          </div>
+          </div>}
 
           <button
             type="button"
             onClick={() => {
-              setIsRegistering(value => !value);
+              if (verificationPending) {
+                setVerificationPending(false);
+                setIsRegistering(false);
+              } else {
+                setIsRegistering(value => !value);
+              }
               setError('');
+              setSuccessMessage('');
             }}
             className="w-full text-center text-sm font-semibold text-[#ab3500] hover:underline"
           >
-            {isRegistering
+            {verificationPending
+              ? t.backToSignIn
+              : isRegistering
               ? (language === 'vi' ? 'Đã có tài khoản? Đăng nhập' : 'Already registered? Sign in')
               : (language === 'vi' ? 'Chưa có tài khoản? Tạo tài khoản' : 'New here? Create an account')}
           </button>
+
+          {!isRegistering && !verificationPending && (
+            <button
+              type="button"
+              onClick={() => {
+                setVerificationPending(true);
+                setError('');
+                setSuccessMessage('');
+              }}
+              className="w-full text-center text-sm font-semibold text-[#ab3500] hover:underline"
+            >
+              {t.verifyEmailLink}
+            </button>
+          )}
 
           <div className="flex items-center justify-center gap-3 pt-3 border-t border-gray-100">
             <span className="text-xs font-semibold text-gray-500">{t.languageLabel}</span>
