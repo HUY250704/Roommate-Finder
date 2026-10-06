@@ -28,6 +28,17 @@ const ReportSchema = new mongoose.Schema(
       enum: ['pending', 'resolved', 'dismissed'],
       default: 'pending',
     },
+    actionTaken: {
+      type: String,
+      default: '',
+    },
+    adminNotes: {
+      type: String,
+      default: '',
+    },
+    resolvedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
