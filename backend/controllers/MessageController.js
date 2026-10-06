@@ -1,7 +1,9 @@
-const Conversation = require('../models/Conversation');
+﻿const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const RoommateRequest = require('../models/RoommateRequest');
 const mongoose = require('mongoose');
+const { createNotification } = require('../services/notificationService');
+const { isBlockedBetween } = require('./BlockController');
 
 const getMessages = async (req, res) => {
   try {
@@ -18,6 +20,28 @@ const getMessages = async (req, res) => {
       return res.status(403).json({ message: 'You are not a participant in this conversation' });
     }
 
+    // Mark unread messages sent by the other participant as read
+    await Message.updateMany(
+      {
+        conversation: conversationId,
+        sender: { $ne: req.user._id },
+        isRead: false,
+      },
+      { isRead: true }
+    );
+
+    const io = req.app.get('io');
+    if (io) {
+      conversation.participants.forEach(participantId => {
+        if (participantId.toString() !== req.user._id.toString()) {
+          io.to(participantId.toString()).emit('messagesRead', {
+            conversationId,
+            readBy: req.user._id,
+          });
+        }
+      });
+    }
+
     const messages = await Message.find({ conversation: conversationId })
       .populate('sender', 'username email avatar')
       .sort({ createdAt: 1 });
@@ -29,12 +53,16 @@ const getMessages = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { recipientId } = req.body;
+    const { recipientId, images } = req.body;
     const text = typeof req.body.text === 'string' ? req.body.text.trim() : '';
     let { conversationId } = req.body;
 
-    if (!text) {
-      return res.status(400).json({ message: 'Message text is required' });
+    const messageImages = Array.isArray(images)
+      ? images.filter(img => typeof img === 'string' && img.trim().length > 0)
+      : (typeof images === 'string' && images.trim().length > 0 ? [images.trim()] : []);
+
+    if (!text && messageImages.length === 0) {
+      return res.status(400).json({ message: 'Message text or image is required' });
     }
     if (text.length > 5000) {
       return res.status(400).json({ message: 'Message must be 5000 characters or fewer' });
@@ -72,6 +100,11 @@ const sendMessage = async (req, res) => {
       });
     }
 
+    const isBlocked = await isBlockedBetween(req.user._id, targetRecipientId);
+    if (isBlocked) {
+      return res.status(403).json({ message: 'Cannot send message: User is blocked' });
+    }
+
     const acceptedRequest = await RoommateRequest.findOne({
       $or: [
         { sender: req.user._id, receiver: targetRecipientId, status: 'accepted' },
@@ -99,6 +132,7 @@ const sendMessage = async (req, res) => {
       conversation: conversation._id,
       sender: req.user._id,
       text,
+      images: messageImages,
     });
 
     conversation.lastMessage = message._id;
@@ -114,6 +148,22 @@ const sendMessage = async (req, res) => {
       });
     }
 
+    // Create notification for the receiver
+    try {
+      const notificationContent = text || 'Sent you an image';
+      await createNotification(
+        targetRecipientId,
+        req.user._id,
+        'message',
+        `New Message from ${req.user.username}`,
+        notificationContent,
+        conversation._id,
+        io
+      );
+    } catch (notifErr) {
+      console.error('Failed to create message notification:', notifErr.message);
+    }
+
     return res.status(201).json(populatedMessage);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -125,7 +175,7 @@ const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: req.user._id
     })
-      .populate('participants', 'username email')
+      .populate('participants', 'username email avatar')
       .populate({
         path: 'lastMessage',
         populate: { path: 'sender', select: 'username avatar' }

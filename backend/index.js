@@ -23,6 +23,7 @@ const roommateRequestRoute = require('./routes/RoommateRequestRoute');
 const messageRoute = require('./routes/MessageRoute');
 const notificationRoute = require('./routes/NotificationRoute');
 const reportRoute = require('./routes/ReportRoute');
+const blockRoute = require('./routes/BlockRoute');
 const adminRoute = require('./routes/AdminRoute');
 const viewingRoute = require('./routes/ViewingRoute');
 const uploadRoute = require('./routes/UploadRoute');
@@ -37,6 +38,8 @@ const io = socketIo(server, {
   },
 });
 
+const onlineUsers = new Map(); // userId -> Set of socketIds
+
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -44,8 +47,8 @@ io.use(async (socket, next) => {
     if (!process.env.JWT_SECRET) return next(new Error('Authentication is not configured'));
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('_id');
-    if (!user) return next(new Error('Authentication failed'));
+    const user = await User.findById(decoded.id).select('_id isVerified');
+    if (!user || !user.isVerified) return next(new Error('Authentication failed'));
 
     socket.data.userId = user._id.toString();
     return next();
@@ -113,6 +116,7 @@ app.use('/api/roommate-requests', roommateRequestRoute);
 app.use('/api/conversations', messageRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/reports', reportRoute);
+app.use('/api/blocks', blockRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/viewings', viewingRoute);
 app.use('/api/upload', uploadRoute);
@@ -129,11 +133,58 @@ app.use(errorHandler);
 
 // Socket.io connection logic
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-  socket.join(socket.data.userId);
+  const userId = socket.data.userId;
+  console.log('A user connected:', socket.id, 'userId:', userId);
+
+  socket.join(userId);
+
+  // Manage online presence
+  if (!onlineUsers.has(userId)) {
+    onlineUsers.set(userId, new Set());
+  }
+  onlineUsers.get(userId).add(socket.id);
+
+  // Broadcast user online status
+  io.emit('userPresence', {
+    userId,
+    status: 'online',
+    onlineUserIds: Array.from(onlineUsers.keys()),
+  });
+
+  // Typing indicators
+  socket.on('typing', ({ conversationId, recipientId }) => {
+    if (recipientId) {
+      io.to(recipientId.toString()).emit('userTyping', {
+        conversationId,
+        senderId: userId,
+        isTyping: true,
+      });
+    }
+  });
+
+  socket.on('stopTyping', ({ conversationId, recipientId }) => {
+    if (recipientId) {
+      io.to(recipientId.toString()).emit('userTyping', {
+        conversationId,
+        senderId: userId,
+        isTyping: false,
+      });
+    }
+  });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected:', socket.id, 'userId:', userId);
+    if (onlineUsers.has(userId)) {
+      onlineUsers.get(userId).delete(socket.id);
+      if (onlineUsers.get(userId).size === 0) {
+        onlineUsers.delete(userId);
+        io.emit('userPresence', {
+          userId,
+          status: 'offline',
+          onlineUserIds: Array.from(onlineUsers.keys()),
+        });
+      }
+    }
   });
 });
 

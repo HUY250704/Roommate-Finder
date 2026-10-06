@@ -24,6 +24,7 @@ const MatchSchema = new mongoose.Schema(
       lifestyleScore: { type: Number, default: 0 },
       habitsScore: { type: Number, default: 0 },
       interestsScore: { type: Number, default: 0 },
+      otherScore: { type: Number, default: 0 },
     },
     status: {
       type: String,

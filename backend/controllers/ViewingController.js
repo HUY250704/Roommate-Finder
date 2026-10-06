@@ -1,6 +1,7 @@
-const Viewing = require('../models/Viewing');
+﻿const Viewing = require('../models/Viewing');
 const Room = require('../models/Room');
 const { createNotification } = require('../services/notificationService');
+const { sendViewingConfirmationEmail } = require('../services/emailService');
 
 const requestViewing = async (req, res) => {
   try {
@@ -25,13 +26,15 @@ const requestViewing = async (req, res) => {
       message,
     });
 
+    const io = req.app.get('io');
     await createNotification(
       room.owner,
       req.user._id,
       'viewing',
       'New Viewing Request',
       `${req.user.username} requested a viewing for your room: "${room.title}".`,
-      viewing._id
+      viewing._id,
+      io
     );
 
     return res.status(201).json(viewing);
@@ -47,7 +50,7 @@ const handleViewing = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const viewing = await Viewing.findById(req.params.id).populate('room');
+    const viewing = await Viewing.findById(req.params.id).populate('room').populate('user', 'username email');
     if (!viewing) {
       return res.status(404).json({ message: 'Viewing request not found' });
     }
@@ -59,14 +62,25 @@ const handleViewing = async (req, res) => {
     viewing.status = status;
     await viewing.save();
 
+    const io = req.app.get('io');
+    const recipientUser = viewing.user._id || viewing.user;
     await createNotification(
-      viewing.user,
+      recipientUser,
       req.user._id,
       'viewing',
       `Viewing Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
       `Your viewing request for "${viewing.room.title}" was ${status}.`,
-      viewing._id
+      viewing._id,
+      io
     );
+
+    if (status === 'approved' && viewing.user && viewing.user.email) {
+      await sendViewingConfirmationEmail(viewing.user.email, {
+        roomTitle: viewing.room.title || 'Room',
+        date: viewing.date,
+        ownerName: req.user.username,
+      });
+    }
 
     return res.status(200).json(viewing);
   } catch (error) {
