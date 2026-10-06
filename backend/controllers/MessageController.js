@@ -151,7 +151,8 @@ const sendMessage = async (req, res) => {
         'message',
         `New Message from ${req.user.username}`,
         notificationContent,
-        conversation._id
+        conversation._id,
+        io
       );
     } catch (notifErr) {
       console.error('Failed to create message notification:', notifErr.message);
