@@ -89,8 +89,11 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    const result = await logout();
+    if (!result.success) {
+      alert(language === 'vi' ? `Đã đăng xuất trên thiết bị này, nhưng máy chủ chưa xác nhận thu hồi phiên: ${result.message}` : `Signed out locally, but the server could not confirm session revocation: ${result.message}`);
+    }
     navigate('/login');
   };
 

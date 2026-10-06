@@ -1,4 +1,5 @@
 ﻿const User = require('../models/User');
+const RefreshToken = require('../models/RefreshToken');
 const generateToken = require('../utils/tokenGenerator');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -7,6 +8,21 @@ const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 
 const EMAIL_VERIFICATION_CODE_TTL = 10 * 60 * 1000;
+const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: '/api/auth',
+  maxAge: REFRESH_TOKEN_TTL,
+};
+const REFRESH_COOKIE_CLEAR_OPTIONS = {
+  httpOnly: REFRESH_COOKIE_OPTIONS.httpOnly,
+  secure: REFRESH_COOKIE_OPTIONS.secure,
+  sameSite: REFRESH_COOKIE_OPTIONS.sameSite,
+  path: REFRESH_COOKIE_OPTIONS.path,
+};
 
 const createEmailVerificationCode = () => String(crypto.randomInt(100000, 1000000));
 
@@ -23,6 +39,39 @@ const matchesEmailVerificationCode = async (code, storedHash) => {
 const getFirebaseAdminAuth = () => {
   const app = getApps()[0] || initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID });
   return getAuth(app);
+};
+
+const hashRefreshToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const getRefreshTokenFromRequest = (req) => {
+  const cookieHeader = req.headers.cookie || '';
+  const cookie = cookieHeader.split(';').map((part) => part.trim())
+    .find((part) => part.startsWith(`${REFRESH_COOKIE_NAME}=`));
+  return cookie ? cookie.slice(REFRESH_COOKIE_NAME.length + 1) : null;
+};
+
+const hasTrustedOrigin = (req) => {
+  const origin = req.get('origin');
+  if (!origin) return true;
+  try {
+    return new URL(origin).origin === new URL(process.env.FRONTEND_URL || 'http://localhost:3000').origin;
+  } catch {
+    return false;
+  }
+};
+
+const issueSession = async (user, res) => {
+  const refreshToken = crypto.randomBytes(64).toString('hex');
+  await RefreshToken.create({
+    user: user._id,
+    tokenHash: hashRefreshToken(refreshToken),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
+  });
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, REFRESH_COOKIE_OPTIONS);
+  return {
+    token: generateToken(user._id),
+    expiresIn: 15 * 60,
+  };
 };
 
 const registerUser = async (req, res) => {
@@ -91,13 +140,14 @@ const loginUser = async (req, res) => {
         return res.status(403).json({ message: 'Please verify your email before signing in' });
       }
 
+      const session = await issueSession(user, res);
       return res.json({
         _id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
-        token: generateToken(user._id),
+        ...session,
       });
     } else {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -108,7 +158,60 @@ const loginUser = async (req, res) => {
 };
 
 const logoutUser = async (req, res) => {
-  return res.status(200).json({ message: 'Logged out successfully' });
+  try {
+    if (!hasTrustedOrigin(req)) {
+      return res.status(403).json({ message: 'Request origin is not allowed' });
+    }
+    const refreshToken = getRefreshTokenFromRequest(req);
+    if (refreshToken) {
+      await RefreshToken.updateOne(
+        { tokenHash: hashRefreshToken(refreshToken), revokedAt: null },
+        { $set: { revokedAt: new Date() } }
+      );
+    }
+    res.clearCookie(REFRESH_COOKIE_NAME, REFRESH_COOKIE_CLEAR_OPTIONS);
+    return res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const refreshSession = async (req, res) => {
+  try {
+    if (!hasTrustedOrigin(req)) {
+      return res.status(403).json({ message: 'Request origin is not allowed' });
+    }
+    if (!process.env.JWT_SECRET) {
+      return res.status(503).json({ message: 'Authentication is not configured' });
+    }
+    const refreshToken = getRefreshTokenFromRequest(req);
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Refresh token is required' });
+    }
+
+    const tokenHash = hashRefreshToken(refreshToken);
+    const now = new Date();
+    const storedToken = await RefreshToken.findOneAndUpdate(
+      { tokenHash, revokedAt: null, expiresAt: { $gt: now } },
+      { $set: { revokedAt: now } },
+      { new: false }
+    );
+    if (!storedToken) {
+      res.clearCookie(REFRESH_COOKIE_NAME, REFRESH_COOKIE_CLEAR_OPTIONS);
+      return res.status(401).json({ message: 'Refresh token is invalid or expired' });
+    }
+
+    const user = await User.findById(storedToken.user);
+    if (!user || !user.isVerified || user.status === 'banned' || user.status === 'suspended' || user.isBanned) {
+      res.clearCookie(REFRESH_COOKIE_NAME, REFRESH_COOKIE_CLEAR_OPTIONS);
+      return res.status(401).json({ message: 'Account is not allowed to refresh this session' });
+    }
+
+    const session = await issueSession(user, res);
+    res.status(200).json(session);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 };
 
 const forgotPassword = async (req, res) => {
@@ -132,6 +235,7 @@ const forgotPassword = async (req, res) => {
       }
     }
 
+    const session = await issueSession(user, res);
     return res.status(200).json({
       message: 'If an account exists with this email, a password reset code has been sent.',
     });
@@ -284,7 +388,7 @@ const firebaseLogin = async (req, res) => {
       role: user.role,
       isVerified: user.isVerified,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      ...session,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -297,6 +401,7 @@ module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  refreshSession,
   forgotPassword,
   resetPassword,
   verifyEmail,

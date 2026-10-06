@@ -150,7 +150,49 @@ const initialViewings = [
   { id: '1', roomId: 'haichau', userId: 'sarah', date: '2026-08-30', time: '14:30', status: 'scheduled' }
 ];
 
-export const useStore = create((set) => ({
+let refreshTimer;
+
+const scheduleTokenRefresh = (set, expiresInSeconds) => {
+  clearTimeout(refreshTimer);
+  const refreshDelay = Math.max(1000, (expiresInSeconds - 60) * 1000);
+  refreshTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.token) {
+        localStorage.removeItem('token');
+        set({ currentUser: null });
+        return;
+      }
+      localStorage.setItem('token', data.token);
+      scheduleTokenRefresh(set, data.expiresIn);
+    } catch (error) {
+      console.error('Could not refresh access token:', error);
+      refreshTimer = setTimeout(() => scheduleTokenRefresh(set, 1), 30000);
+    }
+  }, refreshDelay);
+};
+
+const storedTokenExpiresIn = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return Math.max(1, payload.exp - Math.floor(Date.now() / 1000));
+  } catch {
+    localStorage.removeItem('token');
+    return null;
+  }
+};
+
+export const useStore = create((set) => {
+  const expiresIn = storedTokenExpiresIn();
+  if (expiresIn !== null) scheduleTokenRefresh(set, expiresIn);
+
+  return ({
   language: localStorage.getItem('language') || 'vi',
   setLanguage: (lang) => {
     localStorage.setItem('language', lang);
@@ -165,15 +207,18 @@ export const useStore = create((set) => ({
   favorites: ['haichau'],
 
   loginWithGoogle: async (googleData) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     return { success: false, message: 'Use verified Firebase sign-in' };
   },
 
   loginWithFirebase: async (firebaseData) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: firebaseData.uid,
@@ -187,7 +232,10 @@ export const useStore = create((set) => ({
 
       if (response.ok) {
         const data = await response.json();
-        if (data.token) localStorage.setItem('token', data.token);
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          scheduleTokenRefresh(set, data.expiresIn);
+        }
         const user = {
           ...data,
           id: data._id || data.id,
@@ -207,6 +255,7 @@ export const useStore = create((set) => ({
   },
 
   register: async (username, email, password) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -256,11 +305,13 @@ export const useStore = create((set) => ({
   },
 
   login: async (email, password) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     const emailLower = email.toLowerCase().trim();
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailLower, password })
       });
@@ -269,6 +320,7 @@ export const useStore = create((set) => ({
         const data = await response.json();
         if (data.token) {
           localStorage.setItem('token', data.token);
+          scheduleTokenRefresh(set, data.expiresIn);
         }
         const user = {
           ...data,
@@ -291,9 +343,24 @@ export const useStore = create((set) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    let result = { success: true };
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        result = { success: false, message: data.message || 'Could not revoke refresh token' };
+      }
+    } catch (error) {
+      result = { success: false, message: error.message };
+    }
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     set({ currentUser: null });
+    return result;
   },
 
   addRoom: (room) => set(state => ({
@@ -335,4 +402,5 @@ export const useStore = create((set) => ({
   deleteRequest: (requestId) => set(state => ({
     requests: state.requests.filter(r => r.id !== requestId)
   }))
-}));
+  });
+});
