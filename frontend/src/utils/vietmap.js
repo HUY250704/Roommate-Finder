@@ -15,6 +15,11 @@ const normalizeStr = (str) => {
     .trim();
 };
 
+const authenticatedHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 const VIETNAM_LOCATIONS = [
   // Đà Nẵng
   { label: 'Quận Hải Châu, TP. Đà Nẵng', name: 'Quận Hải Châu', coordinates: [108.2022, 16.0544], category: 'district' },
@@ -137,7 +142,9 @@ export const getVietmapAutocomplete = async (text) => {
   if (!text || text.trim().length === 0) return [];
 
   try {
-    const res = await fetch(`${API_BASE_URL}/map/autocomplete?text=${encodeURIComponent(text)}`);
+    const res = await fetch(`${API_BASE_URL}/map/autocomplete?text=${encodeURIComponent(text)}`, {
+      headers: authenticatedHeaders(),
+    });
     if (res.ok) {
       const data = await res.json();
       const features = data.data?.features || data.features || data.data || [];
@@ -158,7 +165,9 @@ export const getVietmapAutocomplete = async (text) => {
 export const searchVietmapAddress = async (text) => {
   if (!text) return null;
   try {
-    const res = await fetch(`${API_BASE_URL}/map/search?text=${encodeURIComponent(text)}`);
+    const res = await fetch(`${API_BASE_URL}/map/search?text=${encodeURIComponent(text)}`, {
+      headers: authenticatedHeaders(),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data && (data.features?.length > 0 || data.data?.features?.length > 0)) {
@@ -181,7 +190,8 @@ export const searchVietmapAddress = async (text) => {
 export const calculateVietmapRoute = async (originLat, originLng, destLat, destLng, vehicle = 'motorcycle') => {
   try {
     const res = await fetch(
-      `${API_BASE_URL}/map/route?origin=${originLat},${originLng}&destination=${destLat},${destLng}&vehicle=${vehicle}`
+      `${API_BASE_URL}/map/route?origin=${originLat},${originLng}&destination=${destLat},${destLng}&vehicle=${vehicle}`,
+      { headers: authenticatedHeaders() }
     );
     if (res.ok) {
       return await res.json();
@@ -213,4 +223,15 @@ export const calculateVietmapRoute = async (originLat, originLng, destLat, destL
       },
     ],
   };
+
+};
+
+export const getRoomMapMarkers = async () => {
+  const response = await fetch(`${API_BASE_URL}/map/rooms`, {
+    headers: authenticatedHeaders(),
+  });
+  if (!response.ok) {
+    throw new Error(`Could not load room map markers (${response.status})`);
+  }
+  return response.json();
 };

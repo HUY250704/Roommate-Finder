@@ -2,7 +2,7 @@
 import { MapPin, Navigation, ExternalLink, Layers, ZoomIn, ZoomOut, Compass, Map, Globe } from 'lucide-react';
 import { searchVietmapAddress } from '../../utils/vietmap';
 
-export default function VietmapView({ address, location, title }) {
+export default function VietmapView({ address, location, title, coordinates: roomCoordinates }) {
   const [coordinates, setCoordinates] = useState({ lat: 16.0544, lng: 108.2022 }); // Da Nang default
   const [loading, setLoading] = useState(false);
   const [mapLayer, setMapLayer] = useState('street');
@@ -14,6 +14,11 @@ export default function VietmapView({ address, location, title }) {
   useEffect(() => {
     let isMounted = true;
     async function resolveCoords() {
+      const storedCoordinates = roomCoordinates?.coordinates;
+      if (Array.isArray(storedCoordinates) && storedCoordinates.length === 2) {
+        setCoordinates({ lng: Number(storedCoordinates[0]), lat: Number(storedCoordinates[1]) });
+        return;
+      }
       if (!fullAddress) return;
       setLoading(true);
       try {
@@ -31,7 +36,7 @@ export default function VietmapView({ address, location, title }) {
     }
     resolveCoords();
     return () => { isMounted = false; };
-  }, [fullAddress]);
+  }, [fullAddress, roomCoordinates]);
 
   const getTileUrl = (layer) => {
     if (layer === 'satellite') {
