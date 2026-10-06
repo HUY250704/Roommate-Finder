@@ -5,9 +5,49 @@ const { createNotification } = require('../services/notificationService');
 
 const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status', 'title', 'location', 'area', 'bedrooms', 'bathrooms', 'numRoommates', 'houseRules', 'availableFrom', 'roomType'];
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const coordinatesFromInput = (input) => {
+  if (input === undefined) return undefined;
+  const coords = Array.isArray(input)
+    ? input
+    : input && Array.isArray(input.coordinates)
+      ? input.coordinates
+      : input && input.lat !== undefined && input.lng !== undefined
+        ? [input.lng, input.lat]
+        : null;
+  if (
+    !coords || coords.length !== 2 ||
+    !Number.isFinite(Number(coords[0])) || !Number.isFinite(Number(coords[1])) ||
+    Number(coords[0]) < -180 || Number(coords[0]) > 180 ||
+    Number(coords[1]) < -90 || Number(coords[1]) > 90
+  ) {
+    return null;
+  }
+  return { type: 'Point', coordinates: [Number(coords[0]), Number(coords[1])] };
+};
+
+const queryNumber = (value, name, res) => {
+  if (value === undefined || value === '') return undefined;
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    res.status(400).json({ message: `${name} must be a valid number` });
+    return null;
+  }
+  return number;
+};
+
 const createRoom = async (req, res) => {
   try {
     const { title, description, price, address, location, area, bedrooms, bathrooms, numRoommates, houseRules, images, amenities, availableFrom, roomType } = req.body;
+    const coordinates = coordinatesFromInput(
+      req.body.coordinates === undefined && (req.body.lat !== undefined || req.body.lng !== undefined)
+        ? { lat: req.body.lat, lng: req.body.lng }
+        : req.body.coordinates
+    );
+    if (coordinates === null) {
+      return res.status(400).json({ message: 'Valid room coordinates are required as [longitude, latitude]' });
+    }
     const room = await Room.create({
       owner: req.user._id,
       title,
@@ -24,6 +64,7 @@ const createRoom = async (req, res) => {
       amenities,
       availableFrom,
       roomType,
+      ...(coordinates ? { coordinates } : {}),
     });
 
     // Notify users looking for rooms matching this location and budget
@@ -32,7 +73,7 @@ const createRoom = async (req, res) => {
       const targetProfiles = await Profile.find({
         user: { $ne: req.user._id },
         $or: [
-          { 'searchPreferences.location': { $regex: location || address || '', $options: 'i' } },
+          { 'searchPreferences.location': { $regex: escapeRegex(location || address || ''), $options: 'i' } },
           { 'searchPreferences.budgetMax': { $gte: Number(price) } },
         ],
       }).select('user').limit(20);
@@ -99,6 +140,20 @@ const updateRoom = async (req, res) => {
       }
     }
 
+    if (Object.prototype.hasOwnProperty.call(req.body, 'coordinates') ||
+        Object.prototype.hasOwnProperty.call(req.body, 'lat') ||
+        Object.prototype.hasOwnProperty.call(req.body, 'lng')) {
+      const coordinates = coordinatesFromInput(
+        req.body.coordinates === undefined
+          ? { lat: req.body.lat, lng: req.body.lng }
+          : req.body.coordinates
+      );
+      if (!coordinates) {
+        return res.status(400).json({ message: 'Valid room coordinates are required as [longitude, latitude]' });
+      }
+      updates.coordinates = coordinates;
+    }
+
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ message: 'No valid room fields provided for update' });
     }
@@ -152,37 +207,105 @@ const deleteRoom = async (req, res) => {
 
 const searchRooms = async (req, res) => {
   try {
-    const { location, minPrice, maxPrice, roomType, smoking, pets, sleepSchedule, cleanliness } = req.query;
+    const {
+      location, minPrice, maxPrice, roomType, smoking, pets, sleepSchedule,
+      cleanliness, amenities, availableFrom, moveInDate, gender,
+      minAge, maxAge, ageMin, ageMax, lat, lng, radius, radiusKm, distance,
+    } = req.query;
 
     const query = { status: { $in: ['available', 'approved'] } };
 
     if (location) {
+      const safeLocation = escapeRegex(String(location));
       query.$or = [
-        { location: { $regex: location, $options: 'i' } },
-        { address: { $regex: location, $options: 'i' } },
+        { location: { $regex: safeLocation, $options: 'i' } },
+        { address: { $regex: safeLocation, $options: 'i' } },
       ];
     }
 
-    if (minPrice || maxPrice) {
+    const minimumPrice = queryNumber(minPrice, 'minPrice', res);
+    if (minimumPrice === null) return;
+    const maximumPrice = queryNumber(maxPrice, 'maxPrice', res);
+    if (maximumPrice === null) return;
+    if (minimumPrice !== undefined || maximumPrice !== undefined) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (minimumPrice !== undefined) query.price.$gte = minimumPrice;
+      if (maximumPrice !== undefined) query.price.$lte = maximumPrice;
     }
 
     if (roomType) {
       query.roomType = roomType;
     }
 
-    if (smoking || pets || sleepSchedule || cleanliness) {
-      const profileQuery = {};
-      if (smoking) profileQuery['lifestyle.smoking'] = smoking;
-      if (pets) profileQuery['lifestyle.pets'] = pets;
-      if (sleepSchedule) profileQuery['lifestyle.sleepSchedule'] = sleepSchedule;
-      if (cleanliness) profileQuery['lifestyle.cleanliness'] = cleanliness;
+    const selectedAmenities = (Array.isArray(amenities) ? amenities : String(amenities || '').split(','))
+      .map((amenity) => amenity.trim())
+      .filter(Boolean);
+    if (selectedAmenities.length) {
+      query.amenities = { $all: selectedAmenities };
+    }
 
+    const requestedDate = availableFrom || moveInDate;
+    if (requestedDate) {
+      const moveIn = new Date(requestedDate);
+      if (Number.isNaN(moveIn.getTime())) {
+        return res.status(400).json({ message: 'availableFrom must be a valid date' });
+      }
+      query.availableFrom = { $lte: moveIn };
+    }
+
+    const minimumAge = queryNumber(minAge === undefined ? ageMin : minAge, 'minAge', res);
+    if (minimumAge === null) return;
+    const maximumAge = queryNumber(maxAge === undefined ? ageMax : maxAge, 'maxAge', res);
+    if (maximumAge === null) return;
+    if ((minimumAge !== undefined && minimumAge < 0) || (maximumAge !== undefined && maximumAge < 0) ||
+        (minimumAge !== undefined && maximumAge !== undefined && minimumAge > maximumAge)) {
+      return res.status(400).json({ message: 'Age range is invalid' });
+    }
+
+    const profileQuery = {};
+    if (gender && gender !== 'any') profileQuery.gender = String(gender).toLowerCase();
+    if (smoking) profileQuery['lifestyle.smoking'] = smoking;
+    if (pets) profileQuery['lifestyle.pets'] = pets;
+    if (sleepSchedule) profileQuery['lifestyle.sleepSchedule'] = sleepSchedule;
+    if (cleanliness) profileQuery['lifestyle.cleanliness'] = cleanliness;
+
+    if (minimumAge !== undefined || maximumAge !== undefined) {
+      profileQuery.dateOfBirth = {};
+      const today = new Date();
+      if (minimumAge !== undefined) {
+        const oldestAllowedBirthDate = new Date(today);
+        oldestAllowedBirthDate.setFullYear(today.getFullYear() - minimumAge);
+        profileQuery.dateOfBirth.$lte = oldestAllowedBirthDate;
+      }
+      if (maximumAge !== undefined) {
+        const youngestAllowedBirthDate = new Date(today);
+        youngestAllowedBirthDate.setFullYear(today.getFullYear() - maximumAge - 1);
+        profileQuery.dateOfBirth.$gt = youngestAllowedBirthDate;
+      }
+    }
+
+    if (Object.keys(profileQuery).length) {
       const matchingProfiles = await Profile.find(profileQuery).select('user');
       const matchingUserIds = matchingProfiles.map(p => p.user);
       query.owner = { $in: matchingUserIds };
+    }
+
+    const searchLat = queryNumber(lat, 'lat', res);
+    if (searchLat === null) return;
+    const searchLng = queryNumber(lng, 'lng', res);
+    if (searchLng === null) return;
+    const searchRadius = queryNumber(radiusKm || radius || distance, 'radiusKm', res);
+    if (searchRadius === null) return;
+    if (searchLat !== undefined || searchLng !== undefined || searchRadius !== undefined) {
+      if (searchLat === undefined || searchLng === undefined || searchRadius === undefined ||
+          searchLat < -90 || searchLat > 90 || searchLng < -180 || searchLng > 180 || searchRadius <= 0) {
+        return res.status(400).json({ message: 'Valid lat, lng and positive radiusKm are required for distance search' });
+      }
+      query.coordinates = {
+        $geoWithin: {
+          $centerSphere: [[searchLng, searchLat], searchRadius / 6378.1],
+        },
+      };
     }
 
     const rooms = await Room.find(query).populate('owner', 'username email');

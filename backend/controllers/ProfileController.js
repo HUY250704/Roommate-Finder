@@ -1,6 +1,8 @@
 ﻿const Profile = require('../models/Profile');
 const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const getProfile = async (req, res) => {
   try {
     let profile = await Profile.findOne({ user: req.user._id }).populate('user', 'username email role isVerified status');
@@ -54,13 +56,11 @@ const getRoommates = async (req, res) => {
     query.user = { $nin: excludedUserIds };
 
     if (gender) query.gender = gender;
-    if (location) query['searchPreferences.location'] = { $regex: location, $options: 'i' };
+    if (location) query['searchPreferences.location'] = { $regex: escapeRegex(String(location)), $options: 'i' };
 
     if (minBudget || maxBudget) {
-      query['searchPreferences.budgetMin'] = {};
-      query['searchPreferences.budgetMax'] = {};
-      if (minBudget) query['searchPreferences.budgetMin'].$gte = Number(minBudget);
-      if (maxBudget) query['searchPreferences.budgetMax'].$lte = Number(maxBudget);
+      if (maxBudget) query['searchPreferences.budgetMin'] = { $lte: Number(maxBudget) };
+      if (minBudget) query['searchPreferences.budgetMax'] = { $gte: Number(minBudget) };
     }
 
     if (smoking) query['lifestyle.smoking'] = smoking;

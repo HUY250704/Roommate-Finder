@@ -208,6 +208,7 @@ export default function RoomDetails() {
                 address={room.address} 
                 location={room.location} 
                 title={room.title} 
+                coordinates={room.coordinates}
               />
             </div>
           </div>

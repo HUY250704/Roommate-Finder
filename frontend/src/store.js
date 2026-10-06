@@ -297,7 +297,7 @@ export const useStore = create((set) => ({
   },
 
   addRoom: (room) => set(state => ({
-    rooms: [...state.rooms, { ...room, id: String(state.rooms.length + 1), status: 'pending', createdAt: new Date().toISOString().split('T')[0] }]
+    rooms: [...state.rooms, { ...room, id: room.id || String(state.rooms.length + 1), status: room.status || 'pending', createdAt: new Date().toISOString().split('T')[0] }]
   })),
 
   toggleFavorite: (roomId) => set(state => {

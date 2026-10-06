@@ -28,6 +28,26 @@ const RoomSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add location (district/city)'],
     },
+    coordinates: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        validate: {
+          validator(value) {
+            return value.length === 2 &&
+              Number.isFinite(value[0]) &&
+              Number.isFinite(value[1]) &&
+              value[0] >= -180 && value[0] <= 180 &&
+              value[1] >= -90 && value[1] <= 90;
+          },
+          message: 'Coordinates must be [longitude, latitude] within valid ranges',
+        },
+      },
+    },
     area: {
       type: Number,
       default: 0, // area in m2
@@ -75,5 +95,7 @@ const RoomSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+RoomSchema.index({ coordinates: '2dsphere' });
 
 module.exports = mongoose.model('Room', RoomSchema);
