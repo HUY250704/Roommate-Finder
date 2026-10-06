@@ -18,7 +18,10 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, phoneNumber, gender, dateOfBirth, avatar, bio, lifestyle, searchPreferences } = req.body;
+    const {
+      fullName, phoneNumber, gender, dateOfBirth, avatar, bio, jobOrUniversity,
+      lookingFor, moveInDate, preferredGender, lifestyle, searchPreferences,
+    } = req.body;
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) {
       profile = await Profile.create({ user: req.user._id });
@@ -30,8 +33,18 @@ const updateProfile = async (req, res) => {
     if (dateOfBirth !== undefined) profile.dateOfBirth = dateOfBirth;
     if (avatar !== undefined) profile.avatar = avatar;
     if (bio !== undefined) profile.bio = bio;
+    if (jobOrUniversity !== undefined) profile.jobOrUniversity = jobOrUniversity;
+    const profileLookingFor = lookingFor === undefined ? searchPreferences?.lookingFor : lookingFor;
+    const profileMoveInDate = moveInDate === undefined ? searchPreferences?.moveInDate : moveInDate;
+    if (profileLookingFor !== undefined) profile.lookingFor = profileLookingFor;
+    if (profileMoveInDate !== undefined) profile.moveInDate = profileMoveInDate;
     if (lifestyle !== undefined) profile.lifestyle = { ...profile.lifestyle.toObject(), ...lifestyle };
-    if (searchPreferences !== undefined) profile.searchPreferences = { ...profile.searchPreferences.toObject(), ...searchPreferences };
+    if (searchPreferences !== undefined) {
+      profile.searchPreferences = { ...profile.searchPreferences.toObject(), ...searchPreferences };
+    }
+    if (preferredGender !== undefined) {
+      profile.searchPreferences.preferredGender = preferredGender;
+    }
 
     await profile.save();
     return res.status(200).json(profile);
@@ -46,6 +59,7 @@ const getRoommates = async (req, res) => {
 
     const query = {};
     const excludedUserIds = [];
+    const requesterProfile = await Profile.findOne({ user: req.user._id }).select('searchPreferences.preferredGender');
 
     if (req.user) {
       excludedUserIds.push(req.user._id);
@@ -55,7 +69,18 @@ const getRoommates = async (req, res) => {
 
     query.user = { $nin: excludedUserIds };
 
-    if (gender) query.gender = gender;
+    const preferredGender = requesterProfile?.searchPreferences?.preferredGender;
+    const requestedGender = gender && String(gender).toLowerCase() !== 'any'
+      ? String(gender).toLowerCase()
+      : undefined;
+    if (preferredGender && preferredGender !== 'any' && requestedGender && requestedGender !== preferredGender) {
+      return res.status(200).json([]);
+    }
+    if (preferredGender && preferredGender !== 'any') {
+      query.gender = preferredGender;
+    } else if (requestedGender) {
+      query.gender = requestedGender;
+    }
     if (location) query['searchPreferences.location'] = { $regex: escapeRegex(String(location)), $options: 'i' };
 
     if (minBudget || maxBudget) {

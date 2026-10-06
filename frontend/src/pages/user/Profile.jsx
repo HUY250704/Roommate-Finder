@@ -1,9 +1,10 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { User, Phone, Briefcase, Save, LogOut } from 'lucide-react';
 import { translations } from '../../utils/translations';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { API_BASE_URL } from '../../config/api';
 
 export default function Profile() {
   const { currentUser, language, logout } = useStore();
@@ -15,10 +16,77 @@ export default function Profile() {
   const [occupation, setOccupation] = useState(currentUser?.occupation || '');
   const [cleanHabit, setCleanHabit] = useState(currentUser?.cleanHabit || 'High Standard');
   const [intro, setIntro] = useState(currentUser?.intro || '');
+  const [lookingFor, setLookingFor] = useState(['room', 'roommate']);
+  const [moveInDate, setMoveInDate] = useState('');
+  const [preferredGender, setPreferredGender] = useState('any');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError(language === 'vi' ? 'Vui lòng đăng nhập lại để tải hồ sơ.' : 'Please sign in again to load your profile.');
+      setIsLoading(false);
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Could not load profile');
+        setName(data.fullName || currentUser?.name || '');
+        setPhone(data.phoneNumber || '');
+        setOccupation(data.jobOrUniversity || '');
+        setIntro(data.bio || '');
+        setLookingFor(data.lookingFor || data.searchPreferences?.lookingFor || ['room', 'roommate']);
+        const profileMoveInDate = data.moveInDate || data.searchPreferences?.moveInDate;
+        setMoveInDate(profileMoveInDate ? new Date(profileMoveInDate).toISOString().slice(0, 10) : '');
+        setPreferredGender(data.searchPreferences?.preferredGender || 'any');
+      })
+      .catch((loadError) => setError(loadError.message))
+      .finally(() => setIsLoading(false));
+  }, [currentUser?.name, language]);
+
+  const handleLookingForChange = (value) => {
+    setLookingFor((current) => current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value]);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    alert(t.profileUpdatedSuccess);
+    setIsSaving(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error(language === 'vi' ? 'Vui lòng đăng nhập lại để lưu hồ sơ.' : 'Please sign in again to save your profile.');
+      const response = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fullName: name,
+          phoneNumber: phone,
+          jobOrUniversity: occupation,
+          bio: intro,
+          lookingFor,
+          moveInDate: moveInDate || null,
+          preferredGender,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update profile');
+      setLookingFor(data.lookingFor || lookingFor);
+      setPreferredGender(data.searchPreferences?.preferredGender || preferredGender);
+      alert(t.profileUpdatedSuccess);
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -65,6 +133,8 @@ export default function Profile() {
           </div>
 
           <form onSubmit={handleSave} className="mt-8 space-y-6">
+            {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+            {isLoading && <p className="text-sm text-gray-500">{language === 'vi' ? 'Đang tải hồ sơ…' : 'Loading profile…'}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
@@ -116,6 +186,22 @@ export default function Profile() {
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  {language === 'vi' ? 'Giới tính mong muốn của roommate' : 'Preferred roommate gender'}
+                </label>
+                <select
+                  value={preferredGender}
+                  onChange={(e) => setPreferredGender(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl text-sm outline-none focus:bg-white focus:border-[#ab3500] focus:ring-2 focus:ring-[#ab3500]/15 transition"
+                >
+                  <option value="any">{language === 'vi' ? 'Không phân biệt' : 'Any'}</option>
+                  <option value="male">{language === 'vi' ? 'Nam' : 'Male'}</option>
+                  <option value="female">{language === 'vi' ? 'Nữ' : 'Female'}</option>
+                  <option value="other">{language === 'vi' ? 'Khác' : 'Other'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                   {t.cleanHabit}
                 </label>
                 <select
@@ -128,6 +214,34 @@ export default function Profile() {
                   <option value="Relaxed">{t.relaxed}</option>
                 </select>
               </div>
+            </div>
+
+            <fieldset className="space-y-2">
+              <legend className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                {language === 'vi' ? 'Bạn đang tìm' : 'I am looking for'}
+              </legend>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-700">
+                <label className="inline-flex items-center gap-2">
+                  <input type="checkbox" checked={lookingFor.includes('room')} onChange={() => handleLookingForChange('room')} />
+                  {language === 'vi' ? 'Phòng' : 'A room'}
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input type="checkbox" checked={lookingFor.includes('roommate')} onChange={() => handleLookingForChange('roommate')} />
+                  {language === 'vi' ? 'Bạn cùng phòng' : 'A roommate'}
+                </label>
+              </div>
+            </fieldset>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                {language === 'vi' ? 'Ngày dự kiến dọn vào' : 'Preferred move-in date'}
+              </label>
+              <input
+                type="date"
+                value={moveInDate}
+                onChange={(e) => setMoveInDate(e.target.value)}
+                className="w-full md:max-w-sm px-4 py-2.5 bg-gray-50 border border-gray-250 rounded-xl text-sm outline-none focus:bg-white focus:border-[#ab3500] focus:ring-2 focus:ring-[#ab3500]/15 transition"
+              />
             </div>
 
             <div>
@@ -154,10 +268,11 @@ export default function Profile() {
               </button>
               <button
                 type="submit"
+                disabled={isLoading || isSaving}
                 className="px-3 sm:px-6 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
-                <span>{t.saveChanges}</span>
+                <span>{isSaving ? (language === 'vi' ? 'Đang lưu…' : 'Saving…') : t.saveChanges}</span>
               </button>
             </div>
           </form>

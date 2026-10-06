@@ -60,6 +60,19 @@ router.get('/me', protect, getProfile);
  *                 type: string
  *               bio:
  *                 type: string
+ *               jobOrUniversity:
+ *                 type: string
+ *               lookingFor:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [room, roommate]
+ *               moveInDate:
+ *                 type: string
+ *                 format: date
+ *               preferredGender:
+ *                 type: string
+ *                 enum: [male, female, other, any]
  *               lifestyle:
  *                 type: object
  *                 properties:
@@ -91,6 +104,14 @@ router.get('/me', protect, getProfile);
  *                   preferredGender:
  *                     type: string
  *                     enum: [male, female, other, any]
+ *                   lookingFor:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       enum: [room, roommate]
+ *                   moveInDate:
+ *                     type: string
+ *                     format: date
  *     responses:
  *       200:
  *         description: C?p nh?t h? sơ thành công

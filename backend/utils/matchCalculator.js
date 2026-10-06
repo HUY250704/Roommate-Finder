@@ -103,16 +103,14 @@
   }
 
   // 6. Other (Max: 5 points / 5% - Gender preference compatibility)
-  const prefGender1 = p1.searchPreferences?.preferredGender || 'any';
-  const prefGender2 = p2.searchPreferences?.preferredGender || 'any';
-  const g1 = p1.gender || '';
-  const g2 = p2.gender || '';
+  const prefGender1 = (p1.searchPreferences?.preferredGender || 'any').toLowerCase();
+  const prefGender2 = (p2.searchPreferences?.preferredGender || 'any').toLowerCase();
+  const g1 = (p1.gender || '').toLowerCase();
+  const g2 = (p2.gender || '').toLowerCase();
   const matchGender1 = prefGender1 === 'any' || !g2 || prefGender1 === g2;
   const matchGender2 = prefGender2 === 'any' || !g1 || prefGender2 === g1;
   if (matchGender1 && matchGender2) {
     otherScore = 5;
-  } else if (matchGender1 || matchGender2) {
-    otherScore = 3;
   } else {
     otherScore = 0;
   }
