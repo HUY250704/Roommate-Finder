@@ -1,11 +1,14 @@
-const Profile = require('../models/Profile');
+﻿const Profile = require('../models/Profile');
+const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const getProfile = async (req, res) => {
   try {
-    let profile = await Profile.findOne({ user: req.user._id }).populate('user', 'username email role');
+    let profile = await Profile.findOne({ user: req.user._id }).populate('user', 'username email role isVerified status');
     if (!profile) {
       profile = await Profile.create({ user: req.user._id });
-      profile = await Profile.findOne({ user: req.user._id }).populate('user', 'username email role');
+      profile = await Profile.findOne({ user: req.user._id }).populate('user', 'username email role isVerified status');
     }
     return res.status(200).json(profile);
   } catch (error) {
@@ -15,7 +18,10 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, phoneNumber, gender, dateOfBirth, avatar, bio, lifestyle, searchPreferences } = req.body;
+    const {
+      fullName, phoneNumber, gender, dateOfBirth, avatar, bio, jobOrUniversity,
+      lookingFor, moveInDate, preferredGender, lifestyle, searchPreferences,
+    } = req.body;
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) {
       profile = await Profile.create({ user: req.user._id });
@@ -27,8 +33,18 @@ const updateProfile = async (req, res) => {
     if (dateOfBirth !== undefined) profile.dateOfBirth = dateOfBirth;
     if (avatar !== undefined) profile.avatar = avatar;
     if (bio !== undefined) profile.bio = bio;
+    if (jobOrUniversity !== undefined) profile.jobOrUniversity = jobOrUniversity;
+    const profileLookingFor = lookingFor === undefined ? searchPreferences?.lookingFor : lookingFor;
+    const profileMoveInDate = moveInDate === undefined ? searchPreferences?.moveInDate : moveInDate;
+    if (profileLookingFor !== undefined) profile.lookingFor = profileLookingFor;
+    if (profileMoveInDate !== undefined) profile.moveInDate = profileMoveInDate;
     if (lifestyle !== undefined) profile.lifestyle = { ...profile.lifestyle.toObject(), ...lifestyle };
-    if (searchPreferences !== undefined) profile.searchPreferences = { ...profile.searchPreferences.toObject(), ...searchPreferences };
+    if (searchPreferences !== undefined) {
+      profile.searchPreferences = { ...profile.searchPreferences.toObject(), ...searchPreferences };
+    }
+    if (preferredGender !== undefined) {
+      profile.searchPreferences.preferredGender = preferredGender;
+    }
 
     await profile.save();
     return res.status(200).json(profile);
@@ -42,18 +58,34 @@ const getRoommates = async (req, res) => {
     const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
 
     const query = {};
+    const excludedUserIds = [];
+    const requesterProfile = await Profile.findOne({ user: req.user._id }).select('searchPreferences.preferredGender');
+
     if (req.user) {
-      query.user = { $ne: req.user._id };
+      excludedUserIds.push(req.user._id);
+      const blockedIds = await getBlockedUserIds(req.user._id);
+      excludedUserIds.push(...blockedIds);
     }
 
-    if (gender) query.gender = gender;
-    if (location) query['searchPreferences.location'] = { $regex: location, $options: 'i' };
+    query.user = { $nin: excludedUserIds };
+
+    const preferredGender = requesterProfile?.searchPreferences?.preferredGender;
+    const requestedGender = gender && String(gender).toLowerCase() !== 'any'
+      ? String(gender).toLowerCase()
+      : undefined;
+    if (preferredGender && preferredGender !== 'any' && requestedGender && requestedGender !== preferredGender) {
+      return res.status(200).json([]);
+    }
+    if (preferredGender && preferredGender !== 'any') {
+      query.gender = preferredGender;
+    } else if (requestedGender) {
+      query.gender = requestedGender;
+    }
+    if (location) query['searchPreferences.location'] = { $regex: escapeRegex(String(location)), $options: 'i' };
 
     if (minBudget || maxBudget) {
-      query['searchPreferences.budgetMin'] = {};
-      query['searchPreferences.budgetMax'] = {};
-      if (minBudget) query['searchPreferences.budgetMin'].$gte = Number(minBudget);
-      if (maxBudget) query['searchPreferences.budgetMax'].$lte = Number(maxBudget);
+      if (maxBudget) query['searchPreferences.budgetMin'] = { $lte: Number(maxBudget) };
+      if (minBudget) query['searchPreferences.budgetMax'] = { $gte: Number(minBudget) };
     }
 
     if (smoking) query['lifestyle.smoking'] = smoking;
@@ -61,7 +93,7 @@ const getRoommates = async (req, res) => {
     if (sleepSchedule) query['lifestyle.sleepSchedule'] = sleepSchedule;
     if (cleanliness) query['lifestyle.cleanliness'] = cleanliness;
 
-    const roommates = await Profile.find(query).populate('user', 'username email role');
+    const roommates = await Profile.find(query).populate('user', 'username email role isVerified status');
     return res.status(200).json(roommates);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -70,7 +102,16 @@ const getRoommates = async (req, res) => {
 
 const getRoommateById = async (req, res) => {
   try {
-    const roommate = await Profile.findOne({ user: req.params.id }).populate('user', 'username email role');
+    const targetUserId = req.params.id;
+
+    if (req.user && targetUserId) {
+      const blocked = await isBlockedBetween(req.user._id, targetUserId);
+      if (blocked) {
+        return res.status(403).json({ message: 'Access denied: User is blocked' });
+      }
+    }
+
+    const roommate = await Profile.findOne({ user: targetUserId }).populate('user', 'username email role isVerified status');
     if (!roommate) {
       return res.status(404).json({ message: 'Roommate profile not found' });
     }

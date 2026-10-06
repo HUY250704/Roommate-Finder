@@ -1,4 +1,4 @@
-const express = require('express');
+ï»¿const express = require('express');
 const router = express.Router();
 const {
   getProfile,
@@ -19,15 +19,15 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/users/me:
  *   get:
- *     summary: L?y h? sõ cá nhân c?a ngý?i dùng hi?n t?i
+ *     summary: L?y h? sÆ¡ cÃ¡ nhÃ¢n c?a ngÆ°?i dÃ¹ng hi?n t?i
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Tr? v? thông tin Profile thành công
+ *         description: Tr? v? thÃ´ng tin Profile thÃ nh cÃ´ng
  *       401:
- *         description: Không có quy?n truy c?p
+ *         description: KhÃ´ng cÃ³ quy?n truy c?p
  */
 router.get('/me', protect, getProfile);
 
@@ -35,7 +35,7 @@ router.get('/me', protect, getProfile);
  * @swagger
  * /api/users/me:
  *   put:
- *     summary: C?p nh?t h? sõ cá nhân và l?i s?ng c?a ngý?i dùng hi?n t?i
+ *     summary: C?p nh?t h? sÆ¡ cÃ¡ nhÃ¢n vÃ  l?i s?ng c?a ngÆ°?i dÃ¹ng hi?n t?i
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -60,6 +60,19 @@ router.get('/me', protect, getProfile);
  *                 type: string
  *               bio:
  *                 type: string
+ *               jobOrUniversity:
+ *                 type: string
+ *               lookingFor:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [room, roommate]
+ *               moveInDate:
+ *                 type: string
+ *                 format: date
+ *               preferredGender:
+ *                 type: string
+ *                 enum: [male, female, other, any]
  *               lifestyle:
  *                 type: object
  *                 properties:
@@ -91,11 +104,19 @@ router.get('/me', protect, getProfile);
  *                   preferredGender:
  *                     type: string
  *                     enum: [male, female, other, any]
+ *                   lookingFor:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       enum: [room, roommate]
+ *                   moveInDate:
+ *                     type: string
+ *                     format: date
  *     responses:
  *       200:
- *         description: C?p nh?t h? sõ thành công
+ *         description: C?p nh?t h? sÆ¡ thÃ nh cÃ´ng
  *       401:
- *         description: Không có quy?n truy c?p
+ *         description: KhÃ´ng cÃ³ quy?n truy c?p
  */
 router.put('/me', protect, updateProfile);
 
@@ -103,15 +124,15 @@ router.put('/me', protect, updateProfile);
  * @swagger
  * /api/users/stats:
  *   get:
- *     summary: Xem th?ng kê h? th?ng (Ch? dành cho Admin)
+ *     summary: Xem th?ng kÃª h? th?ng (Ch? dÃ nh cho Admin)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: L?y s? li?u th?ng kê thành công
+ *         description: L?y s? li?u th?ng kÃª thÃ nh cÃ´ng
  *       403:
- *         description: T? ch?i truy c?p (Không ph?i Admin)
+ *         description: T? ch?i truy c?p (KhÃ´ng ph?i Admin)
  */
 router.get('/stats', protect, getDashboardStats);
 
@@ -119,7 +140,7 @@ router.get('/stats', protect, getDashboardStats);
  * @swagger
  * /api/users/users:
  *   post:
- *     summary: Admin qu?n l? ngý?i dùng (xóa user / phong c?p admin)
+ *     summary: Admin qu?n l? ngÆ°?i dÃ¹ng (xÃ³a user / phong c?p admin)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -140,10 +161,15 @@ router.get('/stats', protect, getDashboardStats);
  *                 enum: [delete, make_admin]
  *     responses:
  *       200:
- *         description: Th?c hi?n hành ð?ng thành công
+ *         description: Th?c hi?n hÃ nh Ä‘?ng thÃ nh cÃ´ng
  *       403:
- *         description: Không có quy?n truy c?p
+ *         description: KhÃ´ng cÃ³ quy?n truy c?p
  */
 router.post('/users', protect, manageUsers);
+
+const { blockUser, unblockUser } = require('../controllers/BlockController');
+
+router.post('/:userId/block', protect, blockUser);
+router.delete('/:userId/block', protect, unblockUser);
 
 module.exports = router;

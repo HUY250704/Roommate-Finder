@@ -4,9 +4,11 @@ const {
   registerUser,
   loginUser,
   logoutUser,
+  refreshSession,
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerificationCode,
   googleLogin,
   firebaseLogin,
 } = require('../controllers/AuthController');
@@ -43,7 +45,7 @@ const {
  *                 type: string
  *     responses:
  *       201:
- *         description: Registered successfully
+ *         description: Registered successfully; a verification code was sent by email
  */
 router.post('/register', registerUser);
 
@@ -70,8 +72,24 @@ router.post('/register', registerUser);
  *     responses:
  *       200:
  *         description: Login successful
+ *       403:
+ *         description: Email address has not been verified
  */
 router.post('/login', loginUser);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Rotate the HTTP-only refresh cookie and issue a short-lived access token
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Access token refreshed
+ *       401:
+ *         description: Refresh cookie is missing, revoked, or expired
+ */
+router.post('/refresh', refreshSession);
 
 /**
  * @swagger
@@ -81,7 +99,7 @@ router.post('/login', loginUser);
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Logout successful
+ *         description: Refresh token revoked and HTTP-only cookie cleared
  */
 router.post('/logout', logoutUser);
 
@@ -157,12 +175,37 @@ router.post('/reset-password', resetPassword);
  *                 type: string
  *               code:
  *                 type: string
+ *                 pattern: '^[0-9]{6}$'
  *     responses:
  *       200:
  *         description: Email verified successfully
+ *       400:
+ *         description: Verification code is invalid or expired
  */
 router.post('/verify-email', verifyEmail);
 
+/**
+ * @swagger
+ * /api/auth/resend-verification:
+ *   post:
+ *     summary: Resend an email verification code
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: A verification code was sent if the account is awaiting verification
+ */
+router.post('/resend-verification', resendVerificationCode);
 
 
 router.post("/firebase", firebaseLogin);

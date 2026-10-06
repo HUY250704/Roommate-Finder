@@ -150,7 +150,49 @@ const initialViewings = [
   { id: '1', roomId: 'haichau', userId: 'sarah', date: '2026-08-30', time: '14:30', status: 'scheduled' }
 ];
 
-export const useStore = create((set) => ({
+let refreshTimer;
+
+const scheduleTokenRefresh = (set, expiresInSeconds) => {
+  clearTimeout(refreshTimer);
+  const refreshDelay = Math.max(1000, (expiresInSeconds - 60) * 1000);
+  refreshTimer = setTimeout(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.token) {
+        localStorage.removeItem('token');
+        set({ currentUser: null });
+        return;
+      }
+      localStorage.setItem('token', data.token);
+      scheduleTokenRefresh(set, data.expiresIn);
+    } catch (error) {
+      console.error('Could not refresh access token:', error);
+      refreshTimer = setTimeout(() => scheduleTokenRefresh(set, 1), 30000);
+    }
+  }, refreshDelay);
+};
+
+const storedTokenExpiresIn = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return Math.max(1, payload.exp - Math.floor(Date.now() / 1000));
+  } catch {
+    localStorage.removeItem('token');
+    return null;
+  }
+};
+
+export const useStore = create((set) => {
+  const expiresIn = storedTokenExpiresIn();
+  if (expiresIn !== null) scheduleTokenRefresh(set, expiresIn);
+
+  return ({
   language: localStorage.getItem('language') || 'vi',
   setLanguage: (lang) => {
     localStorage.setItem('language', lang);
@@ -165,15 +207,18 @@ export const useStore = create((set) => ({
   favorites: ['haichau'],
 
   loginWithGoogle: async (googleData) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     return { success: false, message: 'Use verified Firebase sign-in' };
   },
 
   loginWithFirebase: async (firebaseData) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: firebaseData.uid,
@@ -187,7 +232,10 @@ export const useStore = create((set) => ({
 
       if (response.ok) {
         const data = await response.json();
-        if (data.token) localStorage.setItem('token', data.token);
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          scheduleTokenRefresh(set, data.expiresIn);
+        }
         const user = {
           ...data,
           id: data._id || data.id,
@@ -207,6 +255,7 @@ export const useStore = create((set) => ({
   },
 
   register: async (username, email, password) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -216,31 +265,53 @@ export const useStore = create((set) => ({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) return { success: false, message: data.message || 'Could not create account' };
-      if (!data.token) return { success: false, message: 'Registration did not create an authenticated session' };
-
-      localStorage.setItem('token', data.token);
-      const user = {
-        ...data,
-        id: data._id || data.id,
-        name: data.username || username,
-        email: data.email || email,
-        avatar: data.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-        status: 'active',
-      };
-      set({ currentUser: user });
-      return { success: true, role: user.role || 'user' };
+      return { success: true, requiresVerification: !data.isVerified };
     } catch (error) {
       console.warn('Backend registration failed', error);
       return { success: false, message: 'Không thể kết nối dịch vụ đăng ký' };
     }
   },
 
+  verifyEmail: async (email, code) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), code: code.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return { success: false, message: data.message || 'Could not verify email' };
+      return { success: true };
+    } catch (error) {
+      console.warn('Email verification failed', error);
+      return { success: false, message: 'Could not connect to email verification service' };
+    }
+  },
+
+  resendVerificationCode: async (email) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return { success: false, message: data.message || 'Could not resend verification code' };
+      return { success: true };
+    } catch (error) {
+      console.warn('Resending email verification code failed', error);
+      return { success: false, message: 'Could not connect to email verification service' };
+    }
+  },
+
   login: async (email, password) => {
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     const emailLower = email.toLowerCase().trim();
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailLower, password })
       });
@@ -249,6 +320,7 @@ export const useStore = create((set) => ({
         const data = await response.json();
         if (data.token) {
           localStorage.setItem('token', data.token);
+          scheduleTokenRefresh(set, data.expiresIn);
         }
         const user = {
           ...data,
@@ -271,13 +343,28 @@ export const useStore = create((set) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    let result = { success: true };
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        result = { success: false, message: data.message || 'Could not revoke refresh token' };
+      }
+    } catch (error) {
+      result = { success: false, message: error.message };
+    }
+    clearTimeout(refreshTimer);
     localStorage.removeItem('token');
     set({ currentUser: null });
+    return result;
   },
 
   addRoom: (room) => set(state => ({
-    rooms: [...state.rooms, { ...room, id: String(state.rooms.length + 1), status: 'pending', createdAt: new Date().toISOString().split('T')[0] }]
+    rooms: [...state.rooms, { ...room, id: room.id || String(state.rooms.length + 1), status: room.status || 'pending', createdAt: new Date().toISOString().split('T')[0] }]
   })),
 
   toggleFavorite: (roomId) => set(state => {
@@ -315,4 +402,5 @@ export const useStore = create((set) => ({
   deleteRequest: (requestId) => set(state => ({
     requests: state.requests.filter(r => r.id !== requestId)
   }))
-}));
+  });
+});

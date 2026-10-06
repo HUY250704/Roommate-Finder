@@ -1,4 +1,5 @@
 ﻿const { searchAddress, autocomplete, reverseGeocode, calculateRoute } = require('../services/vietmapService');
+const Room = require('../models/Room');
 
 const normalizeStr = (str) => {
   if (!str) return '';
@@ -262,9 +263,25 @@ const getRoute = async (req, res) => {
   }
 };
 
+const getRoomMarkers = async (req, res) => {
+  try {
+    const rooms = await Room.find({
+      status: { $in: ['available', 'approved'] },
+      'coordinates.coordinates.0': { $exists: true },
+      'coordinates.coordinates.1': { $exists: true },
+    })
+      .select('title price address location coordinates')
+      .lean();
+    return res.status(200).json(rooms);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   search,
   getAutocomplete,
   reverse,
   getRoute,
+  getRoomMarkers,
 };

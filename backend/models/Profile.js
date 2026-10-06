@@ -32,6 +32,14 @@ const ProfileSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    lookingFor: {
+      type: [String],
+      enum: ['room', 'roommate'],
+      default: ['room', 'roommate'],
+    },
+    moveInDate: {
+      type: Date,
+    },
     bio: {
       type: String,
       default: '',

@@ -4,6 +4,8 @@ import { useStore } from '../../store';
 import { Home, Heart, MessageSquare, ShieldAlert, PlusCircle, Search, LogOut, Bell, Building, Compass, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import VietmapModal from '../common/VietmapModal';
 import { translations } from '../../utils/translations';
+import { API_BASE_URL } from '../../config/api';
+import { searchVietmapAddress } from '../../utils/vietmap';
 
 export default function UserNavbar() {
   const { currentUser, logout, favorites, addRoom, addRequest, language } = useStore();
@@ -23,6 +25,7 @@ export default function UserNavbar() {
   const [type, setType] = useState('Private Studio');
   const [images, setImages] = useState([]);
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [isPostingRoom, setIsPostingRoom] = useState(false);
 
   // Form states for Roommate Request
   const [budget, setBudget] = useState('');
@@ -64,25 +67,81 @@ export default function UserNavbar() {
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    const result = await logout();
+    if (!result.success) {
+      alert(language === 'vi' ? `Đã đăng xuất trên thiết bị này, nhưng máy chủ chưa xác nhận thu hồi phiên: ${result.message}` : `Signed out locally, but the server could not confirm session revocation: ${result.message}`);
+    }
     navigate('/login');
   };
 
-  const handlePostSubmit = (e) => {
+  const handlePostSubmit = async (e) => {
     e.preventDefault();
     if (postType === 'room') {
-      addRoom({
-        title: title || (language === 'vi' ? 'Phòng trọ mới đăng' : 'Newly Added Room Listing'),
-        price: Number(price) || 3000000,
-        location: location || (language === 'vi' ? 'Hải Châu, Đà Nẵng' : 'Hai Chau District, Da Nang'),
-        type: type,
-        description: description || (language === 'vi' ? 'Phòng đẹp đầy đủ tiện nghi.' : 'Beautiful room with full amenities.'),
-        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
-        ownerId: currentUser?.id || 'sarah',
-        verified: true,
-      });
-      alert(t.roomPostedSuccess);
+      setIsPostingRoom(true);
+      try {
+        const geocodeResult = await searchVietmapAddress(location);
+        const feature = geocodeResult?.data?.features?.[0] || geocodeResult?.features?.[0];
+        const point = feature?.geometry?.coordinates;
+        if (!Array.isArray(point) || point.length !== 2 ||
+            !Number.isFinite(Number(point[0])) || !Number.isFinite(Number(point[1]))) {
+          throw new Error(language === 'vi' ? 'Không tìm được tọa độ cho địa chỉ này.' : 'Could not find coordinates for this address.');
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error(language === 'vi' ? 'Vui lòng đăng nhập lại để đăng phòng.' : 'Please sign in again to post a room.');
+        }
+
+        const roomTypes = {
+          'Private Studio': 'Private',
+          'Shared Apartment': 'Shared',
+          'House / Villa': 'Entire House',
+        };
+        const response = await fetch(`${API_BASE_URL}/rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            price: Number(price),
+            address: location.trim(),
+            location: location.trim(),
+            roomType: roomTypes[type] || 'Private',
+            description,
+            images,
+            coordinates: { type: 'Point', coordinates: [Number(point[0]), Number(point[1])] },
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || (language === 'vi' ? 'Không thể đăng phòng.' : 'Could not post room.'));
+        }
+
+        addRoom({
+          id: data._id,
+          title: data.title,
+          price: data.price,
+          location: data.location,
+          type: data.roomType,
+          image: data.images?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
+          gallery: data.images || [],
+          ownerId: currentUser?.id,
+          description: data.description,
+          address: data.address,
+          coordinates: data.coordinates,
+          status: data.status,
+          verified: false,
+        });
+        alert(t.roomPostedSuccess);
+      } catch (error) {
+        alert(error.message);
+        return;
+      } finally {
+        setIsPostingRoom(false);
+      }
     } else {
       addRequest({
         title: title || (language === 'vi' ? 'Tìm bạn ở ghép' : 'Looking for Roommate'),
@@ -459,9 +518,10 @@ export default function UserNavbar() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] text-white rounded-xl text-sm font-semibold shadow-md transition-colors"
+                  disabled={isPostingRoom}
+                  className="flex-1 py-2.5 bg-[#ab3500] hover:bg-[#8e2800] disabled:opacity-60 disabled:cursor-wait text-white rounded-xl text-sm font-semibold shadow-md transition-colors"
                 >
-                  {t.publishAd}
+                  {isPostingRoom ? (language === 'vi' ? 'Đang đăng…' : 'Publishing…') : t.publishAd}
                 </button>
               </div>
             </form>
