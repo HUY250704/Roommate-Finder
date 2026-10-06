@@ -1,5 +1,13 @@
 ﻿const mongoose = require('mongoose');
 
+const REPORT_REASONS = [
+  'Scam',
+  'Fake listing',
+  'Harassment',
+  'Inappropriate content',
+  'Other',
+];
+
 const ReportSchema = new mongoose.Schema(
   {
     reporter: {
@@ -18,6 +26,10 @@ const ReportSchema = new mongoose.Schema(
     reason: {
       type: String,
       required: [true, 'Please provide a reason for report'],
+      enum: {
+        values: REPORT_REASONS,
+        message: 'Reason must be one of: Scam, Fake listing, Harassment, Inappropriate content, Other',
+      },
     },
     details: {
       type: String,
@@ -46,3 +58,4 @@ const ReportSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Report', ReportSchema);
+module.exports.REPORT_REASONS = REPORT_REASONS;

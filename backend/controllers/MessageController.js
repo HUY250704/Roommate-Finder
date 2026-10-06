@@ -3,6 +3,7 @@ const Message = require('../models/Message');
 const RoommateRequest = require('../models/RoommateRequest');
 const mongoose = require('mongoose');
 const { createNotification } = require('../services/notificationService');
+const { isBlockedBetween } = require('./BlockController');
 
 const getMessages = async (req, res) => {
   try {
@@ -97,6 +98,11 @@ const sendMessage = async (req, res) => {
       conversation = await Conversation.findOne({
         participants: { $all: [req.user._id, recipientId], $size: 2 }
       });
+    }
+
+    const isBlocked = await isBlockedBetween(req.user._id, targetRecipientId);
+    if (isBlocked) {
+      return res.status(403).json({ message: 'Cannot send message: User is blocked' });
     }
 
     const acceptedRequest = await RoommateRequest.findOne({

@@ -2,13 +2,18 @@
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { createNotification } = require('../services/notificationService');
+const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
 
 const getPeople = async (req, res) => {
   try {
     const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const blockedIds = await getBlockedUserIds(req.user._id);
+    const excludedIds = [req.user._id, ...blockedIds];
+
     const query = {
-      _id: { $ne: req.user._id },
+      _id: { $nin: excludedIds },
       role: 'user',
     };
     if (escapedSearch) query.username = { $regex: escapedSearch, $options: 'i' };
@@ -38,8 +43,13 @@ const sendRequest = async (req, res) => {
       return res.status(400).json({ message: 'Cannot send request to yourself' });
     }
 
-    const receiver = await User.findById(receiverId).select('_id role');
-    if (!receiver || receiver.role !== 'user') {
+    const blocked = await isBlockedBetween(req.user._id, receiverId);
+    if (blocked) {
+      return res.status(403).json({ message: 'Cannot send request: User is blocked' });
+    }
+
+    const receiver = await User.findById(receiverId).select('_id role status isBanned');
+    if (!receiver || receiver.role !== 'user' || receiver.status === 'banned' || receiver.isBanned) {
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -52,9 +62,7 @@ const sendRequest = async (req, res) => {
     });
 
     if (existingRequest) {
-      return res.status(409).json({ message: existingRequest.status === 'accepted'
-        ? 'You are already connected with this user'
-        : 'A roommate request is already pending between these users' });
+      return res.status(400).json({ message: 'Request already exists between users' });
     }
 
     const request = await RoommateRequest.create({
@@ -63,16 +71,21 @@ const sendRequest = async (req, res) => {
       message,
     });
 
-    const io = req.app.get('io');
-    await createNotification(
-      receiverId,
-      req.user._id,
-      'request',
-      'New Roommate Request',
-      `${req.user.username} sent you a roommate request.`,
-      request._id,
-      io
-    );
+    // Notify receiver
+    try {
+      const io = req.app.get('io');
+      await createNotification(
+        receiverId,
+        req.user._id,
+        'roommate_request',
+        'New Roommate Request',
+        `${req.user.username} has sent you a roommate request.`,
+        request._id,
+        io
+      );
+    } catch (notifErr) {
+      console.error('Failed to send roommate request notification:', notifErr.message);
+    }
 
     return res.status(201).json(request);
   } catch (error) {
@@ -80,7 +93,7 @@ const sendRequest = async (req, res) => {
   }
 };
 
-const handleRequest = async (req, res) => {
+const respondToRequest = async (req, res) => {
   try {
     const { status } = req.body;
     if (!['accepted', 'rejected'].includes(status)) {
@@ -93,22 +106,31 @@ const handleRequest = async (req, res) => {
     }
 
     if (request.receiver.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to handle this request' });
+      return res.status(403).json({ message: 'Not authorized to respond to this request' });
     }
 
     request.status = status;
     await request.save();
 
-    const io = req.app.get('io');
-    await createNotification(
-      request.sender,
-      req.user._id,
-      'request',
-      `Roommate Request ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
-      `${req.user.username} ${status} your roommate request.`,
-      request._id,
-      io
-    );
+    // Notify sender about response
+    try {
+      const io = req.app.get('io');
+      const title = status === 'accepted' ? 'Roommate Request Accepted' : 'Roommate Request Rejected';
+      const notifMessage = status === 'accepted'
+        ? `${req.user.username} accepted your roommate request. Chat is now unlocked!`
+        : `${req.user.username} declined your roommate request.`;
+      await createNotification(
+        request.sender,
+        req.user._id,
+        'match',
+        title,
+        notifMessage,
+        request._id,
+        io
+      );
+    } catch (notifErr) {
+      console.error('Failed to send response notification:', notifErr.message);
+    }
 
     return res.status(200).json(request);
   } catch (error) {
@@ -116,17 +138,16 @@ const handleRequest = async (req, res) => {
   }
 };
 
-const getRequests = async (req, res) => {
+const getMyRequests = async (req, res) => {
   try {
-    const received = await RoommateRequest.find({ receiver: req.user._id })
-      .populate('sender', 'username email')
+    const requests = await RoommateRequest.find({
+      $or: [{ sender: req.user._id }, { receiver: req.user._id }],
+    })
+      .populate('sender', 'username email avatar')
+      .populate('receiver', 'username email avatar')
       .sort({ createdAt: -1 });
 
-    const sent = await RoommateRequest.find({ sender: req.user._id })
-      .populate('receiver', 'username email')
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({ received, sent });
+    return res.status(200).json(requests);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -135,6 +156,6 @@ const getRequests = async (req, res) => {
 module.exports = {
   getPeople,
   sendRequest,
-  handleRequest,
-  getRequests,
+  respondToRequest,
+  getMyRequests,
 };
