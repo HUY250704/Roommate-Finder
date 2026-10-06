@@ -14,7 +14,12 @@ const MessageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: [true, 'Message text is required'],
+      default: '',
+      trim: true,
+    },
+    images: {
+      type: [String],
+      default: [],
     },
     isRead: {
       type: Boolean,
