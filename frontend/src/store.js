@@ -216,22 +216,42 @@ export const useStore = create((set) => ({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) return { success: false, message: data.message || 'Could not create account' };
-      if (!data.token) return { success: false, message: 'Registration did not create an authenticated session' };
-
-      localStorage.setItem('token', data.token);
-      const user = {
-        ...data,
-        id: data._id || data.id,
-        name: data.username || username,
-        email: data.email || email,
-        avatar: data.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-        status: 'active',
-      };
-      set({ currentUser: user });
-      return { success: true, role: user.role || 'user' };
+      return { success: true, requiresVerification: !data.isVerified };
     } catch (error) {
       console.warn('Backend registration failed', error);
       return { success: false, message: 'Không thể kết nối dịch vụ đăng ký' };
+    }
+  },
+
+  verifyEmail: async (email, code) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), code: code.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return { success: false, message: data.message || 'Could not verify email' };
+      return { success: true };
+    } catch (error) {
+      console.warn('Email verification failed', error);
+      return { success: false, message: 'Could not connect to email verification service' };
+    }
+  },
+
+  resendVerificationCode: async (email) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return { success: false, message: data.message || 'Could not resend verification code' };
+      return { success: true };
+    } catch (error) {
+      console.warn('Resending email verification code failed', error);
+      return { success: false, message: 'Could not connect to email verification service' };
     }
   },
 
