@@ -11,7 +11,7 @@
 | Frontend | React + Vite + JavaScript |
 | Backend | Node.js + Express.js |
 | Database | MongoDB |
-| Authentication | JWT |
+| Authentication | Short-lived JWT access token + HTTP-only refresh cookie |
 | Real-time | Socket.io |
 | API Testing | Postman |
 
@@ -177,7 +177,10 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | --- | --- | --- | --- |
 | Auth | POST | /api/auth/register | Đăng ký |
 | Auth | POST | /api/auth/login | Đăng nhập |
+| Auth | POST | /api/auth/refresh | Làm mới access token bằng refresh cookie HTTP-only |
 | Auth | POST | /api/auth/logout | Đăng xuất |
+
+Access token có hiệu lực 15 phút và refresh token được gửi trong cookie HTTP-only, Secure khi chạy production, thời hạn 30 ngày. Frontend tự làm mới access token; logout thu hồi refresh token hiện tại ở server và xóa cookie.
 | User | GET/PATCH | /api/users/me | Xem/cập nhật profile |
 | Room | GET | /api/rooms | Danh sách phòng |
 | Room | POST | /api/rooms | Đăng phòng |
