@@ -1,5 +1,6 @@
 ﻿const User = require('../models/User');
 const generateToken = require('../utils/tokenGenerator');
+const { sendPasswordResetEmail } = require('../services/emailService');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 
@@ -73,21 +74,23 @@ const forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
+
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'No user found with this email' });
+    if (user) {
+      const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetPasswordToken = resetToken;
+      user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+      await user.save({ validateBeforeSave: false });
+
+      try {
+        await sendPasswordResetEmail(user.email, resetToken);
+      } catch (mailError) {
+        console.error('Failed to send password reset email:', mailError.message);
+      }
     }
 
-    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-    await user.save({ validateBeforeSave: false });
-
-    console.log(`Password reset code for ${email} is: ${resetToken}`);
-
     return res.status(200).json({
-      message: 'Password reset code generated successfully',
-      code: resetToken, // For dev testing ease
+      message: 'If an account exists with this email, a password reset code has been sent.',
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -219,4 +222,3 @@ module.exports = {
   resetPassword,
   verifyEmail,
 };
-
