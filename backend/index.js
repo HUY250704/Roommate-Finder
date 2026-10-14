@@ -37,6 +37,8 @@ const io = socketIo(server, {
   },
 });
 
+const onlineUsers = new Map(); // userId -> Set of socketIds
+
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -129,11 +131,58 @@ app.use(errorHandler);
 
 // Socket.io connection logic
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-  socket.join(socket.data.userId);
+  const userId = socket.data.userId;
+  console.log('A user connected:', socket.id, 'userId:', userId);
+
+  socket.join(userId);
+
+  // Manage online presence
+  if (!onlineUsers.has(userId)) {
+    onlineUsers.set(userId, new Set());
+  }
+  onlineUsers.get(userId).add(socket.id);
+
+  // Broadcast user online status
+  io.emit('userPresence', {
+    userId,
+    status: 'online',
+    onlineUserIds: Array.from(onlineUsers.keys()),
+  });
+
+  // Typing indicators
+  socket.on('typing', ({ conversationId, recipientId }) => {
+    if (recipientId) {
+      io.to(recipientId.toString()).emit('userTyping', {
+        conversationId,
+        senderId: userId,
+        isTyping: true,
+      });
+    }
+  });
+
+  socket.on('stopTyping', ({ conversationId, recipientId }) => {
+    if (recipientId) {
+      io.to(recipientId.toString()).emit('userTyping', {
+        conversationId,
+        senderId: userId,
+        isTyping: false,
+      });
+    }
+  });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected:', socket.id, 'userId:', userId);
+    if (onlineUsers.has(userId)) {
+      onlineUsers.get(userId).delete(socket.id);
+      if (onlineUsers.get(userId).size === 0) {
+        onlineUsers.delete(userId);
+        io.emit('userPresence', {
+          userId,
+          status: 'offline',
+          onlineUserIds: Array.from(onlineUsers.keys()),
+        });
+      }
+    }
   });
 });
 

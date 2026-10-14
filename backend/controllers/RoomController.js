@@ -1,5 +1,7 @@
-const Room = require('../models/Room');
+﻿const Room = require('../models/Room');
 const Profile = require('../models/Profile');
+const Favorite = require('../models/Favorite');
+const { createNotification } = require('../services/notificationService');
 
 const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status'];
 
@@ -23,6 +25,35 @@ const createRoom = async (req, res) => {
       availableFrom,
       roomType,
     });
+
+    // Notify users looking for rooms matching this location and budget
+    try {
+      const io = req.app.get('io');
+      const targetProfiles = await Profile.find({
+        user: { $ne: req.user._id },
+        $or: [
+          { 'searchPreferences.location': { $regex: location || address || '', $options: 'i' } },
+          { 'searchPreferences.budgetMax': { $gte: Number(price) } },
+        ],
+      }).select('user').limit(20);
+
+      for (const p of targetProfiles) {
+        if (p.user) {
+          await createNotification(
+            p.user,
+            req.user._id,
+            'room',
+            'New Matching Room Listing',
+            `A new room matching your preferences has been posted: "${title || 'Room listing'}"`,
+            room._id,
+            io
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.error('Failed to send new room notifications:', notifErr.message);
+    }
+
     return res.status(201).json(room);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -73,6 +104,28 @@ const updateRoom = async (req, res) => {
     }
 
     room = await Room.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+
+    // Notify users who favorited this room about the update
+    try {
+      const io = req.app.get('io');
+      const favoritesWithRoom = await Favorite.find({ rooms: room._id }).select('user');
+      for (const fav of favoritesWithRoom) {
+        if (fav.user && fav.user.toString() !== req.user._id.toString()) {
+          await createNotification(
+            fav.user,
+            req.user._id,
+            'room',
+            'Listing Updated',
+            `A room you favorited ("${room.title || 'Room'}") has been updated.`,
+            room._id,
+            io
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.error('Failed to notify favorited users on room update:', notifErr.message);
+    }
+
     return res.status(200).json(room);
   } catch (error) {
     return res.status(500).json({ message: error.message });

@@ -1,4 +1,6 @@
-const Favorite = require('../models/Favorite');
+﻿const Favorite = require('../models/Favorite');
+const Room = require('../models/Room');
+const { createNotification } = require('../services/notificationService');
 
 const getFavorites = async (req, res) => {
   try {
@@ -36,6 +38,25 @@ const addFavoriteRoom = async (req, res) => {
 
     fav.rooms.push(roomId);
     await fav.save();
+
+    // Notify room owner
+    try {
+      const room = await Room.findById(roomId).select('owner title');
+      if (room && room.owner && room.owner.toString() !== req.user._id.toString()) {
+        const io = req.app.get('io');
+        await createNotification(
+          room.owner,
+          req.user._id,
+          'favorite',
+          'Room Favorited',
+          `${req.user.username} favorited your listing "${room.title || 'Room'}"`,
+          room._id,
+          io
+        );
+      }
+    } catch (notifErr) {
+      console.error('Failed to notify room owner of favorite:', notifErr.message);
+    }
 
     return res.status(200).json(fav);
   } catch (error) {
@@ -78,6 +99,24 @@ const addFavoriteRoommate = async (req, res) => {
 
     fav.roommates.push(roommateId);
     await fav.save();
+
+    // Notify favorited user/roommate profile
+    if (roommateId.toString() !== req.user._id.toString()) {
+      try {
+        const io = req.app.get('io');
+        await createNotification(
+          roommateId,
+          req.user._id,
+          'favorite',
+          'Profile Liked',
+          `${req.user.username} liked / favorited your roommate profile.`,
+          null,
+          io
+        );
+      } catch (notifErr) {
+        console.error('Failed to notify roommate of favorite:', notifErr.message);
+      }
+    }
 
     return res.status(200).json(fav);
   } catch (error) {

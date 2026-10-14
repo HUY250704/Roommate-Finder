@@ -1,6 +1,7 @@
 ﻿const Match = require('../models/Match');
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
+const { createNotification } = require('../services/notificationService');
 
 const calculateMatch = async (req, res) => {
   try {
@@ -43,6 +44,17 @@ const calculateMatch = async (req, res) => {
       details,
       status: 'pending',
     });
+
+    const io = req.app.get('io');
+    await createNotification(
+      targetUserId,
+      currentUserId,
+      'match',
+      'New Roommate Match',
+      `${req.user.username} is a ${matchScore}% match with you.`,
+      match._id,
+      io
+    );
 
     return res.status(200).json(match);
   } catch (error) {

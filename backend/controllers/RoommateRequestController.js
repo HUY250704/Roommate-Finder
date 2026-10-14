@@ -1,4 +1,4 @@
-const RoommateRequest = require('../models/RoommateRequest');
+﻿const RoommateRequest = require('../models/RoommateRequest');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { createNotification } = require('../services/notificationService');
@@ -63,13 +63,15 @@ const sendRequest = async (req, res) => {
       message,
     });
 
+    const io = req.app.get('io');
     await createNotification(
       receiverId,
       req.user._id,
       'request',
       'New Roommate Request',
       `${req.user.username} sent you a roommate request.`,
-      request._id
+      request._id,
+      io
     );
 
     return res.status(201).json(request);
@@ -97,13 +99,15 @@ const handleRequest = async (req, res) => {
     request.status = status;
     await request.save();
 
+    const io = req.app.get('io');
     await createNotification(
       request.sender,
       req.user._id,
       'request',
       `Roommate Request ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
       `${req.user.username} ${status} your roommate request.`,
-      request._id
+      request._id,
+      io
     );
 
     return res.status(200).json(request);

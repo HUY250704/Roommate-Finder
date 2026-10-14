@@ -81,7 +81,42 @@ const sendEmailVerificationCode = async (email, verificationCode) => {
   });
 };
 
+const sendViewingConfirmationEmail = async (email, viewingDetails) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    return;
+  }
+
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@roommatefinder.com';
+  const mailOptions = {
+    from: fromAddress,
+    to: email,
+    subject: 'Roommate Finder - Viewing Appointment Confirmed',
+    text: `Your viewing request for "${viewingDetails.roomTitle}" on ${viewingDetails.date} has been confirmed by ${viewingDetails.ownerName}.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #aa3000;">Roommate Finder</h2>
+        <p>Good news! Your viewing request has been <strong>confirmed</strong> by the host (${viewingDetails.ownerName}).</p>
+        <div style="background-color: #fff8f6; border: 1px solid #aa3000; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <p style="margin: 4px 0;"><strong>Room:</strong> ${viewingDetails.roomTitle}</p>
+          <p style="margin: 4px 0;"><strong>Viewing Date & Time:</strong> ${viewingDetails.date}</p>
+        </div>
+        <p>Please be on time and contact the host if you have any questions.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #888;">This is an automated message from Roommate Finder.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (err) {
+    console.error('Failed to send viewing confirmation email:', err.message);
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendEmailVerificationCode,
+  sendViewingConfirmationEmail,
 };
