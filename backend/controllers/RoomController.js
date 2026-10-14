@@ -1,6 +1,8 @@
 const Room = require('../models/Room');
 const Profile = require('../models/Profile');
 
+const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status'];
+
 const createRoom = async (req, res) => {
   try {
     const { title, description, price, address, location, area, bedrooms, bathrooms, numRoommates, houseRules, images, amenities, availableFrom, roomType } = req.body;
@@ -59,7 +61,18 @@ const updateRoom = async (req, res) => {
       return res.status(403).json({ message: 'User not authorized to update this room' });
     }
 
-    room = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updates = {};
+    for (const field of ROOM_UPDATE_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid room fields provided for update' });
+    }
+
+    room = await Room.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     return res.status(200).json(room);
   } catch (error) {
     return res.status(500).json({ message: error.message });
