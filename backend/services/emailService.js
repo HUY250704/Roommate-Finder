@@ -56,6 +56,32 @@ const sendPasswordResetEmail = async (email, resetToken) => {
   await transporter.sendMail(mailOptions);
 };
 
+const sendEmailVerificationCode = async (email, verificationCode) => {
+  const transporter = createTransporter();
+  if (!transporter) {
+    throw new Error('Email service is not configured');
+  }
+
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@roommatefinder.com';
+  await transporter.sendMail({
+    from: fromAddress,
+    to: email,
+    subject: 'Roommate Finder - Verify your email',
+    text: `Your email verification code is: ${verificationCode}. This code is valid for 10 minutes.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #aa3000;">Roommate Finder</h2>
+        <p>Use this code to verify your email address:</p>
+        <div style="background-color: #fff8f6; border: 1px dashed #aa3000; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #aa3000; margin: 20px 0;">
+          ${verificationCode}
+        </div>
+        <p>This code is valid for <strong>10 minutes</strong>.</p>
+      </div>
+    `,
+  });
+};
+
 module.exports = {
   sendPasswordResetEmail,
+  sendEmailVerificationCode,
 };
