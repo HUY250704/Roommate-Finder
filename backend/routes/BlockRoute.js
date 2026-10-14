@@ -91,4 +91,28 @@ router.post('/:userId', protect, blockUser);
  */
 router.delete('/:userId', protect, unblockUser);
 
+/**
+ * @swagger
+ * /api/blocks:
+ *   delete:
+ *     summary: Bỏ chặn người dùng bằng blockedUserId trong request body
+ *     tags: [Blocks]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [blockedUserId]
+ *             properties:
+ *               blockedUserId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Bỏ chặn thành công
+ */
+router.delete('/', protect, unblockUser);
+
 module.exports = router;

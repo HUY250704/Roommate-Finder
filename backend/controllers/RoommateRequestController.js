@@ -109,6 +109,10 @@ const respondToRequest = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to respond to this request' });
     }
 
+    if (await isBlockedBetween(request.sender, request.receiver)) {
+      return res.status(403).json({ message: 'Cannot respond to request: User is blocked' });
+    }
+
     request.status = status;
     await request.save();
 
