@@ -5,7 +5,7 @@ const generateToken = (id) => {
     throw new Error('JWT_SECRET must be configured');
   }
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: '15m',
   });
 };
 

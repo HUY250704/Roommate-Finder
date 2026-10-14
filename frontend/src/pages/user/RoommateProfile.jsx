@@ -4,6 +4,7 @@ import { useStore } from '../../store';
 import { Home, ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { translations } from '../../utils/translations';
 import { API_BASE_URL } from '../../config/api';
+import { authenticatedFetch } from '../../utils/authenticatedFetch';
 
 export default function RoommateProfile() {
   const { id } = useParams();
@@ -74,7 +75,7 @@ export default function RoommateProfile() {
     setSendingRequest(true);
     setRequestError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/roommate-requests`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/roommate-requests`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiverId: user._id }),

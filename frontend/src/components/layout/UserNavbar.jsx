@@ -64,8 +64,8 @@ export default function UserNavbar() {
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

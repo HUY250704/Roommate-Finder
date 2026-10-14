@@ -177,6 +177,7 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | --- | --- | --- | --- |
 | Auth | POST | /api/auth/register | Đăng ký |
 | Auth | POST | /api/auth/login | Đăng nhập |
+| Auth | POST | /api/auth/refresh | Làm mới access token bằng refresh cookie |
 | Auth | POST | /api/auth/logout | Đăng xuất |
 | User | GET/PATCH | /api/users/me | Xem/cập nhật profile |
 | Room | GET | /api/rooms | Danh sách phòng |
@@ -192,6 +193,8 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Notification | GET | /api/notifications | Lấy thông báo |
 | Viewing | POST | /api/viewings | Yêu cầu xem phòng |
 | Report | POST | /api/reports | Báo cáo user/listing |
+
+Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
 
 ---
 

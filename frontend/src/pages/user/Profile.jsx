@@ -21,8 +21,8 @@ export default function Profile() {
     alert(t.profileUpdatedSuccess);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

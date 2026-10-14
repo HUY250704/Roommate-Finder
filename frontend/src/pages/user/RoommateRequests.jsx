@@ -3,6 +3,7 @@ import { Check, Search, UserRoundPlus, X } from 'lucide-react';
 import { useStore } from '../../store';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { API_BASE_URL } from '../../config/api';
+import { authenticatedFetch } from '../../utils/authenticatedFetch';
 
 const avatarFallback = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
 
@@ -31,8 +32,8 @@ export default function RoommateRequests() {
       try {
         const headers = { Authorization: `Bearer ${token}` };
         const [peopleResponse, requestResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/roommate-requests/people?search=${encodeURIComponent(search)}`, { headers }),
-          fetch(`${API_BASE_URL}/roommate-requests`, { headers }),
+          authenticatedFetch(`${API_BASE_URL}/roommate-requests/people?search=${encodeURIComponent(search)}`, { headers }),
+          authenticatedFetch(`${API_BASE_URL}/roommate-requests`, { headers }),
         ]);
         const [peopleData, requestData] = await Promise.all([
           peopleResponse.json().catch(() => []),
@@ -61,7 +62,7 @@ export default function RoommateRequests() {
     setWorkingId(personId);
     setError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/roommate-requests`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/roommate-requests`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiverId: personId }),
@@ -80,7 +81,7 @@ export default function RoommateRequests() {
     setWorkingId(requestId);
     setError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/roommate-requests/${requestId}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/roommate-requests/${requestId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
