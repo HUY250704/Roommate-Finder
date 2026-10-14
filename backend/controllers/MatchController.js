@@ -1,4 +1,4 @@
-const Match = require('../models/Match');
+﻿const Match = require('../models/Match');
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
 
@@ -27,17 +27,22 @@ const calculateMatch = async (req, res) => {
     const user1 = currentUserId < targetUserId ? currentUserId : targetUserId;
     const user2 = currentUserId < targetUserId ? targetUserId : currentUserId;
 
-    const match = await Match.findOneAndUpdate(
-      { user1, user2 },
-      {
-        user1,
-        user2,
-        matchScore,
-        details,
-        status: 'matched',
-      },
-      { upsert: true, new: true }
-    );
+    // Do not overwrite accepted/rejected status to matched just by recalculating score
+    let existingMatch = await Match.findOne({ user1, user2 });
+    if (existingMatch) {
+      existingMatch.matchScore = matchScore;
+      existingMatch.details = details;
+      await existingMatch.save();
+      return res.status(200).json(existingMatch);
+    }
+
+    const match = await Match.create({
+      user1,
+      user2,
+      matchScore,
+      details,
+      status: 'pending',
+    });
 
     return res.status(200).json(match);
   } catch (error) {
@@ -48,9 +53,17 @@ const calculateMatch = async (req, res) => {
 const getMatches = async (req, res) => {
   try {
     const userId = req.user._id;
-    const matches = await Match.find({
+    const { status } = req.query;
+
+    const query = {
       $or: [{ user1: userId }, { user2: userId }],
-    })
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const matches = await Match.find(query)
       .populate('user1', 'username email')
       .populate('user2', 'username email')
       .sort({ matchScore: -1 });
