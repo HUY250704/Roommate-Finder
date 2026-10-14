@@ -35,11 +35,11 @@ const blockUser = async (req, res) => {
     const targetUserId = req.params.userId || req.body.blockedUserId || req.body.userId;
     const { reason } = req.body;
 
-    if (typeof targetUserId !== 'string' || !targetUserId.trim()) {
+    if (!targetUserId) {
       return res.status(400).json({ message: 'User ID to block is required' });
     }
 
-    if (!mongoose.isValidObjectId(targetUserId)) {
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
@@ -77,14 +77,8 @@ const unblockUser = async (req, res) => {
   try {
     const targetUserId = req.params.userId || req.body.blockedUserId || req.body.userId;
 
-    if (typeof targetUserId !== 'string' || !targetUserId.trim()) {
+    if (!targetUserId) {
       return res.status(400).json({ message: 'User ID to unblock is required' });
-    }
-    if (!mongoose.isValidObjectId(targetUserId)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
-    }
-    if (req.user._id.toString() === targetUserId) {
-      return res.status(400).json({ message: 'You cannot unblock yourself' });
     }
 
     const deleted = await Block.findOneAndDelete({

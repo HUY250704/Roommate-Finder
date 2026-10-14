@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getPeople, sendRequest, respondToRequest, getMyRequests } = require('../controllers/RoommateRequestController');
+const { getPeople, sendRequest, handleRequest, getRequests } = require('../controllers/RoommateRequestController');
 const { protect } = require('../middleware/auth');
 
 /**
@@ -71,7 +71,7 @@ router.post('/', protect, sendRequest);
  *       200:
  *         description: Ph?n h?i th�nh c�ng
  */
-router.put('/:id', protect, respondToRequest);
+router.put('/:id', protect, handleRequest);
 
 /**
  * @swagger
@@ -85,6 +85,6 @@ router.put('/:id', protect, respondToRequest);
  *       200:
  *         description: L?y danh s�ch th�nh c�ng
  */
-router.get('/', protect, getMyRequests);
+router.get('/', protect, getRequests);
 
 module.exports = router;

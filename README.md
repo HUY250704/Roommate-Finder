@@ -192,9 +192,6 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Notification | GET | /api/notifications | Lấy thông báo |
 | Viewing | POST | /api/viewings | Yêu cầu xem phòng |
 | Report | POST | /api/reports | Báo cáo user/listing |
-| Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
-
-Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
 
 ---
 

@@ -1,5 +1,4 @@
-﻿const mongoose = require('mongoose');
-const Profile = require('../models/Profile');
+﻿const Profile = require('../models/Profile');
 const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
 
 const getProfile = async (req, res) => {
@@ -79,9 +78,6 @@ const getRoommates = async (req, res) => {
 const getRoommateById = async (req, res) => {
   try {
     const targetUserId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
-    }
 
     if (req.user && targetUserId) {
       const blocked = await isBlockedBetween(req.user._id, targetUserId);

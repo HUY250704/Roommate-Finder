@@ -2,7 +2,6 @@
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
 const { createNotification } = require('../services/notificationService');
-const { isBlockedBetween } = require('./BlockController');
 
 const calculateMatch = async (req, res) => {
   try {
@@ -15,13 +14,6 @@ const calculateMatch = async (req, res) => {
 
     if (currentUserId.toString() === targetUserId.toString()) {
       return res.status(400).json({ message: 'Cannot match with yourself' });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
-      return res.status(400).json({ message: 'Invalid target user ID' });
-    }
-    if (await isBlockedBetween(currentUserId, targetUserId)) {
-      return res.status(403).json({ message: 'Cannot calculate match: User is blocked' });
     }
 
     const myProfile = await Profile.findOne({ user: currentUserId });
