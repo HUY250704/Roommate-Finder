@@ -17,8 +17,8 @@ const createReport = async (req, res) => {
   try {
     const { reportedUserId, reportedRoomId, reason, details } = req.body;
 
-    const hasUser = !!reportedUserId;
-    const hasRoom = !!reportedRoomId;
+    const hasUser = reportedUserId !== undefined && reportedUserId !== null && reportedUserId !== '';
+    const hasRoom = reportedRoomId !== undefined && reportedRoomId !== null && reportedRoomId !== '';
 
     if ((!hasUser && !hasRoom) || (hasUser && hasRoom)) {
       return res.status(400).json({
@@ -34,7 +34,7 @@ const createReport = async (req, res) => {
     }
 
     if (hasUser) {
-      if (!mongoose.Types.ObjectId.isValid(reportedUserId)) {
+      if (typeof reportedUserId !== 'string' || !mongoose.isValidObjectId(reportedUserId)) {
         return res.status(400).json({ message: 'Invalid reported user ID' });
       }
       if (req.user._id.toString() === reportedUserId.toString()) {
@@ -47,7 +47,7 @@ const createReport = async (req, res) => {
     }
 
     if (hasRoom) {
-      if (!mongoose.Types.ObjectId.isValid(reportedRoomId)) {
+      if (typeof reportedRoomId !== 'string' || !mongoose.isValidObjectId(reportedRoomId)) {
         return res.status(400).json({ message: 'Invalid reported room ID' });
       }
       const targetRoom = await Room.findById(reportedRoomId);

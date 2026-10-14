@@ -3,7 +3,7 @@ const Message = require('../models/Message');
 const RoommateRequest = require('../models/RoommateRequest');
 const mongoose = require('mongoose');
 const { createNotification } = require('../services/notificationService');
-const { isBlockedBetween } = require('./BlockController');
+const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
 
 const getMessages = async (req, res) => {
   try {
@@ -18,6 +18,12 @@ const getMessages = async (req, res) => {
     }
     if (!conversation.participants.some(participant => participant.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'You are not a participant in this conversation' });
+    }
+    const otherParticipant = conversation.participants.find(
+      participant => participant.toString() !== req.user._id.toString()
+    );
+    if (otherParticipant && await isBlockedBetween(req.user._id, otherParticipant)) {
+      return res.status(403).json({ message: 'Access denied: messaging is unavailable because a user is blocked' });
     }
 
     // Mark unread messages sent by the other participant as read
@@ -95,14 +101,17 @@ const sendMessage = async (req, res) => {
       if (recipientId.toString() === req.user._id.toString()) {
         return res.status(400).json({ message: 'Cannot send a message to yourself' });
       }
-      conversation = await Conversation.findOne({
-        participants: { $all: [req.user._id, recipientId], $size: 2 }
-      });
     }
 
     const isBlocked = await isBlockedBetween(req.user._id, targetRecipientId);
     if (isBlocked) {
       return res.status(403).json({ message: 'Cannot send message: User is blocked' });
+    }
+
+    if (!conversation) {
+      conversation = await Conversation.findOne({
+        participants: { $all: [req.user._id, targetRecipientId], $size: 2 }
+      });
     }
 
     const acceptedRequest = await RoommateRequest.findOne({
@@ -172,8 +181,9 @@ const sendMessage = async (req, res) => {
 
 const getConversations = async (req, res) => {
   try {
+    const blockedIds = await getBlockedUserIds(req.user._id);
     const conversations = await Conversation.find({
-      participants: req.user._id
+      participants: { $all: [req.user._id], $nin: blockedIds },
     })
       .populate('participants', 'username email avatar')
       .populate({
@@ -191,8 +201,11 @@ const getConversations = async (req, res) => {
 const getChatContacts = async (req, res) => {
   try {
     const userId = req.user._id;
+    const blockedIds = await getBlockedUserIds(userId);
     const acceptedRequests = await RoommateRequest.find({
       status: 'accepted',
+      sender: { $nin: blockedIds },
+      receiver: { $nin: blockedIds },
       $or: [{ sender: userId }, { receiver: userId }],
     })
       .populate('sender', 'username email avatar')
