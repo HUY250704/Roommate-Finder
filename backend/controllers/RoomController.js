@@ -3,7 +3,7 @@ const Profile = require('../models/Profile');
 const Favorite = require('../models/Favorite');
 const { createNotification } = require('../services/notificationService');
 
-const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status'];
+const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status', 'title', 'location', 'area', 'bedrooms', 'bathrooms', 'numRoommates', 'houseRules', 'availableFrom', 'roomType'];
 
 const createRoom = async (req, res) => {
   try {
@@ -62,7 +62,7 @@ const createRoom = async (req, res) => {
 
 const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ status: 'available' }).populate('owner', 'username email');
+    const rooms = await Room.find({ status: { $in: ['available', 'approved'] } }).populate('owner', 'username email');
     return res.status(200).json(rooms);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -154,7 +154,7 @@ const searchRooms = async (req, res) => {
   try {
     const { location, minPrice, maxPrice, roomType, smoking, pets, sleepSchedule, cleanliness } = req.query;
 
-    const query = { status: 'available' };
+    const query = { status: { $in: ['available', 'approved'] } };
 
     if (location) {
       query.$or = [

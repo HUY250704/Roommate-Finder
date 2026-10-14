@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const RoomSchema = new mongoose.Schema(
   {
@@ -67,8 +67,8 @@ const RoomSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['available', 'rented', 'pending'],
-      default: 'available',
+      enum: ['pending', 'approved', 'available', 'rented', 'rejected', 'removed'],
+      default: 'pending',
     },
   },
   {

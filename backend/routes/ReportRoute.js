@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const { createReport, handleReports, updateReportStatus } = require('../controllers/ReportController');
 const { protect } = require('../middleware/auth');
@@ -14,7 +14,7 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/reports:
  *   post:
- *     summary: G?i b�o c�o vi ph?m (ng�?i d�ng ho?c ph?ng tr?)
+ *     summary: Gửi báo cáo vi phạm (người dùng hoặc tin đăng phòng)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -33,13 +33,16 @@ const { protect } = require('../middleware/auth');
  *                 type: string
  *               reason:
  *                 type: string
+ *                 enum: [Scam, Fake listing, Harassment, Inappropriate content, Other]
  *                 example: "Scam"
  *               details:
  *                 type: string
- *                 example: "Ph?ng n�y kh�ng c� th?t, h?nh ?nh gi? m?o."
+ *                 example: "Phòng này không có thật, hình ảnh giả mạo."
  *     responses:
  *       201:
- *         description: B�o c�o th�nh c�ng
+ *         description: Báo cáo thành công
+ *       400:
+ *         description: Thiếu đối tượng hoặc lý do không hợp lệ
  */
 router.post('/', protect, createReport);
 
@@ -47,13 +50,13 @@ router.post('/', protect, createReport);
  * @swagger
  * /api/reports:
  *   get:
- *     summary: Xem danh s�ch b�o c�o vi ph?m (Ch? d�nh cho Admin)
+ *     summary: Xem danh sách báo cáo vi phạm (Chỉ dành cho Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Tr? v? danh s�ch b�o c�o th�nh c�ng
+ *         description: Trả về danh sách báo cáo thành công
  */
 router.get('/', protect, handleReports);
 
@@ -61,7 +64,7 @@ router.get('/', protect, handleReports);
  * @swagger
  * /api/reports/{id}:
  *   put:
- *     summary: C?p nh?t tr?ng th�i x? l? b�o c�o (Ch? d�nh cho Admin)
+ *     summary: Cập nhật trạng thái xử lý báo cáo (Chỉ dành cho Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -77,15 +80,16 @@ router.get('/', protect, handleReports);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - status
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [resolved, dismissed]
+ *                 enum: [pending, resolved, dismissed]
+ *               action:
+ *                 type: string
+ *                 enum: [warn, ban, unban, remove_room, delete_room, approve_room, reject_room]
  *     responses:
  *       200:
- *         description: C?p nh?t th�nh c�ng
+ *         description: Cập nhật thành công
  */
 router.put('/:id', protect, updateReportStatus);
 

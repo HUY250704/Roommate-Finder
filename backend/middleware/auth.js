@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
@@ -26,9 +26,16 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
+      if (req.user.status === 'banned' || req.user.status === 'suspended' || req.user.isBanned) {
+        return res.status(403).json({ message: 'Account has been banned or suspended' });
+      }
+
       if (!req.user.isVerified) {
         return res.status(403).json({ message: 'Please verify your email before accessing this resource' });
       }
+
+      // Update user activity timestamp silently
+      User.findByIdAndUpdate(req.user._id, { lastActiveAt: new Date() }).exec().catch(() => {});
 
       return next();
     } catch (error) {
