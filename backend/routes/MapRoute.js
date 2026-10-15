@@ -1,6 +1,9 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { search, getAutocomplete, reverse, getRoute } = require('../controllers/MapController');
+const { search, getAutocomplete, reverse, getRoute, getRoomMarkers } = require('../controllers/MapController');
+const { protect } = require('../middleware/auth');
+
+router.use(protect);
 
 /**
  * @swagger
@@ -109,5 +112,19 @@ router.get('/reverse', reverse);
  *         description: Chi tiết tuyến đường và khoảng cách
  */
 router.get('/route', getRoute);
+
+/**
+ * @swagger
+ * /api/map/rooms:
+ *   get:
+ *     summary: Lấy các phòng đã đăng có tọa độ để hiển thị marker
+ *     tags: [Map]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách phòng có tọa độ
+ */
+router.get('/rooms', getRoomMarkers);
 
 module.exports = router;

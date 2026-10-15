@@ -30,22 +30,37 @@ const seedDefaultAccounts = async () => {
       }
     }
 
-    const sarahExists = await User.findOne({ email: 'sarah@example.com' });
-    if (!sarahExists) {
-      const sarah = await User.create({
-        username: 'sarah',
-        email: 'sarah@example.com',
-        password: '123456',
-        role: 'user',
-        isVerified: true,
-      });
-      await Profile.create({
-        user: sarah._id,
-        fullName: 'Sarah J.',
-        gender: 'Female',
-        bio: 'Looking for a neat space near downtown.',
-      });
-      console.log('Seeded default user account: sarah@example.com / 123456');
+    if (process.env.NODE_ENV === 'development' && process.env.DEV_DEMO_SEED === 'true') {
+      const demoPassword = process.env.DEV_DEMO_USER_PASSWORD;
+      if (!demoPassword || demoPassword.length < 12) {
+        console.warn('Demo user seed skipped: set DEV_DEMO_USER_PASSWORD to at least 12 characters.');
+        return;
+      }
+
+      const demoUserExists = await User.findOne({ email: 'sarah@example.com' });
+      if (!demoUserExists) {
+        const demoUser = await User.create({
+          username: 'sarah',
+          email: 'sarah@example.com',
+          password: demoPassword,
+          role: 'user',
+          isVerified: true,
+        });
+
+        try {
+          await Profile.create({
+            user: demoUser._id,
+            fullName: 'Sarah J.',
+            gender: 'female',
+            bio: 'Looking for a neat space near downtown.',
+          });
+        } catch (error) {
+          await User.deleteOne({ _id: demoUser._id });
+          throw error;
+        }
+
+        console.log('Seeded development demo user.');
+      }
     }
   } catch (err) {
     console.warn('DB seed note:', err.message);

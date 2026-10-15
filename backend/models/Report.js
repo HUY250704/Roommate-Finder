@@ -1,5 +1,13 @@
 ﻿const mongoose = require('mongoose');
 
+const REPORT_REASONS = [
+  'Scam',
+  'Fake listing',
+  'Harassment',
+  'Inappropriate content',
+  'Other',
+];
+
 const ReportSchema = new mongoose.Schema(
   {
     reporter: {
@@ -18,6 +26,10 @@ const ReportSchema = new mongoose.Schema(
     reason: {
       type: String,
       required: [true, 'Please provide a reason for report'],
+      enum: {
+        values: REPORT_REASONS,
+        message: 'Reason must be one of: Scam, Fake listing, Harassment, Inappropriate content, Other',
+      },
     },
     details: {
       type: String,
@@ -28,10 +40,30 @@ const ReportSchema = new mongoose.Schema(
       enum: ['pending', 'resolved', 'dismissed'],
       default: 'pending',
     },
+    actionTaken: {
+      type: String,
+      default: '',
+    },
+    adminNotes: {
+      type: String,
+      default: '',
+    },
+    resolvedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
+ReportSchema.pre('validate', function validateSingleReportTarget() {
+  const hasUser = Boolean(this.reportedUser);
+  const hasRoom = Boolean(this.reportedRoom);
+  if (hasUser === hasRoom) {
+    this.invalidate('reportedUser', 'A report must specify exactly one target: a user or a room');
+  }
+});
+
 module.exports = mongoose.model('Report', ReportSchema);
+module.exports.REPORT_REASONS = REPORT_REASONS;
