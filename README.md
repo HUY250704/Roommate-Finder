@@ -179,20 +179,27 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Auth | POST | /api/auth/login | Đăng nhập |
 | Auth | POST | /api/auth/refresh | Làm mới access token bằng refresh cookie |
 | Auth | POST | /api/auth/logout | Đăng xuất |
-| User | GET/PATCH | /api/users/me | Xem/cập nhật profile |
+| User | GET | /api/users/me | Xem profile |
+| User | PUT | /api/users/me | Cập nhật profile |
 | Room | GET | /api/rooms | Danh sách phòng |
 | Room | POST | /api/rooms | Đăng phòng |
 | Room | GET | /api/rooms/:id | Chi tiết phòng |
-| Room | PATCH/DELETE | /api/rooms/:id | Sửa/xóa phòng |
+| Room | PUT | /api/rooms/:id | Sửa phòng |
+| Room | DELETE | /api/rooms/:id | Xóa phòng |
 | Roommate | GET | /api/roommates | Tìm roommate |
 | Match | GET | /api/matches | Lấy danh sách match |
-| Request | POST | /api/roommate-requests/:userId | Gửi request |
-| Request | PATCH | /api/roommate-requests/:id | Xử lý request |
-| Favorite | POST/DELETE | /api/favorites/rooms/:id | Lưu/bỏ lưu phòng |
-| Chat | GET/POST | /api/conversations/:id/messages | Lấy/gửi tin nhắn |
+| Request | POST | /api/roommate-requests | Gửi request (`receiverId`, tùy chọn `message` trong body) |
+| Request | PUT | /api/roommate-requests/:id | Xử lý request |
+| Favorite | POST | /api/favorites/rooms | Lưu phòng (`roomId` trong body) |
+| Favorite | DELETE | /api/favorites/rooms/:roomId | Bỏ lưu phòng |
+| Chat | GET | /api/conversations/messages/:conversationId | Lấy tin nhắn |
+| Chat | POST | /api/conversations/messages | Gửi tin nhắn (`text` và `recipientId` hoặc `conversationId` trong body) |
 | Notification | GET | /api/notifications | Lấy thông báo |
 | Viewing | POST | /api/viewings | Yêu cầu xem phòng |
 | Report | POST | /api/reports | Báo cáo user/listing |
+| Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
+
+Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
 
 Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
 

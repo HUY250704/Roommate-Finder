@@ -8,6 +8,7 @@ const {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerificationCode,
   googleLogin,
   firebaseLogin,
 } = require('../controllers/AuthController');
@@ -44,7 +45,7 @@ const {
  *                 type: string
  *     responses:
  *       201:
- *         description: Registered successfully
+ *         description: Registered successfully; a verification code was sent by email
  */
 router.post('/register', registerUser);
 
@@ -71,6 +72,8 @@ router.post('/register', registerUser);
  *     responses:
  *       200:
  *         description: Login successful; returns a short-lived access token and sets a refresh cookie
+ *       403:
+ *         description: Email address has not been verified
  */
 router.post('/login', loginUser);
 
@@ -174,12 +177,37 @@ router.post('/reset-password', resetPassword);
  *                 type: string
  *               code:
  *                 type: string
+ *                 pattern: '^[0-9]{6}$'
  *     responses:
  *       200:
  *         description: Email verified successfully
+ *       400:
+ *         description: Verification code is invalid or expired
  */
 router.post('/verify-email', verifyEmail);
 
+/**
+ * @swagger
+ * /api/auth/resend-verification:
+ *   post:
+ *     summary: Resend an email verification code
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: A verification code was sent if the account is awaiting verification
+ */
+router.post('/resend-verification', resendVerificationCode);
 
 
 router.post("/firebase", firebaseLogin);

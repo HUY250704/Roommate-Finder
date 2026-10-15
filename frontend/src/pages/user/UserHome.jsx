@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 import { translations } from '../../utils/translations';
+import RoomMap from '../../components/common/RoomMap';
 
 export default function UserHome() {
   const { users, rooms, favorites, language } = useStore();
@@ -17,6 +18,7 @@ export default function UserHome() {
   const [maxBudget, setMaxBudget] = useState(10000000);
   const [selectedSmoking, setSelectedSmoking] = useState('All');
   const [selectedPets, setSelectedPets] = useState('All');
+  const [showRoomMap, setShowRoomMap] = useState(false);
 
   const roommates = users.filter(u => u.role !== 'admin' && u.id !== 'sarah');
 
@@ -99,6 +101,17 @@ export default function UserHome() {
                 <span>{t.filters}</span>
               </button>
 
+              {activeTab === 'rooms' && (
+                <button
+                  type="button"
+                  onClick={() => setShowRoomMap((current) => !current)}
+                  className="w-full sm:w-auto justify-center px-4 py-2 rounded-full text-xs font-bold border border-gray-250 bg-gray-50 hover:bg-gray-100 text-gray-700 flex items-center gap-1.5 transition-colors shadow-2xs"
+                >
+                  <span className="material-symbols-outlined text-[16px]">map</span>
+                  <span>{showRoomMap ? (language === 'vi' ? 'Danh sách' : 'List') : (language === 'vi' ? 'Bản đồ' : 'Map')}</span>
+                </button>
+              )}
+
             </div>
           </div>
 
@@ -166,6 +179,9 @@ export default function UserHome() {
         </section>
 
         {/* Feed Grid */}
+        {activeTab === 'rooms' && showRoomMap ? (
+          <RoomMap language={language} />
+        ) : (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {activeTab === 'roommates' ? (
             filteredRoommates.length > 0 ? (
@@ -257,6 +273,7 @@ export default function UserHome() {
             )
           )}
         </section>
+        )}
       </main>
     </div>
   );

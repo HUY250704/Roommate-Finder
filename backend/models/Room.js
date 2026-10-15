@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const RoomSchema = new mongoose.Schema(
   {
@@ -27,6 +27,26 @@ const RoomSchema = new mongoose.Schema(
     location: {
       type: String,
       required: [true, 'Please add location (district/city)'],
+    },
+    coordinates: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        validate: {
+          validator(value) {
+            return value.length === 2 &&
+              Number.isFinite(value[0]) &&
+              Number.isFinite(value[1]) &&
+              value[0] >= -180 && value[0] <= 180 &&
+              value[1] >= -90 && value[1] <= 90;
+          },
+          message: 'Coordinates must be [longitude, latitude] within valid ranges',
+        },
+      },
     },
     area: {
       type: Number,
@@ -67,13 +87,15 @@ const RoomSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['available', 'rented', 'pending'],
-      default: 'available',
+      enum: ['pending', 'approved', 'available', 'rented', 'rejected', 'removed'],
+      default: 'pending',
     },
   },
   {
     timestamps: true,
   }
 );
+
+RoomSchema.index({ coordinates: '2dsphere' });
 
 module.exports = mongoose.model('Room', RoomSchema);

@@ -22,7 +22,7 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/rooms:
  *   post:
- *     summary: Ğãng ph?ng m?i
+ *     summary: ï¿½ï¿½ng ph?ng m?i
  *     tags: [Rooms]
  *     security:
  *       - bearerAuth: []
@@ -40,16 +40,16 @@ const { protect } = require('../middleware/auth');
  *             properties:
  *               title:
  *                 type: string
- *                 example: Ph?ng tr? cao c?p trung tâm Qu?n 1
+ *                 example: Ph?ng tr? cao c?p trung tï¿½m Qu?n 1
  *               description:
  *                 type: string
- *                 example: Ph?ng ğ?y ğ? ti?n nghi, gi? gi?c t? do, có ch? ğ? xe r?ng r?i.
+ *                 example: Ph?ng ï¿½?y ï¿½? ti?n nghi, gi? gi?c t? do, cï¿½ ch? ï¿½? xe r?ng r?i.
  *               price:
  *                 type: number
  *                 example: 3500000
  *               address:
  *                 type: string
- *                 example: 123 Nguy?n Tr?i, Phı?ng B?n Thành, Qu?n 1
+ *                 example: 123 Nguy?n Tr?i, Phï¿½?ng B?n Thï¿½nh, Qu?n 1
  *               location:
  *                 type: string
  *                 example: Qu?n 1
@@ -68,9 +68,9 @@ const { protect } = require('../middleware/auth');
  *                 example: Private
  *     responses:
  *       201:
- *         description: Ğãng ph?ng thành công
+ *         description: ï¿½ï¿½ng ph?ng thï¿½nh cï¿½ng
  *       401:
- *         description: Chıa xác th?c ngı?i dùng
+ *         description: Chï¿½a xï¿½c th?c ngï¿½?i dï¿½ng
  */
 router.post('/', protect, createRoom);
 
@@ -78,11 +78,11 @@ router.post('/', protect, createRoom);
  * @swagger
  * /api/rooms:
  *   get:
- *     summary: L?y danh sách t?t c? ph?ng c?n tr?ng (available)
+ *     summary: L?y danh sï¿½ch t?t c? ph?ng c?n tr?ng (available)
  *     tags: [Rooms]
  *     responses:
  *       200:
- *         description: Tr? v? danh sách ph?ng thành công
+ *         description: Tr? v? danh sï¿½ch ph?ng thï¿½nh cï¿½ng
  */
 router.get('/', getRooms);
 
@@ -90,7 +90,7 @@ router.get('/', getRooms);
  * @swagger
  * /api/rooms/search:
  *   get:
- *     summary: L?c ph?ng nâng cao theo ğ?a ği?m, giá c?, lo?i ph?ng và l?i s?ng c?a ch? ph?ng
+ *     summary: L?c ph?ng nï¿½ng cao theo ï¿½?a ï¿½i?m, giï¿½ c?, lo?i ph?ng vï¿½ l?i s?ng c?a ch? ph?ng
  *     tags: [Rooms]
  *     parameters:
  *       - name: location
@@ -138,9 +138,48 @@ router.get('/', getRooms);
  *         schema:
  *           type: string
  *           enum: [high, medium, low]
+ *       - name: amenities
+ *         in: query
+ *         description: Tiá»‡n Ã­ch cáº§n cÃ³; cÃ³ thá»ƒ láº·p tham sá»‘ hoáº·c phÃ¢n cÃ¡ch báº±ng dáº¥u pháº©y
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - name: availableFrom
+ *         in: query
+ *         description: NgÃ y ngÆ°á»i tÃ¬m phÃ²ng muá»‘n dá»n vÃ o; phÃ²ng pháº£i sáºµn sÃ ng trÆ°á»›c hoáº·c trong ngÃ y nÃ y
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: gender
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [male, female, other, any]
+ *       - name: minAge
+ *         in: query
+ *         schema:
+ *           type: integer
+ *       - name: maxAge
+ *         in: query
+ *         schema:
+ *           type: integer
+ *       - name: lat
+ *         in: query
+ *         schema:
+ *           type: number
+ *       - name: lng
+ *         in: query
+ *         schema:
+ *           type: number
+ *       - name: radiusKm
+ *         in: query
+ *         description: BÃ¡n kÃ­nh tÃ¬m kiáº¿m tÃ­nh báº±ng kilomet, cáº§n Ä‘i kÃ¨m lat vÃ  lng
+ *         schema:
+ *           type: number
  *     responses:
  *       200:
- *         description: Tr? v? k?t qu? t?m ki?m thành công
+ *         description: Tr? v? k?t qu? t?m ki?m thï¿½nh cï¿½ng
  */
 router.get('/search', searchRooms);
 
@@ -148,7 +187,7 @@ router.get('/search', searchRooms);
  * @swagger
  * /api/rooms/{id}:
  *   get:
- *     summary: L?y chi ti?t thông tin m?t ph?ng theo ID
+ *     summary: L?y chi ti?t thï¿½ng tin m?t ph?ng theo ID
  *     tags: [Rooms]
  *     parameters:
  *       - name: id
@@ -158,9 +197,9 @@ router.get('/search', searchRooms);
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? chi ti?t ph?ng thành công
+ *         description: Tr? v? chi ti?t ph?ng thï¿½nh cï¿½ng
  *       404:
- *         description: Không t?m th?y ph?ng
+ *         description: Khï¿½ng t?m th?y ph?ng
  */
 router.get('/:id', getRoomById);
 
@@ -168,7 +207,7 @@ router.get('/:id', getRoomById);
  * @swagger
  * /api/rooms/{id}:
  *   put:
- *     summary: C?p nh?t thông tin ph?ng c?a b?n
+ *     summary: C?p nh?t thï¿½ng tin ph?ng c?a b?n
  *     tags: [Rooms]
  *     security:
  *       - bearerAuth: []
@@ -194,9 +233,9 @@ router.get('/:id', getRoomById);
  *                 enum: [available, rented, pending]
  *     responses:
  *       200:
- *         description: C?p nh?t ph?ng thành công
+ *         description: C?p nh?t ph?ng thï¿½nh cï¿½ng
  *       403:
- *         description: B?n không có quy?n ch?nh s?a ph?ng này
+ *         description: B?n khï¿½ng cï¿½ quy?n ch?nh s?a ph?ng nï¿½y
  */
 router.put('/:id', protect, updateRoom);
 
@@ -204,7 +243,7 @@ router.put('/:id', protect, updateRoom);
  * @swagger
  * /api/rooms/{id}:
  *   delete:
- *     summary: Xóa ph?ng c?a b?n
+ *     summary: Xï¿½a ph?ng c?a b?n
  *     tags: [Rooms]
  *     security:
  *       - bearerAuth: []
@@ -216,9 +255,9 @@ router.put('/:id', protect, updateRoom);
  *           type: string
  *     responses:
  *       200:
- *         description: Xóa ph?ng thành công
+ *         description: Xï¿½a ph?ng thï¿½nh cï¿½ng
  *       403:
- *         description: Không có quy?n xóa ph?ng này
+ *         description: Khï¿½ng cï¿½ quy?n xï¿½a ph?ng nï¿½y
  */
 router.delete('/:id', protect, deleteRoom);
 
@@ -226,7 +265,7 @@ router.delete('/:id', protect, deleteRoom);
  * @swagger
  * /api/rooms/admin/{roomId}:
  *   delete:
- *     summary: Admin xóa ph?ng vi ph?m quy ğ?nh
+ *     summary: Admin xï¿½a ph?ng vi ph?m quy ï¿½?nh
  *     tags: [Rooms]
  *     security:
  *       - bearerAuth: []
@@ -238,9 +277,9 @@ router.delete('/:id', protect, deleteRoom);
  *           type: string
  *     responses:
  *       200:
- *         description: Admin xóa ph?ng thành công
+ *         description: Admin xï¿½a ph?ng thï¿½nh cï¿½ng
  *       403:
- *         description: Không có quy?n Admin
+ *         description: Khï¿½ng cï¿½ quy?n Admin
  */
 router.delete('/admin/:roomId', protect, manageRooms);
 

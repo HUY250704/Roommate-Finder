@@ -1,6 +1,8 @@
-const Match = require('../models/Match');
+﻿const Match = require('../models/Match');
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
+const { createNotification } = require('../services/notificationService');
+const { isBlockedBetween } = require('./BlockController');
 
 const calculateMatch = async (req, res) => {
   try {
@@ -15,6 +17,13 @@ const calculateMatch = async (req, res) => {
       return res.status(400).json({ message: 'Cannot match with yourself' });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ message: 'Invalid target user ID' });
+    }
+    if (await isBlockedBetween(currentUserId, targetUserId)) {
+      return res.status(403).json({ message: 'Cannot calculate match: User is blocked' });
+    }
+
     const myProfile = await Profile.findOne({ user: currentUserId });
     const targetProfile = await Profile.findOne({ user: targetUserId });
 
@@ -27,16 +36,32 @@ const calculateMatch = async (req, res) => {
     const user1 = currentUserId < targetUserId ? currentUserId : targetUserId;
     const user2 = currentUserId < targetUserId ? targetUserId : currentUserId;
 
-    const match = await Match.findOneAndUpdate(
-      { user1, user2 },
-      {
-        user1,
-        user2,
-        matchScore,
-        details,
-        status: 'matched',
-      },
-      { upsert: true, new: true }
+    // Do not overwrite accepted/rejected status to matched just by recalculating score
+    let existingMatch = await Match.findOne({ user1, user2 });
+    if (existingMatch) {
+      existingMatch.matchScore = matchScore;
+      existingMatch.details = details;
+      await existingMatch.save();
+      return res.status(200).json(existingMatch);
+    }
+
+    const match = await Match.create({
+      user1,
+      user2,
+      matchScore,
+      details,
+      status: 'pending',
+    });
+
+    const io = req.app.get('io');
+    await createNotification(
+      targetUserId,
+      currentUserId,
+      'match',
+      'New Roommate Match',
+      `${req.user.username} is a ${matchScore}% match with you.`,
+      match._id,
+      io
     );
 
     return res.status(200).json(match);
@@ -48,9 +73,17 @@ const calculateMatch = async (req, res) => {
 const getMatches = async (req, res) => {
   try {
     const userId = req.user._id;
-    const matches = await Match.find({
+    const { status } = req.query;
+
+    const query = {
       $or: [{ user1: userId }, { user2: userId }],
-    })
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const matches = await Match.find(query)
       .populate('user1', 'username email')
       .populate('user2', 'username email')
       .sort({ matchScore: -1 });
