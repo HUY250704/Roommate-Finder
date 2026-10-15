@@ -2,7 +2,7 @@ import { API_BASE_URL } from '../config/api';
 
 let refreshRequest;
 
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   if (!refreshRequest) {
     refreshRequest = fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',

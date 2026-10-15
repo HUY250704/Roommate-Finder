@@ -1,4 +1,7 @@
-﻿/**
+import { API_BASE_URL } from '../config/api';
+import { authenticatedFetch } from './authenticatedFetch';
+
+/**
  * Helper to upload image file or base64 to Cloudinary via backend API or direct upload
  * @param {File|Blob|string} image - File instance, Blob or base64 string
  * @param {string} token - User JWT token (optional)
@@ -16,14 +19,12 @@ export const uploadImageToCloudinary = async (image, token = '') => {
     });
   }
 
-  const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
-  const apiUrl = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
-    headers['Authorization'] = Bearer ;
+    headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(${apiUrl}/upload, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/upload`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ image: imageBase64 }),

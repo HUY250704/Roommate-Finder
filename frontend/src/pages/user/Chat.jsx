@@ -5,7 +5,7 @@ import { Send, ArrowLeft, Search, CheckCheck, Smile, Paperclip, MoreVertical, Sp
 import { translations } from '../../utils/translations';
 import { io } from 'socket.io-client';
 import { API_BASE_URL } from '../../config/api';
-import { authenticatedFetch } from '../../utils/authenticatedFetch';
+import { authenticatedFetch, refreshAccessToken } from '../../utils/authenticatedFetch';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -89,7 +89,14 @@ export default function Chat() {
     if (!token || !authenticatedUserId) return undefined;
 
     const socket = io(API_BASE_URL.replace(/\/api\/?$/, ''), {
-      auth: { token },
+      auth: (callback) => {
+        refreshAccessToken()
+          .then((accessToken) => callback({ token: accessToken || '' }))
+          .catch((error) => {
+            setChatError(error.message);
+            callback({ token: '' });
+          });
+      },
       transports: ['websocket', 'polling'],
     });
     socketRef.current = socket;
