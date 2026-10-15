@@ -29,7 +29,7 @@ const createRoom = async (req, res) => {
 
 const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ status: 'available' }).populate('owner', 'username email');
+    const rooms = await Room.find({ status: 'available' }).populate('owner', 'username');
     return res.status(200).json(rooms);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -38,7 +38,7 @@ const getRooms = async (req, res) => {
 
 const getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id).populate('owner', 'username email');
+    const room = await Room.findById(req.params.id).populate('owner', 'username');
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
@@ -119,7 +119,7 @@ const searchRooms = async (req, res) => {
       query.owner = { $in: matchingUserIds };
     }
 
-    const rooms = await Room.find(query).populate('owner', 'username email');
+    const rooms = await Room.find(query).populate('owner', 'username');
     return res.status(200).json(rooms);
   } catch (error) {
     return res.status(500).json({ message: error.message });
