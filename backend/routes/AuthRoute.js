@@ -4,6 +4,7 @@ const {
   registerUser,
   loginUser,
   logoutUser,
+  refreshAccessToken,
   forgotPassword,
   resetPassword,
   verifyEmail,
@@ -70,7 +71,7 @@ router.post('/register', registerUser);
  *                 type: string
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Login successful; returns a short-lived access token and sets a refresh cookie
  *       403:
  *         description: Email address has not been verified
  */
@@ -82,11 +83,27 @@ router.post('/login', loginUser);
  *   post:
  *     summary: Logout user
  *     tags: [Auth]
+ *     security: []
  *     responses:
  *       200:
- *         description: Logout successful
+ *         description: Logout successful; revokes the refresh token and clears its cookie
  */
 router.post('/logout', logoutUser);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh the access token using the HTTP-only refresh cookie
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Access token refreshed and refresh cookie rotated
+ *       401:
+ *         description: Refresh token is missing, invalid, or expired
+ */
+router.post('/refresh', refreshAccessToken);
 
 /**
  * @swagger

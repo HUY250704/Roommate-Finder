@@ -174,6 +174,7 @@ export const useStore = create((set) => ({
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           uid: firebaseData.uid,
@@ -211,6 +212,7 @@ export const useStore = create((set) => ({
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), email: email.toLowerCase().trim(), password }),
       });
@@ -261,6 +263,7 @@ export const useStore = create((set) => ({
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailLower, password })
       });
@@ -291,9 +294,21 @@ export const useStore = create((set) => ({
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
-    set({ currentUser: null });
+  logout: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(`Logout failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Server-side logout failed', error);
+    } finally {
+      localStorage.removeItem('token');
+      set({ currentUser: null });
+    }
   },
 
   addRoom: (room) => set(state => ({

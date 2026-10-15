@@ -177,6 +177,7 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | --- | --- | --- | --- |
 | Auth | POST | /api/auth/register | Đăng ký |
 | Auth | POST | /api/auth/login | Đăng nhập |
+| Auth | POST | /api/auth/refresh | Làm mới access token bằng refresh cookie |
 | Auth | POST | /api/auth/logout | Đăng xuất |
 | User | GET | /api/users/me | Xem profile |
 | User | PUT | /api/users/me | Cập nhật profile |
@@ -199,6 +200,8 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
 
 Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
+
+Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
 
 ---
 

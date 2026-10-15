@@ -1,10 +1,47 @@
 ﻿const User = require('../models/User');
+const RefreshToken = require('../models/RefreshToken');
 const generateToken = require('../utils/tokenGenerator');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { sendPasswordResetEmail, sendEmailVerificationCode } = require('../services/emailService');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
+
+const REFRESH_TOKEN_COOKIE = 'refreshToken';
+const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
+
+const getRefreshTokenCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: '/api/auth',
+  maxAge: REFRESH_TOKEN_TTL,
+});
+
+const readRefreshToken = (req) => {
+  const cookie = req.headers.cookie
+    ?.split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${REFRESH_TOKEN_COOKIE}=`));
+  return cookie?.slice(REFRESH_TOKEN_COOKIE.length + 1) || null;
+};
+
+const hashRefreshToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const issueRefreshToken = async (userId, res) => {
+  const token = crypto.randomBytes(64).toString('hex');
+  await RefreshToken.create({
+    user: userId,
+    tokenHash: hashRefreshToken(token),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
+  });
+  res.cookie(REFRESH_TOKEN_COOKIE, token, getRefreshTokenCookieOptions());
+};
+
+const clearRefreshTokenCookie = (res) => {
+  const { maxAge, ...options } = getRefreshTokenCookieOptions();
+  res.clearCookie(REFRESH_TOKEN_COOKIE, options);
+};
 
 const EMAIL_VERIFICATION_CODE_TTL = 10 * 60 * 1000;
 
@@ -16,7 +53,6 @@ const matchesEmailVerificationCode = async (code, storedHash) => {
   if (!/^\d{6}$/.test(code) || !/^\$2[aby]\$\d\d\$[./A-Za-z0-9]{53}$/.test(storedHash || '')) {
     return false;
   }
-
   return bcrypt.compare(code, storedHash);
 };
 
@@ -91,13 +127,15 @@ const loginUser = async (req, res) => {
         return res.status(403).json({ message: 'Please verify your email before signing in' });
       }
 
+      const token = generateToken(user._id);
+      await issueRefreshToken(user._id, res);
       return res.json({
         _id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,
         isVerified: user.isVerified,
-        token: generateToken(user._id),
+        token,
       });
     } else {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -108,7 +146,51 @@ const loginUser = async (req, res) => {
 };
 
 const logoutUser = async (req, res) => {
-  return res.status(200).json({ message: 'Logged out successfully' });
+  try {
+    const token = readRefreshToken(req);
+    if (token) {
+      await RefreshToken.deleteOne({ tokenHash: hashRefreshToken(token) });
+    }
+    clearRefreshTokenCookie(res);
+    return res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const refreshAccessToken = async (req, res) => {
+  try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(503).json({ message: 'Authentication is not configured' });
+    }
+
+    const token = readRefreshToken(req);
+    if (!token) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Refresh token is required' });
+    }
+
+    const session = await RefreshToken.findOneAndDelete({
+      tokenHash: hashRefreshToken(token),
+      expiresAt: { $gt: new Date() },
+    });
+    if (!session) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'Refresh token is invalid or expired' });
+    }
+
+    const user = await User.findById(session.user).select('_id');
+    if (!user) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ message: 'User is not authorized to refresh tokens' });
+    }
+
+    const accessToken = generateToken(user._id);
+    await issueRefreshToken(user._id, res);
+    return res.status(200).json({ token: accessToken });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 };
 
 const forgotPassword = async (req, res) => {
@@ -277,6 +359,8 @@ const firebaseLogin = async (req, res) => {
         isVerified: true,
       });
     }
+    const token = generateToken(user._id);
+    await issueRefreshToken(user._id, res);
     return res.status(200).json({
       _id: user.id,
       username: user.username,
@@ -284,7 +368,7 @@ const firebaseLogin = async (req, res) => {
       role: user.role,
       isVerified: user.isVerified,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -297,6 +381,7 @@ module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  refreshAccessToken,
   forgotPassword,
   resetPassword,
   verifyEmail,

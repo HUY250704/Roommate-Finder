@@ -5,6 +5,7 @@ import { Send, ArrowLeft, Search, CheckCheck, Smile, Paperclip, MoreVertical, Sp
 import { translations } from '../../utils/translations';
 import { io } from 'socket.io-client';
 import { API_BASE_URL } from '../../config/api';
+import { authenticatedFetch, refreshAccessToken } from '../../utils/authenticatedFetch';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function Chat() {
       }
 
       try {
-        const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
+        const profileResponse = await authenticatedFetch(`${API_BASE_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const profile = await profileResponse.json().catch(() => ({}));
@@ -60,7 +61,7 @@ export default function Chat() {
         if (!isMounted) return;
         setAuthenticatedUserId(userId);
 
-        const response = await fetch(`${API_BASE_URL}/conversations/contacts`, {
+        const response = await authenticatedFetch(`${API_BASE_URL}/conversations/contacts`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json().catch(() => []);
@@ -88,7 +89,14 @@ export default function Chat() {
     if (!token || !authenticatedUserId) return undefined;
 
     const socket = io(API_BASE_URL.replace(/\/api\/?$/, ''), {
-      auth: { token },
+      auth: (callback) => {
+        refreshAccessToken()
+          .then((accessToken) => callback({ token: accessToken || '' }))
+          .catch((error) => {
+            setChatError(error.message);
+            callback({ token: '' });
+          });
+      },
       transports: ['websocket', 'polling'],
     });
     socketRef.current = socket;
@@ -129,7 +137,7 @@ export default function Chat() {
     const conversationId = activeContact?.conversationId;
     if (!token || !conversationId) return undefined;
 
-    fetch(`${API_BASE_URL}/conversations/messages/${conversationId}`, {
+    authenticatedFetch(`${API_BASE_URL}/conversations/messages/${conversationId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async response => {
@@ -175,7 +183,7 @@ export default function Chat() {
     setSending(true);
     setChatError('');
     try {
-      const response = await fetch(`${API_BASE_URL}/conversations/messages`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/conversations/messages`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
