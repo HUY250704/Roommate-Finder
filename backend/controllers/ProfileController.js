@@ -1,6 +1,7 @@
 ﻿const mongoose = require('mongoose');
 const Profile = require('../models/Profile');
 const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
+const { parsePagination } = require('../utils/pagination');
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -43,6 +44,11 @@ const updateProfile = async (req, res) => {
 
 const getRoommates = async (req, res) => {
   try {
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+
     const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
 
     const query = {};
@@ -69,8 +75,20 @@ const getRoommates = async (req, res) => {
     if (sleepSchedule) query['lifestyle.sleepSchedule'] = sleepSchedule;
     if (cleanliness) query['lifestyle.cleanliness'] = cleanliness;
 
-    const roommates = await Profile.find(query).populate('user', 'username email role isVerified status');
-    return res.status(200).json(roommates);
+    const [roommates, total] = await Promise.all([
+      Profile.find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .populate('user', 'username email role isVerified status'),
+      Profile.countDocuments(query),
+    ]);
+    return res.status(200).json({
+      roommates,
+      page: pagination.page,
+      limit: pagination.limit,
+      total,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

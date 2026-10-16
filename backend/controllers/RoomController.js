@@ -2,6 +2,7 @@
 const Profile = require('../models/Profile');
 const Favorite = require('../models/Favorite');
 const { createNotification } = require('../services/notificationService');
+const { parsePagination } = require('../utils/pagination');
 
 const ROOM_UPDATE_FIELDS = ['price', 'address', 'description', 'images', 'amenities', 'status', 'title', 'location', 'area', 'bedrooms', 'bathrooms', 'numRoommates', 'houseRules', 'availableFrom', 'roomType'];
 
@@ -103,8 +104,26 @@ const createRoom = async (req, res) => {
 
 const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ status: { $in: ['available', 'approved'] } }).populate('owner', 'username avatar');
-    return res.status(200).json(rooms);
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+
+    const query = { status: { $in: ['available', 'approved'] } };
+    const [rooms, total] = await Promise.all([
+      Room.find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .populate('owner', 'username avatar'),
+      Room.countDocuments(query),
+    ]);
+    return res.status(200).json({
+      rooms,
+      page: pagination.page,
+      limit: pagination.limit,
+      total,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -207,6 +226,11 @@ const deleteRoom = async (req, res) => {
 
 const searchRooms = async (req, res) => {
   try {
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+
     const {
       location, minPrice, maxPrice, roomType, smoking, pets, sleepSchedule,
       cleanliness, amenities, availableFrom, moveInDate, gender,
@@ -285,8 +309,7 @@ const searchRooms = async (req, res) => {
     }
 
     if (Object.keys(profileQuery).length) {
-      const matchingProfiles = await Profile.find(profileQuery).select('user');
-      const matchingUserIds = matchingProfiles.map(p => p.user);
+      const matchingUserIds = await Profile.distinct('user', profileQuery);
       query.owner = { $in: matchingUserIds };
     }
 
@@ -308,8 +331,20 @@ const searchRooms = async (req, res) => {
       };
     }
 
-    const rooms = await Room.find(query).populate('owner', 'username avatar');
-    return res.status(200).json(rooms);
+    const [rooms, total] = await Promise.all([
+      Room.find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+        .populate('owner', 'username avatar'),
+      Room.countDocuments(query),
+    ]);
+    return res.status(200).json({
+      rooms,
+      page: pagination.page,
+      limit: pagination.limit,
+      total,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

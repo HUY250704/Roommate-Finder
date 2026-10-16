@@ -83,9 +83,24 @@ router.get('/analytics', protect, getAnalytics);
  *         required: false
  *         schema:
  *           type: string
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *     responses:
  *       200:
- *         description: Trả về danh sách người dùng thành công
+ *         description: Paginated users with total count
  */
 router.get('/users', protect, getUsers);
 
@@ -125,7 +140,7 @@ router.put('/users/:userId', protect, manageUsers);
  * @swagger
  * /api/admin/rooms:
  *   get:
- *     summary: Xem danh sách tin đăng phòng (tất cả trạng thái: pending, approved, available, rejected, v.v.)
+ *     summary: "Xem danh sách tin đăng phòng (tất cả trạng thái: pending, approved, available, rejected, v.v.)"
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []

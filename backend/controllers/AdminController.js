@@ -9,6 +9,7 @@ const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Notification = require('../models/Notification');
 const { createNotification } = require('../services/notificationService');
+const { parsePagination } = require('../utils/pagination');
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -114,12 +115,18 @@ const getUsers = async (req, res) => {
       return res.status(403).json({ message: 'Access denied: Admin only' });
     }
 
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+
     const { status, role, isVerified, search } = req.query;
     const query = {};
+    const andConditions = [];
 
     if (status) {
       if (status === 'banned') {
-        query.$or = [{ status: 'banned' }, { status: 'suspended' }, { isBanned: true }];
+        andConditions.push({ $or: [{ status: 'banned' }, { status: 'suspended' }, { isBanned: true }] });
       } else if (status === 'active') {
         query.status = 'active';
         query.isBanned = { $ne: true };
@@ -137,14 +144,30 @@ const getUsers = async (req, res) => {
     }
 
     if (search) {
-      query.$or = [
-        { username: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
+      andConditions.push({
+        $or: [
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      });
     }
 
-    const users = await User.find(query).select('-password').sort({ createdAt: -1 });
-    return res.status(200).json(users);
+    if (andConditions.length) query.$and = andConditions;
+
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select('-password')
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit),
+      User.countDocuments(query),
+    ]);
+    return res.status(200).json({
+      users,
+      page: pagination.page,
+      limit: pagination.limit,
+      total,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
