@@ -14,7 +14,7 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/viewings:
  *   post:
- *     summary: G?i yï¿½u c?u xem ph?ng
+ *     summary: G?i yêu c?u xem ph?ng
  *     tags: [Viewings]
  *     security:
  *       - bearerAuth: []
@@ -36,10 +36,10 @@ const { protect } = require('../middleware/auth');
  *                 example: "2026-08-28T18:30:00Z"
  *               message:
  *                 type: string
- *                 example: "M?nh mu?n xem ph?ng vï¿½o chi?u t?i mai cï¿½ ti?n khï¿½ng?"
+ *                 example: "M?nh mu?n xem ph?ng vào chi?u t?i mai có ti?n không?"
  *     responses:
  *       201:
- *         description: G?i yï¿½u c?u thï¿½nh cï¿½ng
+ *         description: G?i yêu c?u thành công
  *       400:
  *         description: Missing fields, invalid date, or viewing date is not in the future
  *       409:
@@ -51,7 +51,7 @@ router.post('/', protect, requestViewing);
  * @swagger
  * /api/viewings/{id}:
  *   put:
- *     summary: Duy?t ho?c t? ch?i yï¿½u c?u xem ph?ng (Ch? ch? ph?ng)
+ *     summary: Duy?t ho?c t? ch?i yêu c?u xem ph?ng (Ch? ch? ph?ng)
  *     tags: [Viewings]
  *     security:
  *       - bearerAuth: []
@@ -75,7 +75,7 @@ router.post('/', protect, requestViewing);
  *                 enum: [approved, rejected]
  *     responses:
  *       200:
- *         description: C?p nh?t thï¿½nh cï¿½ng
+ *         description: C?p nh?t thành công
  */
 router.put('/:id', protect, handleViewing);
 
@@ -83,13 +83,13 @@ router.put('/:id', protect, handleViewing);
  * @swagger
  * /api/viewings:
  *   get:
- *     summary: L?y danh sï¿½ch l?ch xem ph?ng liï¿½n quan ï¿½?n ngï¿½?i dï¿½ng hi?n t?i
+ *     summary: L?y danh sách l?ch xem ph?ng liên quan ð?n ngý?i dùng hi?n t?i
  *     tags: [Viewings]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Tr? v? danh sï¿½ch thï¿½nh cï¿½ng
+ *         description: Tr? v? danh sách thành công
  */
 router.get('/', protect, getViewings);
 
