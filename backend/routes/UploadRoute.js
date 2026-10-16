@@ -14,7 +14,7 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/upload:
  *   post:
- *     summary: Upload một hình ảnh lên Cloudinary
+ *     summary: Upload một hình ảnh vào thư mục riêng của người dùng trên Cloudinary
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -30,9 +30,6 @@ const { protect } = require('../middleware/auth');
  *               image:
  *                 type: string
  *                 description: Base64 string, Data URL hoặc Image URL
- *               folder:
- *                 type: string
- *                 description: Thư mục lưu trữ trên Cloudinary (mặc định roommate-finder)
  *     responses:
  *       200:
  *         description: Upload thành công, trả về link ảnh secure_url
@@ -47,7 +44,7 @@ router.post('/', protect, uploadSingle);
  * @swagger
  * /api/upload/multiple:
  *   post:
- *     summary: Upload nhiều hình ảnh lên Cloudinary (cho gallery phòng trọ)
+ *     summary: Upload nhiều hình ảnh vào thư mục riêng của người dùng trên Cloudinary
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -65,8 +62,6 @@ router.post('/', protect, uploadSingle);
  *                 items:
  *                   type: string
  *                 description: Danh sách base64 strings hoặc URL ảnh
- *               folder:
- *                 type: string
  *     responses:
  *       200:
  *         description: Upload thành công, trả về danh sách URLs
@@ -77,7 +72,7 @@ router.post('/multiple', protect, uploadMultiple);
  * @swagger
  * /api/upload/delete:
  *   post:
- *     summary: Xóa hình ảnh trên Cloudinary bằng publicId
+ *     summary: Xóa hình ảnh thuộc về người dùng trên Cloudinary bằng publicId (admin có thể xóa mọi ảnh)
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -95,6 +90,8 @@ router.post('/multiple', protect, uploadMultiple);
  *     responses:
  *       200:
  *         description: Xóa ảnh thành công
+ *       403:
+ *         description: Ảnh không thuộc quyền xóa của người dùng
  */
 router.post('/delete', protect, deleteImage);
 
