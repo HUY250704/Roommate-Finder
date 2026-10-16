@@ -102,6 +102,8 @@ router.post('/logout', logoutUser);
  *         description: Access token refreshed and refresh cookie rotated
  *       401:
  *         description: Refresh token is missing, invalid, or expired
+ *       403:
+ *         description: Account has been banned or suspended
  */
 router.post('/refresh', refreshAccessToken);
 
