@@ -7,9 +7,9 @@ const getFavorites = async (req, res) => {
     let fav = await Favorite.findOne({ user: req.user._id })
       .populate({
         path: 'rooms',
-        populate: { path: 'owner', select: 'username email' }
+        populate: { path: 'owner', select: 'username avatar' }
       })
-      .populate('roommates', 'username email');
+      .populate('roommates', 'username avatar');
 
     if (!fav) {
       fav = await Favorite.create({ user: req.user._id, rooms: [], roommates: [] });

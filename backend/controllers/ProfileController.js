@@ -44,6 +44,17 @@ const updateProfile = async (req, res) => {
 const getRoommates = async (req, res) => {
   try {
     const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
+    const requestedPage = req.query.page === undefined ? 1 : Number(req.query.page);
+    const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+    if (
+      !Number.isSafeInteger(requestedPage) ||
+      requestedPage < 1 ||
+      !Number.isSafeInteger(requestedLimit) ||
+      requestedLimit < 1
+    ) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+    const limit = Math.min(requestedLimit, 100);
 
     const query = {};
     const excludedUserIds = [];
@@ -69,8 +80,23 @@ const getRoommates = async (req, res) => {
     if (sleepSchedule) query['lifestyle.sleepSchedule'] = sleepSchedule;
     if (cleanliness) query['lifestyle.cleanliness'] = cleanliness;
 
-    const roommates = await Profile.find(query).populate('user', 'username email role isVerified status');
-    return res.status(200).json(roommates);
+    const [roommates, total] = await Promise.all([
+      Profile.find(query)
+        .sort({ _id: 1 })
+        .skip((requestedPage - 1) * limit)
+        .limit(limit)
+        .populate('user', 'username avatar'),
+      Profile.countDocuments(query),
+    ]);
+    return res.status(200).json({
+      roommates,
+      pagination: {
+        page: requestedPage,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -90,7 +116,7 @@ const getRoommateById = async (req, res) => {
       }
     }
 
-    const roommate = await Profile.findOne({ user: targetUserId }).populate('user', 'username email role isVerified status');
+    const roommate = await Profile.findOne({ user: targetUserId }).populate('user', 'username avatar');
     if (!roommate) {
       return res.status(404).json({ message: 'Roommate profile not found' });
     }
