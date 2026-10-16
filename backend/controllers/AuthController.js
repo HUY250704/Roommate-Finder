@@ -196,13 +196,14 @@ const refreshAccessToken = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) {
+    if (typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (user) {
-      const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const resetToken = String(crypto.randomInt(100000, 1000000));
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
       await user.save({ validateBeforeSave: false });
@@ -225,12 +226,12 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
-    if (!email || !code || !newPassword) {
+    if (typeof email !== 'string' || !email.trim() || !code || !newPassword) {
       return res.status(400).json({ message: 'Please provide all fields' });
     }
 
     const user = await User.findOne({
-      email,
+      email: email.trim().toLowerCase(),
       resetPasswordToken: code,
       resetPasswordExpire: { $gt: Date.now() }
     });
