@@ -86,7 +86,7 @@ router.post('/login', loginUser);
  *     security: []
  *     responses:
  *       200:
- *         description: Logout successful; revokes the refresh token and clears its cookie
+ *         description: Logout successful; revokes the refresh token, invalidates issued access tokens, and clears its cookie
  */
 router.post('/logout', logoutUser);
 

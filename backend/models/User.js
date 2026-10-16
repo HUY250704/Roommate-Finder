@@ -37,6 +37,10 @@ const UserSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ['active', 'banned', 'suspended'],
