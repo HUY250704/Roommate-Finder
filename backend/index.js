@@ -30,6 +30,8 @@ const uploadRoute = require('./routes/UploadRoute');
 const mapRoute = require('./routes/MapRoute');
 
 const app = express();
+// Use the client IP forwarded by the single deployment proxy for rate limiting.
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
