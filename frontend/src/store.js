@@ -295,10 +295,12 @@ export const useStore = create((set) => ({
   },
 
   logout: async () => {
+    const token = localStorage.getItem('token');
     try {
       const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) {
         throw new Error(`Logout failed with status ${response.status}`);
