@@ -1,6 +1,7 @@
 ﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const http = require('http');
 const socketIo = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
@@ -61,6 +62,7 @@ io.use(async (socket, next) => {
 app.set('io', io);
 
 // Middleware
+app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -102,7 +104,17 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerCspDirectives = {
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  'script-src': ["'self'", "'unsafe-inline'"],
+  'connect-src': ["'self'", 'http:', 'https:'],
+};
+app.use(
+  '/api-docs',
+  helmet({ contentSecurityPolicy: { directives: swaggerCspDirectives } }),
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Routes
 app.use('/api/auth', authRoute);
