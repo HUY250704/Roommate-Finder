@@ -68,8 +68,8 @@ const createReport = async (req, res) => {
     });
 
     const populated = await Report.findById(report._id)
-      .populate('reporter', 'username email')
-      .populate('reportedUser', 'username email')
+      .populate('reporter', 'username avatar')
+      .populate('reportedUser', 'username avatar')
       .populate('reportedRoom', 'title location price');
 
     return res.status(201).json(populated);

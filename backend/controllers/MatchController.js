@@ -84,8 +84,8 @@ const getMatches = async (req, res) => {
     }
 
     const matches = await Match.find(query)
-      .populate('user1', 'username email')
-      .populate('user2', 'username email')
+      .populate('user1', 'username avatar')
+      .populate('user2', 'username avatar')
       .sort({ matchScore: -1 });
 
     return res.status(200).json(matches);
