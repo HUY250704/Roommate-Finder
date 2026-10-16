@@ -19,10 +19,18 @@ export default function Chat() {
   const [inputText, setInputText] = useState('');
   const [searchContact, setSearchContact] = useState('');
   const [loadingChats, setLoadingChats] = useState(true);
+  const [messagePage, setMessagePage] = useState(1);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [chatError, setChatError] = useState('');
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+  const shouldScrollToBottomRef = useRef(true);
+  const activeContactIdRef = useRef(activeContactId);
+  const activeConversationIdRef = useRef(activeContact?.conversationId);
+  activeContactIdRef.current = activeContactId;
+  activeConversationIdRef.current = activeContact?.conversationId;
   const token = localStorage.getItem('token');
 
   const activeContact = contacts.find(contact => contact.id === activeContactId) || contacts[0] || {
@@ -135,19 +143,24 @@ export default function Chat() {
   useEffect(() => {
     let isMounted = true;
     const conversationId = activeContact?.conversationId;
+    shouldScrollToBottomRef.current = true;
+    setMessages([]);
+    setMessagePage(1);
+    setHasOlderMessages(false);
     if (!token || !conversationId) return undefined;
 
-    authenticatedFetch(`${API_BASE_URL}/conversations/messages/${conversationId}`, {
+    authenticatedFetch(`${API_BASE_URL}/conversations/messages/${conversationId}?page=1&limit=20`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async response => {
-        const data = await response.json().catch(() => []);
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'Could not load messages');
         return data;
       })
       .then(data => {
         if (!isMounted) return;
-        const normalized = data.map(message => {
+        const pageMessages = Array.isArray(data) ? data : data.messages || [];
+        const normalized = pageMessages.map(message => {
           const senderId = String(message.sender?._id || message.sender);
           return {
             id: String(message._id),
@@ -158,11 +171,11 @@ export default function Chat() {
             timestamp: message.createdAt,
           };
         });
-        setMessages(existing => {
-          const byId = new Map(existing.map(message => [message.id, message]));
-          normalized.forEach(message => byId.set(message.id, message));
-          return [...byId.values()];
-        });
+        setMessages(normalized);
+        const page = data.page || 1;
+        const limit = data.limit || 20;
+        setMessagePage(page);
+        setHasOlderMessages(!Array.isArray(data) && page * limit < data.total);
       })
       .catch(error => {
         if (isMounted) setChatError(error.message);
@@ -173,8 +186,64 @@ export default function Chat() {
 
   // Auto scroll to bottom when new message arrives or contact changes
   useEffect(() => {
+    if (!shouldScrollToBottomRef.current) {
+      shouldScrollToBottomRef.current = true;
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [filteredMessages.length, activeContactId]);
+
+  const handleLoadOlderMessages = async () => {
+    const conversationId = activeContact?.conversationId;
+    const contactId = activeContactId;
+    if (!token || !conversationId || !hasOlderMessages || loadingOlderMessages) return;
+
+    setLoadingOlderMessages(true);
+    try {
+      const nextPage = messagePage + 1;
+      const response = await authenticatedFetch(
+        `${API_BASE_URL}/conversations/messages/${conversationId}?page=${nextPage}&limit=20`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not load older messages');
+      if (
+        activeContactIdRef.current !== contactId ||
+        activeConversationIdRef.current !== conversationId
+      ) {
+        return;
+      }
+
+      const pageMessages = Array.isArray(data) ? data : data.messages || [];
+      const normalized = pageMessages.map(message => {
+        const senderId = String(message.sender?._id || message.sender);
+        return {
+          id: String(message._id),
+          conversationId: String(message.conversation),
+          senderId,
+          receiverId: senderId === authenticatedUserId ? activeContactId : senderId,
+          text: message.text,
+          timestamp: message.createdAt,
+        };
+      });
+
+      if (normalized.length) shouldScrollToBottomRef.current = false;
+      setMessages(existing => {
+        const byId = new Map([...normalized, ...existing].map(message => [message.id, message]));
+        return [...byId.values()].sort((first, second) => (
+          new Date(first.timestamp).getTime() - new Date(second.timestamp).getTime()
+        ));
+      });
+      const page = data.page || nextPage;
+      const limit = data.limit || 20;
+      setMessagePage(page);
+      setHasOlderMessages(!Array.isArray(data) && page * limit < data.total);
+    } catch (error) {
+      setChatError(error.message);
+    } finally {
+      setLoadingOlderMessages(false);
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -372,6 +441,20 @@ export default function Chat() {
                 <p className="text-sm text-gray-500">{language === 'vi' ? 'Chỉ nhắn tin được với người đã chấp nhận yêu cầu ở ghép.' : 'Messaging is available after a roommate request is accepted.'}</p>
                 <button onClick={() => navigate('/requests')} className="text-sm font-semibold text-[#ab3500] hover:underline">
                   {language === 'vi' ? 'Tìm bạn ở ghép' : 'Find roommates'}
+                </button>
+              </div>
+            )}
+            {hasOlderMessages && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={handleLoadOlderMessages}
+                  disabled={loadingOlderMessages}
+                  className="text-xs font-semibold text-[#ab3500] hover:underline disabled:opacity-50"
+                >
+                  {loadingOlderMessages
+                    ? (language === 'vi' ? 'Đang tải...' : 'Loading...')
+                    : (language === 'vi' ? 'Tải tin nhắn cũ hơn' : 'Load older messages')}
                 </button>
               </div>
             )}

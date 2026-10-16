@@ -14,11 +14,26 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/roommates:
  *   get:
- *     summary: L?y danh sách nh?ng ngý?i t?m ph?ng ghép kèm b? l?c
+ *     summary: L?y danh sï¿½ch nh?ng ngï¿½?i t?m ph?ng ghï¿½p kï¿½m b? l?c
  *     tags: [Roommates]
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *       - name: gender
  *         in: query
  *         required: false
@@ -61,7 +76,7 @@ const { protect } = require('../middleware/auth');
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? danh sách roommates thành công
+ *         description: Paginated roommate profiles with total count
  */
 router.get('/', protect, getRoommates);
 
@@ -69,7 +84,7 @@ router.get('/', protect, getRoommates);
  * @swagger
  * /api/roommates/{id}:
  *   get:
- *     summary: Xem chi ti?t h? sõ t?m ph?ng ghép c?a m?t ngý?i dùng theo ID
+ *     summary: Xem chi ti?t h? sï¿½ t?m ph?ng ghï¿½p c?a m?t ngï¿½?i dï¿½ng theo ID
  *     tags: [Roommates]
  *     security:
  *       - bearerAuth: []
@@ -81,9 +96,9 @@ router.get('/', protect, getRoommates);
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? thông tin h? sõ chi ti?t
+ *         description: Tr? v? thï¿½ng tin h? sï¿½ chi ti?t
  *       404:
- *         description: Không t?m th?y h? sõ
+ *         description: Khï¿½ng t?m th?y h? sï¿½
  */
 router.get('/:id', protect, getRoommateById);
 
