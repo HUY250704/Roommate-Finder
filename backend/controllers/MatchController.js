@@ -1,4 +1,5 @@
-﻿const Match = require('../models/Match');
+const mongoose = require('mongoose');
+const Match = require('../models/Match');
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
 const { createNotification } = require('../services/notificationService');
