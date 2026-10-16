@@ -203,6 +203,8 @@ Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam
 
 Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
 
+Tài khoản bị ban hoặc đình chỉ không thể làm mới access token hay kết nối Socket.IO; khi admin ban/đình chỉ tài khoản, refresh session bị thu hồi và các kết nối Socket.IO hiện tại bị ngắt.
+
 ---
 
 # **5. Database – MongoDB**
