@@ -207,6 +207,8 @@ Access token có thời hạn 15 phút và được trả trong JSON. Refresh to
 
 Các route `/api/auth/*` được giới hạn 60 request mỗi IP trong 15 phút; đăng nhập/Firebase và đăng ký giới hạn 10 request, còn verify email, quên/đặt lại mật khẩu và gửi lại mã xác minh giới hạn 5 request mỗi IP trong cùng khoảng thời gian.
 
+Tài khoản bị ban hoặc đình chỉ không thể làm mới access token hay kết nối Socket.IO; khi admin ban/đình chỉ tài khoản, refresh session bị thu hồi và các kết nối Socket.IO hiện tại bị ngắt.
+
 ---
 
 # **5. Database – MongoDB**

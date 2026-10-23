@@ -202,10 +202,16 @@ const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ message: 'Refresh token is invalid or expired' });
     }
 
-    const user = await User.findById(session.user).select('_id tokenVersion');
+    const user = await User.findById(session.user).select('_id status isBanned tokenVersion');
     if (!user) {
       clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'User is not authorized to refresh tokens' });
+    }
+
+    if (user.status === 'banned' || user.status === 'suspended' || user.isBanned) {
+      await RefreshToken.deleteMany({ user: user._id });
+      clearRefreshTokenCookie(res);
+      return res.status(403).json({ message: 'Account has been banned or suspended' });
     }
 
     const accessToken = generateToken(user._id, user.tokenVersion);

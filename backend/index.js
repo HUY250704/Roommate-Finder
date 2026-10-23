@@ -50,10 +50,13 @@ io.use(async (socket, next) => {
     if (!process.env.JWT_SECRET) return next(new Error('Authentication is not configured'));
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('_id isVerified tokenVersion');
+    const user = await User.findById(decoded.id).select('_id isVerified status isBanned tokenVersion');
     if (
       !user ||
       !user.isVerified ||
+      user.status === 'banned' ||
+      user.status === 'suspended' ||
+      user.isBanned ||
       (decoded.tokenVersion ?? 0) !== user.tokenVersion
     ) return next(new Error('Authentication failed'));
 
