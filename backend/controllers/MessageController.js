@@ -35,7 +35,7 @@ const getMessages = async (req, res) => {
     const query = { conversation: conversationId };
     const [messages, total] = await Promise.all([
       Message.find(query)
-        .populate('sender', 'username email avatar')
+        .populate('sender', 'username avatar')
         .sort({ createdAt: -1, _id: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit),
@@ -176,7 +176,7 @@ const sendMessage = async (req, res) => {
     await conversation.save();
 
     const populatedMessage = await Message.findById(message._id)
-      .populate('sender', 'username email avatar');
+      .populate('sender', 'username avatar');
 
     const io = req.app.get('io');
     if (io) {
@@ -213,7 +213,7 @@ const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: { $all: [req.user._id], $nin: blockedIds },
     })
-      .populate('participants', 'username email avatar')
+      .populate('participants', 'username avatar')
       .populate({
         path: 'lastMessage',
         populate: { path: 'sender', select: 'username avatar' }
@@ -236,8 +236,8 @@ const getChatContacts = async (req, res) => {
       receiver: { $nin: blockedIds },
       $or: [{ sender: userId }, { receiver: userId }],
     })
-      .populate('sender', 'username email avatar')
-      .populate('receiver', 'username email avatar')
+      .populate('sender', 'username avatar')
+      .populate('receiver', 'username avatar')
       .sort({ updatedAt: -1 });
 
     const contactsById = new Map();
@@ -250,7 +250,6 @@ const getChatContacts = async (req, res) => {
       contactsById.set(contact._id.toString(), {
         id: contact._id,
         name: contact.username,
-        email: contact.email,
         avatar: contact.avatar,
         requestId: request._id,
       });

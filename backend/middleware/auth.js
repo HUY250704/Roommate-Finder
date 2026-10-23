@@ -26,6 +26,10 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
+      if ((decoded.tokenVersion ?? 0) !== req.user.tokenVersion) {
+        return res.status(401).json({ message: 'Not authorized, token has been revoked' });
+      }
+
       if (req.user.status === 'banned' || req.user.status === 'suspended' || req.user.isBanned) {
         return res.status(403).json({ message: 'Account has been banned or suspended' });
       }

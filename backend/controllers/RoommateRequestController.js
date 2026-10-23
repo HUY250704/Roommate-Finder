@@ -147,8 +147,8 @@ const getMyRequests = async (req, res) => {
     const requests = await RoommateRequest.find({
       $or: [{ sender: req.user._id }, { receiver: req.user._id }],
     })
-      .populate('sender', 'username email avatar')
-      .populate('receiver', 'username email avatar')
+      .populate('sender', 'username avatar')
+      .populate('receiver', 'username avatar')
       .sort({ createdAt: -1 });
 
     return res.status(200).json(requests);

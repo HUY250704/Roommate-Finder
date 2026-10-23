@@ -50,7 +50,6 @@ const getRoommates = async (req, res) => {
     }
 
     const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
-
     const query = {};
     const excludedUserIds = [];
 
@@ -80,14 +79,17 @@ const getRoommates = async (req, res) => {
         .sort({ createdAt: -1, _id: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit)
-        .populate('user', 'username email role isVerified status'),
+        .populate('user', 'username avatar'),
       Profile.countDocuments(query),
     ]);
     return res.status(200).json({
       roommates,
-      page: pagination.page,
-      limit: pagination.limit,
-      total,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        total,
+        totalPages: Math.ceil(total / pagination.limit),
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -108,7 +110,7 @@ const getRoommateById = async (req, res) => {
       }
     }
 
-    const roommate = await Profile.findOne({ user: targetUserId }).populate('user', 'username email role isVerified status');
+    const roommate = await Profile.findOne({ user: targetUserId }).populate('user', 'username avatar');
     if (!roommate) {
       return res.status(404).json({ message: 'Roommate profile not found' });
     }

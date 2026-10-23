@@ -1,4 +1,5 @@
 const express = require('express');
+const { rateLimit } = require('express-rate-limit');
 const router = express.Router();
 const {
   registerUser,
@@ -12,6 +13,26 @@ const {
   googleLogin,
   firebaseLogin,
 } = require('../controllers/AuthController');
+
+const AUTH_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const createAuthRateLimiter = (limit) => rateLimit({
+  windowMs: AUTH_RATE_LIMIT_WINDOW_MS,
+  limit,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many authentication attempts. Please try again later.' },
+});
+
+const authRateLimit = createAuthRateLimiter(60);
+const loginRateLimit = createAuthRateLimiter(10);
+const firebaseLoginRateLimit = createAuthRateLimiter(10);
+const registrationRateLimit = createAuthRateLimiter(10);
+const forgotPasswordRateLimit = createAuthRateLimiter(5);
+const resetPasswordRateLimit = createAuthRateLimiter(5);
+const verifyEmailRateLimit = createAuthRateLimiter(5);
+const resendVerificationRateLimit = createAuthRateLimiter(5);
+
+router.use(authRateLimit);
 
 /**
  * @swagger
@@ -46,8 +67,10 @@ const {
  *     responses:
  *       201:
  *         description: Registered successfully; a verification code was sent by email
+ *       429:
+ *         description: Too many registration attempts
  */
-router.post('/register', registerUser);
+router.post('/register', registrationRateLimit, registerUser);
 
 /**
  * @swagger
@@ -74,8 +97,10 @@ router.post('/register', registerUser);
  *         description: Login successful; returns a short-lived access token and sets a refresh cookie
  *       403:
  *         description: Email address has not been verified
+ *       429:
+ *         description: Too many login attempts
  */
-router.post('/login', loginUser);
+router.post('/login', loginRateLimit, loginUser);
 
 /**
  * @swagger
@@ -86,7 +111,7 @@ router.post('/login', loginUser);
  *     security: []
  *     responses:
  *       200:
- *         description: Logout successful; revokes the refresh token and clears its cookie
+ *         description: Logout successful; revokes the refresh token, invalidates issued access tokens, and clears its cookie
  */
 router.post('/logout', logoutUser);
 
@@ -102,6 +127,8 @@ router.post('/logout', logoutUser);
  *         description: Access token refreshed and refresh cookie rotated
  *       401:
  *         description: Refresh token is missing, invalid, or expired
+ *       403:
+ *         description: Account has been banned or suspended
  */
 router.post('/refresh', refreshAccessToken);
 
@@ -125,8 +152,10 @@ router.post('/refresh', refreshAccessToken);
  *     responses:
  *       200:
  *         description: Reset code sent successfully
+ *       429:
+ *         description: Too many password-reset requests
  */
-router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password', forgotPasswordRateLimit, forgotPassword);
 
 /**
  * @swagger
@@ -154,8 +183,10 @@ router.post('/forgot-password', forgotPassword);
  *     responses:
  *       200:
  *         description: Password reset successful
+ *       429:
+ *         description: Too many password-reset attempts
  */
-router.post('/reset-password', resetPassword);
+router.post('/reset-password', resetPasswordRateLimit, resetPassword);
 
 /**
  * @swagger
@@ -183,8 +214,10 @@ router.post('/reset-password', resetPassword);
  *         description: Email verified successfully
  *       400:
  *         description: Verification code is invalid or expired
+ *       429:
+ *         description: Too many email verification attempts
  */
-router.post('/verify-email', verifyEmail);
+router.post('/verify-email', verifyEmailRateLimit, verifyEmail);
 
 /**
  * @swagger
@@ -206,10 +239,12 @@ router.post('/verify-email', verifyEmail);
  *     responses:
  *       200:
  *         description: A verification code was sent if the account is awaiting verification
+ *       429:
+ *         description: Too many verification-code requests
  */
-router.post('/resend-verification', resendVerificationCode);
+router.post('/resend-verification', resendVerificationRateLimit, resendVerificationCode);
 
 
-router.post("/firebase", firebaseLogin);
+router.post('/firebase', firebaseLoginRateLimit, firebaseLogin);
 
 module.exports = router;

@@ -36,7 +36,6 @@ export default function Chat() {
   const activeContact = contacts.find(contact => contact.id === activeContactId) || contacts[0] || {
     id: '',
     name: language === 'vi' ? 'Chưa có liên hệ' : 'No contacts yet',
-    email: '',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
   };
 
@@ -290,8 +289,7 @@ export default function Chat() {
   };
 
   const filteredContacts = contacts.filter(contact => (
-    contact.name.toLowerCase().includes(searchContact.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchContact.toLowerCase())
+    contact.name.toLowerCase().includes(searchContact.toLowerCase())
   ));
 
   const formatTime = (ts) => {
@@ -359,7 +357,6 @@ export default function Chat() {
                       <div className="font-bold text-gray-900 text-sm truncate">{user.name}</div>
                       <span className="text-[10px] text-gray-400">10:30</span>
                     </div>
-                    <div className="text-xs text-gray-500 truncate mt-0.5">{user.email}</div>
                   </div>
                 </button>
               );

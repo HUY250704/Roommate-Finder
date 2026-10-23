@@ -199,11 +199,15 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Report | POST | /api/reports | Báo cáo user/listing |
 | Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
 
-Các endpoint danh sách `GET /api/rooms`, `GET /api/rooms/search`, `GET /api/roommates`, `GET /api/conversations/messages/:conversationId` và `GET /api/admin/users` hỗ trợ `page` (mặc định `1`) và `limit` (mặc định `20`, tối đa `100`). Response chứa `rooms`, `roommates`, `messages` hoặc `users` tương ứng, cùng `page`, `limit` và `total`.
+Các endpoint danh sách `GET /api/rooms`, `GET /api/rooms/search`, `GET /api/roommates`, `GET /api/conversations/messages/:conversationId` và `GET /api/admin/users` hỗ trợ `page` (mặc định `1`) và `limit` (mặc định `20`, tối đa `100`). Response chứa `rooms`, `roommates`, `messages` hoặc `users` tương ứng, cùng thông tin phân trang (`page`, `limit`, `total`); riêng `GET /api/roommates` trả metadata phân trang trong object `pagination` (`page`, `limit`, `total`, `totalPages`). Các API hiển thị thông tin người dùng khác (roommate, favorite, viewing, chat, match, request, block, notification và phản hồi report cho user) chỉ trả username/avatar, không trả email. Email vẫn có thể được dùng nội bộ để gửi thông báo hoặc hiển thị trong luồng quản trị được bảo vệ.
 
 Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
 
-Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
+Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại, tăng phiên bản token để vô hiệu hóa ngay các access token đã phát hành cho tài khoản, ngắt các kết nối Socket.IO đang hoạt động và xóa cookie.
+
+Các route `/api/auth/*` được giới hạn 60 request mỗi IP trong 15 phút; đăng nhập/Firebase và đăng ký giới hạn 10 request, còn verify email, quên/đặt lại mật khẩu và gửi lại mã xác minh giới hạn 5 request mỗi IP trong cùng khoảng thời gian.
+
+Tài khoản bị ban hoặc đình chỉ không thể làm mới access token hay kết nối Socket.IO; khi admin ban/đình chỉ tài khoản, refresh session bị thu hồi và các kết nối Socket.IO hiện tại bị ngắt.
 
 ---
 

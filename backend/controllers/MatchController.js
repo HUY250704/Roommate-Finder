@@ -1,4 +1,5 @@
-﻿const Match = require('../models/Match');
+const mongoose = require('mongoose');
+const Match = require('../models/Match');
 const Profile = require('../models/Profile');
 const { calculateMatchScore } = require('../utils/matchCalculator');
 const { createNotification } = require('../services/notificationService');
@@ -84,8 +85,8 @@ const getMatches = async (req, res) => {
     }
 
     const matches = await Match.find(query)
-      .populate('user1', 'username email')
-      .populate('user2', 'username email')
+      .populate('user1', 'username avatar')
+      .populate('user2', 'username avatar')
       .sort({ matchScore: -1 });
 
     return res.status(200).json(matches);

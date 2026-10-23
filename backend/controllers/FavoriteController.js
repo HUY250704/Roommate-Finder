@@ -7,9 +7,9 @@ const getFavorites = async (req, res) => {
     let fav = await Favorite.findOne({ user: req.user._id })
       .populate({
         path: 'rooms',
-        populate: { path: 'owner', select: 'username email' }
+        populate: { path: 'owner', select: 'username avatar' }
       })
-      .populate('roommates', 'username email');
+      .populate('roommates', 'username avatar');
 
     if (!fav) {
       fav = await Favorite.create({ user: req.user._id, rooms: [], roommates: [] });
@@ -32,7 +32,7 @@ const addFavoriteRoom = async (req, res) => {
       fav = await Favorite.create({ user: req.user._id, rooms: [], roommates: [] });
     }
 
-    if (fav.rooms.includes(roomId)) {
+    if (fav.rooms.some(id => id.toString() === roomId.toString())) {
       return res.status(400).json({ message: 'Room already in favorites' });
     }
 
@@ -93,7 +93,7 @@ const addFavoriteRoommate = async (req, res) => {
       fav = await Favorite.create({ user: req.user._id, rooms: [], roommates: [] });
     }
 
-    if (fav.roommates.includes(roommateId)) {
+    if (fav.roommates.some(id => id.toString() === roommateId.toString())) {
       return res.status(400).json({ message: 'Roommate already in favorites' });
     }
 

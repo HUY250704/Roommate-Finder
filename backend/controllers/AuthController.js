@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const { sendPasswordResetEmail, sendEmailVerificationCode } = require('../services/emailService');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
+const jwt = require('jsonwebtoken');
 
 const REFRESH_TOKEN_COOKIE = 'refreshToken';
 const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000;
@@ -127,7 +128,7 @@ const loginUser = async (req, res) => {
         return res.status(403).json({ message: 'Please verify your email before signing in' });
       }
 
-      const token = generateToken(user._id);
+      const token = generateToken(user._id, user.tokenVersion);
       await issueRefreshToken(user._id, res);
       return res.json({
         _id: user.id,
@@ -146,12 +147,34 @@ const loginUser = async (req, res) => {
 };
 
 const logoutUser = async (req, res) => {
+  clearRefreshTokenCookie(res);
   try {
     const token = readRefreshToken(req);
-    if (token) {
-      await RefreshToken.deleteOne({ tokenHash: hashRefreshToken(token) });
+    const refreshSession = token
+      ? await RefreshToken.findOneAndDelete({ tokenHash: hashRefreshToken(token) })
+      : null;
+    let userId = refreshSession?.user;
+
+    if (!userId && process.env.JWT_SECRET) {
+      const authorization = req.headers.authorization;
+      const accessToken = authorization?.startsWith('Bearer ')
+        ? authorization.slice('Bearer '.length)
+        : null;
+      if (accessToken) {
+        try {
+          userId = jwt.verify(accessToken, process.env.JWT_SECRET).id;
+        } catch (error) {
+          if (!['TokenExpiredError', 'JsonWebTokenError', 'NotBeforeError'].includes(error.name)) {
+            throw error;
+          }
+        }
+      }
     }
-    clearRefreshTokenCookie(res);
+
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { $inc: { tokenVersion: 1 } });
+      req.app.get('io')?.in(userId.toString()).disconnectSockets(true);
+    }
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -179,13 +202,19 @@ const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ message: 'Refresh token is invalid or expired' });
     }
 
-    const user = await User.findById(session.user).select('_id');
+    const user = await User.findById(session.user).select('_id status isBanned tokenVersion');
     if (!user) {
       clearRefreshTokenCookie(res);
       return res.status(401).json({ message: 'User is not authorized to refresh tokens' });
     }
 
-    const accessToken = generateToken(user._id);
+    if (user.status === 'banned' || user.status === 'suspended' || user.isBanned) {
+      await RefreshToken.deleteMany({ user: user._id });
+      clearRefreshTokenCookie(res);
+      return res.status(403).json({ message: 'Account has been banned or suspended' });
+    }
+
+    const accessToken = generateToken(user._id, user.tokenVersion);
     await issueRefreshToken(user._id, res);
     return res.status(200).json({ token: accessToken });
   } catch (error) {
@@ -196,13 +225,14 @@ const refreshAccessToken = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) {
+    if (typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (user) {
-      const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const resetToken = String(crypto.randomInt(100000, 1000000));
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
       await user.save({ validateBeforeSave: false });
@@ -225,12 +255,12 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
-    if (!email || !code || !newPassword) {
+    if (typeof email !== 'string' || !email.trim() || !code || !newPassword) {
       return res.status(400).json({ message: 'Please provide all fields' });
     }
 
     const user = await User.findOne({
-      email,
+      email: email.trim().toLowerCase(),
       resetPasswordToken: code,
       resetPasswordExpire: { $gt: Date.now() }
     });
@@ -359,7 +389,7 @@ const firebaseLogin = async (req, res) => {
         isVerified: true,
       });
     }
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.tokenVersion);
     await issueRefreshToken(user._id, res);
     return res.status(200).json({
       _id: user.id,

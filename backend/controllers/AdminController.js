@@ -8,8 +8,14 @@ const Favorite = require('../models/Favorite');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Notification = require('../models/Notification');
+const RefreshToken = require('../models/RefreshToken');
 const { createNotification } = require('../services/notificationService');
 const { parsePagination } = require('../utils/pagination');
+
+const revokeUserSessions = async (req, userId) => {
+  await RefreshToken.deleteMany({ user: userId });
+  req.app.get('io')?.in(userId.toString()).disconnectSockets(true);
+};
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -220,6 +226,7 @@ const manageUsers = async (req, res) => {
       user.status = 'banned';
       user.isBanned = true;
       await user.save({ validateBeforeSave: false });
+      await revokeUserSessions(req, userId);
       return res.status(200).json({ message: 'User banned successfully', user });
     }
 
@@ -234,6 +241,7 @@ const manageUsers = async (req, res) => {
       user.status = 'suspended';
       user.isBanned = true;
       await user.save({ validateBeforeSave: false });
+      await revokeUserSessions(req, userId);
       return res.status(200).json({ message: 'User suspended successfully', user });
     }
 
@@ -461,6 +469,7 @@ const updateReportStatus = async (req, res) => {
           status: 'banned',
           isBanned: true,
         });
+        await revokeUserSessions(req, report.reportedUser);
       } else if (action === 'unban' && report.reportedUser) {
         await User.findByIdAndUpdate(report.reportedUser, {
           status: 'active',
