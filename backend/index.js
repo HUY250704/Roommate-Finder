@@ -50,8 +50,12 @@ io.use(async (socket, next) => {
     if (!process.env.JWT_SECRET) return next(new Error('Authentication is not configured'));
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('_id isVerified');
-    if (!user || !user.isVerified) return next(new Error('Authentication failed'));
+    const user = await User.findById(decoded.id).select('_id isVerified tokenVersion');
+    if (
+      !user ||
+      !user.isVerified ||
+      (decoded.tokenVersion ?? 0) !== user.tokenVersion
+    ) return next(new Error('Authentication failed'));
 
     socket.data.userId = user._id.toString();
     return next();
