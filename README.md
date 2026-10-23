@@ -199,7 +199,7 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Report | POST | /api/reports | Báo cáo user/listing |
 | Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
 
-`GET /api/roommates` hỗ trợ phân trang qua `page` (mặc định `1`) và `limit` (mặc định `20`, tối đa `100`); response gồm `roommates` và metadata `pagination`. Các API hiển thị thông tin người dùng khác (roommate, favorite, viewing, chat, match, request, block, notification và phản hồi report cho user) chỉ trả username/avatar, không trả email. Email vẫn có thể được dùng nội bộ để gửi thông báo hoặc hiển thị trong luồng quản trị được bảo vệ.
+Các endpoint danh sách `GET /api/rooms`, `GET /api/rooms/search`, `GET /api/roommates`, `GET /api/conversations/messages/:conversationId` và `GET /api/admin/users` hỗ trợ `page` (mặc định `1`) và `limit` (mặc định `20`, tối đa `100`). Response chứa `rooms`, `roommates`, `messages` hoặc `users` tương ứng, cùng thông tin phân trang (`page`, `limit`, `total`); riêng `GET /api/roommates` trả metadata phân trang trong object `pagination` (`page`, `limit`, `total`, `totalPages`). Các API hiển thị thông tin người dùng khác (roommate, favorite, viewing, chat, match, request, block, notification và phản hồi report cho user) chỉ trả username/avatar, không trả email. Email vẫn có thể được dùng nội bộ để gửi thông báo hoặc hiển thị trong luồng quản trị được bảo vệ.
 
 Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
 

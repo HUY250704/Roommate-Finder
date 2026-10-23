@@ -4,9 +4,15 @@ const RoommateRequest = require('../models/RoommateRequest');
 const mongoose = require('mongoose');
 const { createNotification } = require('../services/notificationService');
 const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
+const { parsePagination } = require('../utils/pagination');
 
 const getMessages = async (req, res) => {
   try {
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
+      return res.status(400).json({ message: 'Page and limit must be positive integers' });
+    }
+
     const { conversationId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
       return res.status(400).json({ message: 'Invalid conversation ID' });
@@ -26,32 +32,54 @@ const getMessages = async (req, res) => {
       return res.status(403).json({ message: 'Access denied: messaging is unavailable because a user is blocked' });
     }
 
-    // Mark unread messages sent by the other participant as read
-    await Message.updateMany(
-      {
-        conversation: conversationId,
-        sender: { $ne: req.user._id },
-        isRead: false,
-      },
-      { isRead: true }
-    );
+    const query = { conversation: conversationId };
+    const [messages, total] = await Promise.all([
+      Message.find(query)
+        .populate('sender', 'username avatar')
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit),
+      Message.countDocuments(query),
+    ]);
 
-    const io = req.app.get('io');
-    if (io) {
-      conversation.participants.forEach(participantId => {
-        if (participantId.toString() !== req.user._id.toString()) {
-          io.to(participantId.toString()).emit('messagesRead', {
-            conversationId,
-            readBy: req.user._id,
-          });
+    const unreadMessageIds = messages
+      .filter(message => {
+        const senderId = message.sender?._id || message.sender;
+        return senderId && senderId.toString() !== req.user._id.toString() && !message.isRead;
+      })
+      .map(message => message._id);
+    if (unreadMessageIds.length) {
+      const unreadIds = new Set(unreadMessageIds.map(id => id.toString()));
+      await Message.updateMany(
+        { _id: { $in: unreadMessageIds } },
+        { isRead: true }
+      );
+      messages.forEach(message => {
+        if (unreadIds.has(message._id.toString())) {
+          message.isRead = true;
         }
       });
+
+      const io = req.app.get('io');
+      if (io) {
+        conversation.participants.forEach(participantId => {
+          if (participantId.toString() !== req.user._id.toString()) {
+            io.to(participantId.toString()).emit('messagesRead', {
+              conversationId,
+              readBy: req.user._id,
+            });
+          }
+        });
+      }
     }
 
-    const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'username avatar')
-      .sort({ createdAt: 1 });
-    return res.status(200).json(messages);
+    messages.reverse();
+    return res.status(200).json({
+      messages,
+      page: pagination.page,
+      limit: pagination.limit,
+      total,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

@@ -1,6 +1,7 @@
 ﻿const mongoose = require('mongoose');
 const Profile = require('../models/Profile');
 const { getBlockedUserIds, isBlockedBetween } = require('./BlockController');
+const { parsePagination } = require('../utils/pagination');
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -43,19 +44,12 @@ const updateProfile = async (req, res) => {
 
 const getRoommates = async (req, res) => {
   try {
-    const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
-    const requestedPage = req.query.page === undefined ? 1 : Number(req.query.page);
-    const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
-    if (
-      !Number.isSafeInteger(requestedPage) ||
-      requestedPage < 1 ||
-      !Number.isSafeInteger(requestedLimit) ||
-      requestedLimit < 1
-    ) {
+    const pagination = parsePagination(req.query);
+    if (!pagination) {
       return res.status(400).json({ message: 'Page and limit must be positive integers' });
     }
-    const limit = Math.min(requestedLimit, 100);
 
+    const { gender, location, minBudget, maxBudget, smoking, pets, sleepSchedule, cleanliness } = req.query;
     const query = {};
     const excludedUserIds = [];
 
@@ -82,19 +76,19 @@ const getRoommates = async (req, res) => {
 
     const [roommates, total] = await Promise.all([
       Profile.find(query)
-        .sort({ _id: 1 })
-        .skip((requestedPage - 1) * limit)
-        .limit(limit)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit)
         .populate('user', 'username avatar'),
       Profile.countDocuments(query),
     ]);
     return res.status(200).json({
       roommates,
       pagination: {
-        page: requestedPage,
-        limit,
+        page: pagination.page,
+        limit: pagination.limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / pagination.limit),
       },
     });
   } catch (error) {

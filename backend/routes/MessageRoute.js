@@ -34,6 +34,21 @@ router.get('/contacts', protect, getChatContacts);
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *       - name: conversationId
  *         in: path
  *         required: true
@@ -41,7 +56,7 @@ router.get('/contacts', protect, getChatContacts);
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? danh s�ch tin nh?n th�nh c�ng
+ *         description: Paginated messages with total count, ordered chronologically within each page
  */
 router.get('/messages/:conversationId', protect, getMessages);
 

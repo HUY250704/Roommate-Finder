@@ -78,11 +78,25 @@ router.post('/', protect, createRoom);
  * @swagger
  * /api/rooms:
  *   get:
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *     summary: L?y danh s�ch t?t c? ph?ng c?n tr?ng (available)
  *     tags: [Rooms]
  *     responses:
  *       200:
- *         description: Tr? v? danh s�ch ph?ng th�nh c�ng
+ *         description: Paginated room results with total count
  */
 router.get('/', getRooms);
 
@@ -93,6 +107,19 @@ router.get('/', getRooms);
  *     summary: L?c ph?ng n�ng cao theo �?a �i?m, gi� c?, lo?i ph?ng v� l?i s?ng c?a ch? ph?ng
  *     tags: [Rooms]
  *     parameters:
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *       - name: location
  *         in: query
  *         required: false
@@ -179,7 +206,7 @@ router.get('/', getRooms);
  *           type: number
  *     responses:
  *       200:
- *         description: Tr? v? k?t qu? t?m ki?m th�nh c�ng
+ *         description: Paginated search results with total count
  */
 router.get('/search', searchRooms);
 
