@@ -6,8 +6,13 @@ const { sendViewingConfirmationEmail } = require('../services/emailService');
 const requestViewing = async (req, res) => {
   try {
     const { roomId, date, message } = req.body;
-    if (!roomId || !date) {
+    if (!roomId || typeof date !== 'string' || !date.trim()) {
       return res.status(400).json({ message: 'Room ID and date are required' });
+    }
+
+    const viewingDate = new Date(date);
+    if (Number.isNaN(viewingDate.getTime()) || viewingDate.getTime() <= Date.now()) {
+      return res.status(400).json({ message: 'Viewing date must be a valid date in the future' });
     }
 
     const room = await Room.findById(roomId);
@@ -19,10 +24,20 @@ const requestViewing = async (req, res) => {
       return res.status(400).json({ message: 'Cannot request a viewing for your own room' });
     }
 
+    const existingRequest = await Viewing.findOne({
+      user: req.user._id,
+      room: roomId,
+      date: viewingDate,
+      status: 'pending',
+    });
+    if (existingRequest) {
+      return res.status(409).json({ message: 'A pending viewing request already exists for this room and date' });
+    }
+
     const viewing = await Viewing.create({
       user: req.user._id,
       room: roomId,
-      date,
+      date: viewingDate,
       message,
     });
 

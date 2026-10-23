@@ -40,6 +40,10 @@ const { protect } = require('../middleware/auth');
  *     responses:
  *       201:
  *         description: G?i yêu c?u thành công
+ *       400:
+ *         description: Missing fields, invalid date, or viewing date is not in the future
+ *       409:
+ *         description: A pending viewing request already exists for this room and date
  */
 router.post('/', protect, requestViewing);
 
