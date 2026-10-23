@@ -27,6 +27,10 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const shouldScrollToBottomRef = useRef(true);
+  const activeContactIdRef = useRef(activeContactId);
+  const activeConversationIdRef = useRef(activeContact?.conversationId);
+  activeContactIdRef.current = activeContactId;
+  activeConversationIdRef.current = activeContact?.conversationId;
   const token = localStorage.getItem('token');
 
   const activeContact = contacts.find(contact => contact.id === activeContactId) || contacts[0] || {
@@ -34,11 +38,6 @@ export default function Chat() {
     name: language === 'vi' ? 'Chưa có liên hệ' : 'No contacts yet',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
   };
-
-  const activeContactIdRef = useRef(activeContactId);
-  const activeConversationIdRef = useRef(activeContact.conversationId);
-  activeContactIdRef.current = activeContactId;
-  activeConversationIdRef.current = activeContact.conversationId;
 
   const filteredMessages = messages.filter(
     message => (activeContact.conversationId && message.conversationId === activeContact.conversationId) || (
