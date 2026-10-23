@@ -105,7 +105,7 @@ const unblockUser = async (req, res) => {
 const getBlockedUsers = async (req, res) => {
   try {
     const blocks = await Block.find({ blocker: req.user._id })
-      .populate('blocked', 'username email avatar')
+      .populate('blocked', 'username avatar')
       .sort({ createdAt: -1 });
 
     return res.status(200).json(blocks);

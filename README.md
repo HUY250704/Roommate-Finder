@@ -199,6 +199,8 @@ Backend sử dụng **Node.js + Express.js**, xây dựng REST API.
 | Report | POST | /api/reports | Báo cáo user/listing |
 | Block | POST/DELETE | /api/blocks | Chặn/bỏ chặn user qua `blockedUserId` |
 
+`GET /api/roommates` hỗ trợ phân trang qua `page` (mặc định `1`) và `limit` (mặc định `20`, tối đa `100`); response gồm `roommates` và metadata `pagination`. Các API hiển thị thông tin người dùng khác (roommate, favorite, viewing, chat, match, request, block, notification và phản hồi report cho user) chỉ trả username/avatar, không trả email. Email vẫn có thể được dùng nội bộ để gửi thông báo hoặc hiển thị trong luồng quản trị được bảo vệ.
+
 Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam`, `Fake listing`, `Harassment`, `Inappropriate content`, `Other`. Người dùng bị chặn không thể xem hồ sơ roommate, gửi hoặc phản hồi roommate request, mở lịch sử hội thoại hay gửi tin nhắn với bên còn lại.
 
 Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại, tăng phiên bản token để vô hiệu hóa ngay các access token đã phát hành cho tài khoản, ngắt các kết nối Socket.IO đang hoạt động và xóa cookie.

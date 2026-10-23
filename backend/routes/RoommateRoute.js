@@ -14,11 +14,26 @@ const { protect } = require('../middleware/auth');
  * @swagger
  * /api/roommates:
  *   get:
- *     summary: L?y danh sách nh?ng ngý?i t?m ph?ng ghép kèm b? l?c
+ *     summary: Search roommate profiles with optional filters
  *     tags: [Roommates]
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *       - name: gender
  *         in: query
  *         required: false
@@ -61,7 +76,9 @@ const { protect } = require('../middleware/auth');
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? danh sách roommates thành công
+ *         description: Paginated roommate profiles without private email addresses
+ *       400:
+ *         description: Page and limit must be positive integers
  */
 router.get('/', protect, getRoommates);
 
@@ -69,7 +86,7 @@ router.get('/', protect, getRoommates);
  * @swagger
  * /api/roommates/{id}:
  *   get:
- *     summary: Xem chi ti?t h? sõ t?m ph?ng ghép c?a m?t ngý?i dùng theo ID
+ *     summary: View a roommate profile by user ID
  *     tags: [Roommates]
  *     security:
  *       - bearerAuth: []
@@ -81,9 +98,9 @@ router.get('/', protect, getRoommates);
  *           type: string
  *     responses:
  *       200:
- *         description: Tr? v? thông tin h? sõ chi ti?t
+ *         description: Roommate profile returned successfully
  *       404:
- *         description: Không t?m th?y h? sõ
+ *         description: Roommate profile not found
  */
 router.get('/:id', protect, getRoommateById);
 

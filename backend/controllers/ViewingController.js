@@ -1,5 +1,6 @@
 ﻿const Viewing = require('../models/Viewing');
 const Room = require('../models/Room');
+const User = require('../models/User');
 const { createNotification } = require('../services/notificationService');
 const { sendViewingConfirmationEmail } = require('../services/emailService');
 
@@ -65,7 +66,7 @@ const handleViewing = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const viewing = await Viewing.findById(req.params.id).populate('room').populate('user', 'username email');
+    const viewing = await Viewing.findById(req.params.id).populate('room').populate('user', 'username avatar');
     if (!viewing) {
       return res.status(404).json({ message: 'Viewing request not found' });
     }
@@ -89,8 +90,9 @@ const handleViewing = async (req, res) => {
       io
     );
 
-    if (status === 'approved' && viewing.user && viewing.user.email) {
-      await sendViewingConfirmationEmail(viewing.user.email, {
+    if (status === 'approved' && viewing.user) {
+      const viewingUser = await User.findById(viewing.user._id).select('email');
+      if (viewingUser?.email) await sendViewingConfirmationEmail(viewingUser.email, {
         roomTitle: viewing.room.title || 'Room',
         date: viewing.date,
         ownerName: req.user.username,
@@ -114,10 +116,10 @@ const getViewings = async (req, res) => {
         { room: { $in: myRoomIds } }
       ]
     })
-      .populate('user', 'username email')
+      .populate('user', 'username avatar')
       .populate({
         path: 'room',
-        populate: { path: 'owner', select: 'username email' }
+        populate: { path: 'owner', select: 'username avatar' }
       })
       .sort({ date: 1 });
 
