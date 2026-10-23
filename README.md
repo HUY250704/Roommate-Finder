@@ -203,6 +203,8 @@ Report cần đúng một target (user hoặc listing); lý do hợp lệ: `Scam
 
 Access token có thời hạn 15 phút và được trả trong JSON. Refresh token được lưu dạng hash phía server, gửi qua cookie `HttpOnly`, và được xoay mỗi khi gọi `/api/auth/refresh`. `/api/auth/logout` thu hồi refresh token hiện tại và xóa cookie.
 
+Các route `/api/auth/*` được giới hạn 60 request mỗi IP trong 15 phút; đăng nhập/Firebase và đăng ký giới hạn 10 request, còn verify email, quên/đặt lại mật khẩu và gửi lại mã xác minh giới hạn 5 request mỗi IP trong cùng khoảng thời gian.
+
 ---
 
 # **5. Database – MongoDB**
