@@ -1,6 +1,7 @@
 ﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const http = require('http');
 const socketIo = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
@@ -30,6 +31,8 @@ const uploadRoute = require('./routes/UploadRoute');
 const mapRoute = require('./routes/MapRoute');
 
 const app = express();
+// Use the client IP forwarded by the single deployment proxy for rate limiting.
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -47,13 +50,14 @@ io.use(async (socket, next) => {
     if (!process.env.JWT_SECRET) return next(new Error('Authentication is not configured'));
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('_id isVerified status isBanned');
+    const user = await User.findById(decoded.id).select('_id isVerified status isBanned tokenVersion');
     if (
       !user ||
       !user.isVerified ||
       user.status === 'banned' ||
       user.status === 'suspended' ||
-      user.isBanned
+      user.isBanned ||
+      (decoded.tokenVersion ?? 0) !== user.tokenVersion
     ) return next(new Error('Authentication failed'));
 
     socket.data.userId = user._id.toString();
@@ -67,6 +71,7 @@ io.use(async (socket, next) => {
 app.set('io', io);
 
 // Middleware
+app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -108,7 +113,17 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerCspDirectives = {
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  'script-src': ["'self'", "'unsafe-inline'"],
+  'connect-src': ["'self'", 'http:', 'https:'],
+};
+app.use(
+  '/api-docs',
+  helmet({ contentSecurityPolicy: { directives: swaggerCspDirectives } }),
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Routes
 app.use('/api/auth', authRoute);

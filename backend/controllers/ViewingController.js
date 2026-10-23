@@ -1,13 +1,19 @@
 ﻿const Viewing = require('../models/Viewing');
 const Room = require('../models/Room');
+const User = require('../models/User');
 const { createNotification } = require('../services/notificationService');
 const { sendViewingConfirmationEmail } = require('../services/emailService');
 
 const requestViewing = async (req, res) => {
   try {
     const { roomId, date, message } = req.body;
-    if (!roomId || !date) {
+    if (!roomId || typeof date !== 'string' || !date.trim()) {
       return res.status(400).json({ message: 'Room ID and date are required' });
+    }
+
+    const viewingDate = new Date(date);
+    if (Number.isNaN(viewingDate.getTime()) || viewingDate.getTime() <= Date.now()) {
+      return res.status(400).json({ message: 'Viewing date must be a valid date in the future' });
     }
 
     const room = await Room.findById(roomId);
@@ -19,10 +25,20 @@ const requestViewing = async (req, res) => {
       return res.status(400).json({ message: 'Cannot request a viewing for your own room' });
     }
 
+    const existingRequest = await Viewing.findOne({
+      user: req.user._id,
+      room: roomId,
+      date: viewingDate,
+      status: 'pending',
+    });
+    if (existingRequest) {
+      return res.status(409).json({ message: 'A pending viewing request already exists for this room and date' });
+    }
+
     const viewing = await Viewing.create({
       user: req.user._id,
       room: roomId,
-      date,
+      date: viewingDate,
       message,
     });
 
@@ -50,7 +66,7 @@ const handleViewing = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const viewing = await Viewing.findById(req.params.id).populate('room').populate('user', 'username email');
+    const viewing = await Viewing.findById(req.params.id).populate('room').populate('user', 'username avatar');
     if (!viewing) {
       return res.status(404).json({ message: 'Viewing request not found' });
     }
@@ -74,8 +90,9 @@ const handleViewing = async (req, res) => {
       io
     );
 
-    if (status === 'approved' && viewing.user && viewing.user.email) {
-      await sendViewingConfirmationEmail(viewing.user.email, {
+    if (status === 'approved' && viewing.user) {
+      const viewingUser = await User.findById(viewing.user._id).select('email');
+      if (viewingUser?.email) await sendViewingConfirmationEmail(viewingUser.email, {
         roomTitle: viewing.room.title || 'Room',
         date: viewing.date,
         ownerName: req.user.username,
@@ -99,10 +116,10 @@ const getViewings = async (req, res) => {
         { room: { $in: myRoomIds } }
       ]
     })
-      .populate('user', 'username email')
+      .populate('user', 'username avatar')
       .populate({
         path: 'room',
-        populate: { path: 'owner', select: 'username email' }
+        populate: { path: 'owner', select: 'username avatar' }
       })
       .sort({ date: 1 });
 

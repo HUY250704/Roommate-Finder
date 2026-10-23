@@ -1,17 +1,19 @@
 ﻿const { uploadToCloudinary, deleteFromCloudinary } = require('../services/cloudinaryService');
 
+const getUserUploadFolder = (userId) => `roommate-finder/${userId}`;
+
 /**
  * Upload single image (avatar, room thumbnail)
  */
 const uploadSingle = async (req, res) => {
   try {
-    const { image, folder } = req.body;
+    const { image } = req.body;
 
     if (!image) {
       return res.status(400).json({ message: 'Vui lòng cung cấp dữ liệu hình ảnh (base64 hoặc URL)' });
     }
 
-    const uploadResult = await uploadToCloudinary(image, folder || 'roommate-finder');
+    const uploadResult = await uploadToCloudinary(image, getUserUploadFolder(req.user._id));
 
     return res.status(200).json({
       message: 'Upload hình ảnh thành công',
@@ -31,13 +33,13 @@ const uploadSingle = async (req, res) => {
  */
 const uploadMultiple = async (req, res) => {
   try {
-    const { images, folder } = req.body;
+    const { images } = req.body;
 
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ message: 'Vui lòng cung cấp mảng hình ảnh images[]' });
     }
 
-    const uploadPromises = images.map((img) => uploadToCloudinary(img, folder || 'roommate-finder/rooms'));
+    const uploadPromises = images.map((img) => uploadToCloudinary(img, getUserUploadFolder(req.user._id)));
     const results = await Promise.all(uploadPromises);
 
     return res.status(200).json({
@@ -59,8 +61,13 @@ const deleteImage = async (req, res) => {
   try {
     const { publicId } = req.body;
 
-    if (!publicId) {
+    if (typeof publicId !== 'string' || !publicId.trim()) {
       return res.status(400).json({ message: 'Vui lòng cung cấp publicId của ảnh cần xóa' });
+    }
+
+    const userFolderPrefix = `${getUserUploadFolder(req.user._id)}/`;
+    if (req.user.role !== 'admin' && !publicId.startsWith(userFolderPrefix)) {
+      return res.status(403).json({ message: 'You are not authorized to delete this image' });
     }
 
     const result = await deleteFromCloudinary(publicId);
