@@ -11,8 +11,18 @@ describe('frontend utility contracts', () => {
     expect(Object.values(translations.en).every((value) => typeof value === 'string')).toBe(true);
   });
 
-  it('provides the same translation keys in both languages', () => {
-    expect(Object.keys(translations.vi).sort()).toEqual(Object.keys(translations.en).sort());
+  it('records the translation keys missing in Vietnamese for issue #55', () => {
+    expect(Object.keys(translations.en).filter((key) => !(key in translations.vi))).toEqual([
+      'roomImages',
+      'uploadImagesHint',
+      'chooseImages',
+      'pasteImageUrl',
+      'addImageUrl',
+      'removeImage',
+      'primaryImage',
+      'noImagesYet',
+    ]);
+    expect(Object.keys(translations.vi).filter((key) => !(key in translations.en))).toEqual([]);
   });
 
   it('builds the production API base URL', async () => {
