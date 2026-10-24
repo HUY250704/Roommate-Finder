@@ -9,6 +9,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const jwt = require('jsonwebtoken');
 
 const connectDB = require('./config/db');
+const { getAllowedOrigins, getHelmetOptions } = require('./config/security');
 const User = require('./models/User');
 const { notFound, errorHandler } = require('./middleware/error');
 
@@ -33,10 +34,11 @@ const mapRoute = require('./routes/MapRoute');
 const app = express();
 // Use the client IP forwarded by the single deployment proxy for rate limiting.
 app.set('trust proxy', 1);
+const allowedOrigins = getAllowedOrigins();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
@@ -71,9 +73,9 @@ io.use(async (socket, next) => {
 app.set('io', io);
 
 // Middleware
-app.use(helmet());
+app.use(helmet(getHelmetOptions()));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(express.json({ limit: '25mb' }));
