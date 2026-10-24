@@ -209,6 +209,8 @@ Các route `/api/auth/*` được giới hạn 60 request mỗi IP trong 15 phú
 
 Tài khoản bị ban hoặc đình chỉ không thể làm mới access token hay kết nối Socket.IO; khi admin ban/đình chỉ tài khoản, refresh session bị thu hồi và các kết nối Socket.IO hiện tại bị ngắt.
 
+CORS cho phép frontend production `https://roommate-finder-ashen.vercel.app` và các origin được liệt kê trong `FRONTEND_URL` (phân cách bằng dấu phẩy, chỉ gồm origin, không có path). Khi thay domain frontend trên Railway, cập nhật `FRONTEND_URL` rồi redeploy backend. Helmet dùng COOP `same-origin-allow-popups` để tương thích đăng nhập Firebase/Google bằng popup.
+
 ---
 
 # **5. Database – MongoDB**
