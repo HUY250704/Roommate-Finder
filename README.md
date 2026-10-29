@@ -213,6 +213,51 @@ CORS cho phép frontend production `https://roommate-finder-ashen.vercel.app` v�
 
 ---
 
+# **Chạy test**
+
+## Frontend
+
+```bash
+cd frontend
+npm ci
+npm test
+npm run build
+```
+
+Frontend tests dùng Vitest và React Testing Library; đặt trong `frontend/src/__tests__/` với tên `*.test.js` hoặc `*.test.jsx`. Khi test code gọi API hoặc Socket.IO, mock các dịch vụ đó để test không gọi mạng/backend thật. Dùng Testing Library để render component và kiểm tra hành vi người dùng.
+
+## Backend
+
+```bash
+cd backend
+npm ci
+npm test
+```
+
+Backend tests dùng Jest, Supertest và MongoDB Memory Server; test đặt trong `backend/tests/` với tên `*.test.js`. Database chạy giả lập trong RAM, không cần cài hoặc cấu hình MongoDB bên ngoài. Setup chung kết nối MongoDB và dọn dữ liệu giữa các test.
+
+Ví dụ test endpoint được bảo vệ:
+
+```js
+const request = require('supertest');
+const app = require('../index');
+const { createUser, tokenFor } = require('./helpers');
+
+it('returns the current resource', async () => {
+  const user = await createUser();
+  const response = await request(app)
+    .get('/api/example')
+    .set('Authorization', `Bearer ${tokenFor(user)}`);
+
+  expect(response.status).toBe(200);
+  expect(response.body).toMatchObject({ id: expect.any(String) });
+});
+```
+
+Tạo dữ liệu fixture trước request, dùng Supertest gửi request đến app Express, rồi kiểm tra status/response và dữ liệu lưu tương ứng. CI chạy backend test, frontend test và frontend build trên mỗi pull request và push lên `main`.
+
+---
+
 # **5. Database – MongoDB**
 
 Các collection chính:
