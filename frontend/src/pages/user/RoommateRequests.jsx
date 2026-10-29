@@ -8,7 +8,7 @@ import { authenticatedFetch } from '../../utils/authenticatedFetch';
 const avatarFallback = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150';
 
 export default function RoommateRequests() {
-  const { language } = useStore();
+  const { language, currentUser } = useStore();
   const isVietnamese = language === 'vi';
   const token = localStorage.getItem('token');
   const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') || '');
@@ -41,9 +41,16 @@ export default function RoommateRequests() {
         ]);
         if (!peopleResponse.ok) throw new Error(peopleData.message || 'Could not load users');
         if (!requestResponse.ok) throw new Error(requestData.message || 'Could not load roommate requests');
+        if (!Array.isArray(peopleData)) throw new Error('Invalid users response');
+        if (!Array.isArray(requestData)) throw new Error('Invalid roommate requests response');
+        const currentUserId = String(currentUser?._id || currentUser?.id || '');
+        if (!currentUserId) throw new Error('Could not identify the signed-in account');
         if (!isCurrent) return;
         setPeople(peopleData);
-        setRequests(requestData);
+        setRequests({
+          received: requestData.filter(request => String(request.receiver?._id || request.receiver) === currentUserId),
+          sent: requestData.filter(request => String(request.sender?._id || request.sender) === currentUserId),
+        });
         setError('');
       } catch (loadError) {
         if (isCurrent) setError(loadError.message);
@@ -56,7 +63,7 @@ export default function RoommateRequests() {
       isCurrent = false;
       clearTimeout(timer);
     };
-  }, [token, search, refreshVersion, isVietnamese]);
+  }, [token, search, refreshVersion, isVietnamese, currentUser?.id, currentUser?._id]);
 
   const sendRequest = async (personId) => {
     setWorkingId(personId);
