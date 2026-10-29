@@ -1,33 +1,43 @@
 ﻿const mongoose = require('mongoose');
 
+const ADMIN_EMAIL = 'admin@roommate.com';
+
 const seedDefaultAccounts = async () => {
   try {
     const User = require('../models/User');
     const Profile = require('../models/Profile');
 
-    const adminExists = await User.findOne({ email: 'admin@roommate.com' });
-    if (!adminExists) {
-      const adminPassword = process.env.ADMIN_SEED_PASSWORD;
-      if (!adminPassword || adminPassword.length < 12) {
-        console.warn('Admin seed skipped: set ADMIN_SEED_PASSWORD to a value of at least 12 characters.');
-      } else {
-        const usernameBase = process.env.ADMIN_SEED_USERNAME || 'admin';
-        let username = usernameBase;
-        let suffix = 1;
-        while (await User.exists({ username })) {
-          username = `${usernameBase}${suffix}`;
-          suffix += 1;
-        }
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+    const resetExistingAdmin = process.env.ADMIN_SEED_RESET_EXISTING === 'true';
+    const adminExists = await User.findOne({ email: ADMIN_EMAIL });
 
-        await User.create({
-          username,
-          email: 'admin@roommate.com',
-          password: adminPassword,
-          role: 'admin',
-          isVerified: true,
-        });
-        console.log('Seeded default admin account.');
+    if (!adminPassword || adminPassword.length < 12) {
+      if (!adminExists || resetExistingAdmin) {
+        console.warn('Admin seed skipped: set ADMIN_SEED_PASSWORD to a value of at least 12 characters.');
       }
+    } else if (adminExists && resetExistingAdmin) {
+      adminExists.password = adminPassword;
+      adminExists.role = 'admin';
+      adminExists.isVerified = true;
+      await adminExists.save();
+      console.log('Reset existing administrator credentials.');
+    } else if (!adminExists) {
+      const usernameBase = process.env.ADMIN_SEED_USERNAME || 'admin';
+      let username = usernameBase;
+      let suffix = 1;
+      while (await User.exists({ username })) {
+        username = `${usernameBase}${suffix}`;
+        suffix += 1;
+      }
+
+      await User.create({
+        username,
+        email: ADMIN_EMAIL,
+        password: adminPassword,
+        role: 'admin',
+        isVerified: true,
+      });
+      console.log('Seeded default admin account.');
     }
 
     if (process.env.NODE_ENV === 'development' && process.env.DEV_DEMO_SEED === 'true') {
@@ -98,3 +108,4 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+module.exports.seedDefaultAccounts = seedDefaultAccounts;

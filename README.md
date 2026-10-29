@@ -211,6 +211,10 @@ Tài khoản bị ban hoặc đình chỉ không thể làm mới access token h
 
 CORS cho phép frontend production `https://roommate-finder-ashen.vercel.app` và các origin được liệt kê trong `FRONTEND_URL` (phân cách bằng dấu phẩy, chỉ gồm origin, không có path). Khi thay domain frontend, cập nhật `FRONTEND_URL` trên hosting backend rồi redeploy. Frontend production hiện dùng API Render `https://roommate-finder-layf.onrender.com/api`; khi chuyển backend sang host khác, cập nhật URL production trong `frontend/src/config/api.js` rồi build/deploy lại frontend. `VITE_API_URL` chỉ cấu hình API cho môi trường development. Helmet dùng COOP `same-origin-allow-popups` để tương thích đăng nhập Firebase/Google bằng popup.
 
+### Khởi tạo hoặc đặt lại tài khoản admin
+
+Email admin mặc định là `admin@roommate.com`. Đặt `ADMIN_SEED_PASSWORD` trên Render thành mật khẩu mạnh dài ít nhất 12 ký tự để tạo admin nếu tài khoản chưa tồn tại. Nếu tài khoản đã tồn tại và cần đặt lại mật khẩu, tạm thời đặt `ADMIN_SEED_RESET_EXISTING=true`, sau đó deploy/restart backend; khi khởi động, backend sẽ cập nhật mật khẩu và xác minh quyền admin cho tài khoản đó. Sau khi quá trình chạy thành công, đặt biến này về `false` hoặc xóa nó và deploy/restart lại để tránh lặp lại thao tác reset khi service khởi động sau này. Không dùng mật khẩu mẫu trong `.env.example`.
+
 ---
 
 # **Chạy test**
