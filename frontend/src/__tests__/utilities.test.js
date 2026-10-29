@@ -20,7 +20,7 @@ describe('frontend utility contracts', () => {
     vi.resetModules();
     const { API_BASE_URL } = await import('../config/api');
 
-    expect(API_BASE_URL).toBe('https://roommate-finder-be-production.up.railway.app/api');
+    expect(API_BASE_URL).toBe('https://roommate-finder-layf.onrender.com/api');
   });
 
   it('normalizes a development API URL to exactly one /api suffix', async () => {
